@@ -63,18 +63,7 @@ MATERIAL = """
 </head>
 <body>
 <a href="/">Home</a>
-  <br/>
-  <input
-  type="text"
-  name="repeat"
-  onchange="cb(this.value, 'atoms')">
-  <div id='atoms' class='atoms'></div>
-  </body>
-  <script src='https://cdn.plot.ly/plotly-latest.min.js'></script>
-  <script type='text/javascript'>
-    var graphs = {{ !atoms_json }};
-    Plotly.newPlot('atoms', graphs, {});
-  </script>
+
 </html>
 """
 
