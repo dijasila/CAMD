@@ -9,7 +9,8 @@ from bottle import run, route, request, template, Bottle
 INDEX = """
 <html>
   <head>
-    <title>C2DB</title>
+  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+  <title>C2DB</title>
   </head>
   <body>
     <form>
@@ -63,7 +64,10 @@ MATERIAL = """
 </head>
 <body>
 <a href="/">Home</a>
-
+% for title, html in sections:
+<h1>{{ title }}</h1>
+{{ !html }}
+% end
 </html>
 """
 
@@ -90,20 +94,12 @@ class C2DB:
                         atoms_json=plot_atoms())
 
     def callback(self):
-        n = int(request.query.data)
-        print(request.query.what)
-        return plot_atoms(min(n, 100))
+        request.query.data
+        name = request.query.name
+        id = request.query.id
+        return self.callbacks[name](id, request)
 
 
-def plot_atoms(n=5):
-    df = pd.DataFrame(
-        {'Fruit': ['Apples', 'Oranges', 'Bananas', 'Apples', 'Oranges',
-                   'Bananas'],
-         'Amount': [4, 1, 2, 2, 4, n],
-         'City': ['SF', 'SF', 'SF', 'Montreal', 'Montreal', 'Montreal']})
-    fig = px.bar(df, x='Fruit', y='Amount', color='City',
-                 barmode='group')
-    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
 C2DB(42).app.run(host='localhost', port=8080, debug=True)

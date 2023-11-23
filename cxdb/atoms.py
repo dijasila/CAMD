@@ -31,3 +31,14 @@ class Atoms(Section):
                     z=z,
                     mode='markers')])
         return fig
+
+
+def plot_atoms(n=5):
+    df = pd.DataFrame(
+        {'Fruit': ['Apples', 'Oranges', 'Bananas', 'Apples', 'Oranges',
+                   'Bananas'],
+         'Amount': [4, 1, 2, 2, 4, n],
+         'City': ['SF', 'SF', 'SF', 'Montreal', 'Montreal', 'Montreal']})
+    fig = px.bar(df, x='Fruit', y='Amount', color='City',
+                 barmode='group')
+    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
