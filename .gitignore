@@ -1,0 +1,7 @@
+*.pyc
+.mypy_cache
+build/
+dist/
+.coverage
+htmlcov/
+venv/

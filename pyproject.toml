@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cxdb"
+description = "C2DB web-app prototype"
+version = "23.11.0"
+readme = "README.rst"
+authors = [
+  { name="Jens Jørgen Mortensen", email="jjmo@dtu.dk" },
+]
+dependencies = [
+    "bottle"]
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+
+[tool.mypy]
+ignore_missing_imports = false
+disallow_untyped_defs = true
