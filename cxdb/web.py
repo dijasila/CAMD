@@ -4,8 +4,8 @@ from bottle import request, template, Bottle
 from pathlib import Path
 from cxdb.material import Material
 from cxdb.atoms import AtomsSection
-#from cxdb.dos import DOSSection
-#from cxdb.bader import BaderSection
+from cxdb.dos import DOSSection
+from cxdb.bader import BaderSection
 
 TEMPLATES = Path(__file__).parent
 
@@ -17,10 +17,11 @@ class C2DB:
         self.app.route('/')(self.index)
         self.app.route('/material/<id>')(self.material)
         self.app.route('/callback')(self.callback)
+        self.app.route('/png/<id>/<filename>')(self.png)
 
         self.sections = [AtomsSection(),
-                        ]  # DOSSection(),
-                        # BaderSection()]
+                         DOSSection(),
+                         BaderSection()]
         self.callbacks = {}
         for section in self.sections:
             self.callbacks.update(section.callbacks)
@@ -42,8 +43,9 @@ class C2DB:
         footer = ''
         for section in self.sections:
             title, html1, html2 = section.get_html(material)
-            sections.append((title, html1))
-            footer += html2
+            if title:
+                sections.append((title, html1))
+                footer += html2
         return template(str(TEMPLATES / 'material.html'),
                         title=id,
                         sections=sections,
@@ -54,6 +56,9 @@ class C2DB:
         id = request.query.id
         material = self.materials[id]
         return self.callbacks[name](material, int(request.query.data))
+
+    def png(self, id: str, filename: str):
+        return (Path(id) / filename).read_bytes()
 
 
 if __name__ == '__main__':
