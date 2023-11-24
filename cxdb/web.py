@@ -3,14 +3,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from bottle import Bottle, request, template
+from bottle import Bottle, request, template, TEMPLATE_PATH
 
 from cxdb.atoms import AtomsSection
 from cxdb.bader import BaderSection
 from cxdb.dos import DOSSection
 from cxdb.material import Material
 
-TEMPLATES = Path(__file__).parent
+TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
 class C2DB:
@@ -32,9 +32,7 @@ class C2DB:
 
     def index(self) -> str:
         query = request.query.get('query', '')
-        print(repr(query))
-        print(list(self.materials))
-        return template(str(TEMPLATES / 'index.html'),
+        return template('index.html',
                         query=query,
                         rows=[(id, material.columns)
                               for id, material in self.materials.items()
@@ -50,7 +48,7 @@ class C2DB:
             if html1:
                 sections.append((section.title, html1))
                 footer += html2
-        return template(str(TEMPLATES / 'material.html'),
+        return template('material.html',
                         title=id,
                         sections=sections,
                         footer=footer)
