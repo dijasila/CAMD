@@ -1,0 +1,29 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
+</script>
+<script>
+  function cb(selection, name, id) {
+      $.getJSON(
+          {
+              url: "/callback",
+              data: { 'data': selection, 'name': name, 'id': id },
+              success: function (result) {
+                  Plotly.newPlot(name, result, {staticPlot: true});;
+                  }
+              });
+      }
+</script>
+<title>C2DB-{{ title }}</title>
+</head>
+<body>
+<a href="/">Home</a>
+% for section_title, html in sections:
+  <h1>{{ section_title }}</h1>
+  {{ !html }}
+% end
+</body>
+{{ !footer }}
+</html>

@@ -1,0 +1,32 @@
+<html>
+<head>
+<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+<title>C2DB</title>
+</head>
+<body>
+<form>
+  <input
+    type="text"
+    name="query"
+    value="{{ query }}"
+    placeholder="chemical symbol">
+  <button type="submit">Submit</button>
+</form>
+<br/>
+<table>
+<tr>
+% for column in header:
+  <th>{{ column }}</th>
+% end
+</tr>
+% for id, columns in rows:
+<tr>
+  % for column in columns:
+    <td>{{ !column }}</td>
+  % end
+  <td><a href=/material/{{ id }}>{{ id }}</a></td>
+</tr>
+% end
+</table>
+</body>
+</html>

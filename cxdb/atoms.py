@@ -1,27 +1,37 @@
+import json
+
+import plotly
 import plotly.graph_objects as go
-from cxdb.section import Section
+
 
 HTML = """
-<input type="text" name="repeat" onchange="cb(this.value, 'atoms')">
+{formula}
+<br/>
+<input type="text" name="repeat" onchange="cb(this.value, 'atoms', '{id}')">
 <div id='atoms' class='atoms'></div>
 """
 
 FOOTER = """
 <script type='text/javascript'>
 var graphs = {atoms_json};
-Plotly.newPlot('atoms', graphs, {});
+Plotly.newPlot('atoms', graphs, {{}});
 </script>
 """
 
 
-class Atoms(Section):
-    def __init__(self, atoms):
-        self.atoms = atoms
-        super().__init__(
-            html=HTML, footer=FOOTER)
+class AtomsSection:
+    def __init__(self):
+        self.callbacks = {'atoms': self.plot}
 
-    def plot(self, repeat: int = 1):
-        atoms = self.atoms * repeat
+    def get_html(self, material):
+        return ('Atoms',
+                HTML.format(id=material.id,
+                            formula=material.formula_html),
+                FOOTER.format(atoms_json=self.plot(material, 1)))
+
+    def plot(self, material: str, repeat: int = 1):
+        # repeat = min(repeat, len(atoms) * r**p = 1000)
+        atoms = material.atoms * repeat
         x, y, z = atoms.positions.T
         fig = go.Figure(
             data=[
@@ -30,15 +40,4 @@ class Atoms(Section):
                     y=y,
                     z=z,
                     mode='markers')])
-        return fig
-
-
-def plot_atoms(n=5):
-    df = pd.DataFrame(
-        {'Fruit': ['Apples', 'Oranges', 'Bananas', 'Apples', 'Oranges',
-                   'Bananas'],
-         'Amount': [4, 1, 2, 2, 4, n],
-         'City': ['SF', 'SF', 'SF', 'Montreal', 'Montreal', 'Montreal']})
-    fig = px.bar(df, x='Fruit', y='Amount', color='City',
-                 barmode='group')
-    return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
