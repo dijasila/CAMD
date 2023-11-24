@@ -1,18 +1,22 @@
 from __future__ import annotations
+
 import sys
-from bottle import request, template, Bottle
 from pathlib import Path
-from cxdb.material import Material
+
+from bottle import Bottle, request, template
+
 from cxdb.atoms import AtomsSection
-from cxdb.dos import DOSSection
 from cxdb.bader import BaderSection
+from cxdb.dos import DOSSection
+from cxdb.material import Material
 
 TEMPLATES = Path(__file__).parent
 
 
 class C2DB:
-    def __init__(self, materials):
+    def __init__(self, materials: dict[str, Material]):
         self.materials = materials
+
         self.app = Bottle()
         self.app.route('/')(self.index)
         self.app.route('/material/<id>')(self.material)
@@ -42,26 +46,26 @@ class C2DB:
         sections = []
         footer = ''
         for section in self.sections:
-            title, html1, html2 = section.get_html(material)
-            if title:
-                sections.append((title, html1))
+            html1, html2 = section.get_html(material)
+            if html1:
+                sections.append((section.title, html1))
                 footer += html2
         return template(str(TEMPLATES / 'material.html'),
                         title=id,
                         sections=sections,
                         footer=footer)
 
-    def callback(self):
+    def callback(self) -> str:
         name = request.query.name
         id = request.query.id
         material = self.materials[id]
         return self.callbacks[name](material, int(request.query.data))
 
-    def png(self, id: str, filename: str):
+    def png(self, id: str, filename: str) -> bytes:
         return (Path(id) / filename).read_bytes()
 
 
-if __name__ == '__main__':
+def main():
     materials = {}
     for arg in sys.argv[1:]:
         folder = Path(arg)
@@ -69,3 +73,7 @@ if __name__ == '__main__':
         materials[id] = Material(folder, id)
 
     C2DB(materials).app.run(host='localhost', port=8080, debug=True)
+
+
+if __name__ == '__main__':
+    main()

@@ -3,6 +3,8 @@ import json
 import plotly
 import plotly.graph_objects as go
 
+from cxdb.section import Section
+from cxdb.material import Material
 
 HTML = """
 <h4>{formula}</h4>
@@ -22,25 +24,21 @@ Plotly.newPlot('atoms', graphs, {{}});
 """
 
 
-class AtomsSection:
+class AtomsSection(Section):
+    title = 'Atoms'
+
     def __init__(self):
         self.callbacks = {'atoms': self.plot}
 
-    def get_html(self, material):
-        return ('Atoms',
-                HTML.format(id=material.id,
+    def get_html(self, material: Material) -> tuple[str, str]:
+        return (HTML.format(id=material.id,
                             formula=material.formula_html),
                 FOOTER.format(atoms_json=self.plot(material, 1)))
 
-    def plot(self, material, repeat: int = 1):
-        # repeat = min(repeat, len(atoms) * r**p = 1000)
+    def plot(self, material: Material, repeat: int = 1) -> str:
+        assert repeat < 5, 'DOS!'
         atoms = material.atoms * repeat
         x, y, z = atoms.positions.T
-        fig = go.Figure(
-            data=[
-                go.Scatter3d(
-                    x=x,
-                    y=y,
-                    z=z,
-                    mode='markers')])
+        fig = go.Figure(data=[go.Scatter3d(x=x, y=y, z=z,
+                                           mode='markers')])
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
