@@ -7,7 +7,7 @@ HTML = """
 
 
 class DOSSection(Section):
-    title = 'Density of state'
+    title = 'Density of states'
 
     def get_html(self, material: Material) -> tuple[str, str]:
         return (HTML.format(id=material.id), '')
