@@ -11,7 +11,10 @@ authors = [
   { name="Jens Jørgen Mortensen", email="jjmo@dtu.dk" },
 ]
 dependencies = [
-    "bottle"]
+    "bottle",
+    "plotly",
+    "pandas",
+    "ase"]
 requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: 3",
