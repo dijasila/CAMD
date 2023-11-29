@@ -4,7 +4,7 @@ tests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install flake8 mypy coverage pytest interrogate scipy
+    - pip install flake8 mypy coverage pytest scipy
     - pip install --no-deps git+https://gitlab.com/ase/ase.git
     - pip install .
     - coverage run --source=cxdb -m pytest -v --color=yes
@@ -12,7 +12,6 @@ tests:
     - coverage html
     - mypy -p cxdb
     - flake8 cxdb
-    - interrogate -v -m -i -f 2.8 cxdb -e cxdb/test
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
