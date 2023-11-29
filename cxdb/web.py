@@ -55,7 +55,7 @@ class C2DB:
                         sections=sections,
                         footer=footer)
 
-    def stop(self, code: int):
+    def stop(self, code: int) -> str:
         if code == 117:
             sys.stderr.close()
         return ''
@@ -71,7 +71,7 @@ class C2DB:
         return (material.folder / filename).read_bytes()
 
 
-def main():
+def main() -> None:
     materials = {}
     for arg in sys.argv[1:]:
         folder = Path(arg)
