@@ -11,6 +11,7 @@ from cxdb.dos import DOSSection
 from cxdb.material import Material
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
+# STATIC_PATH ???
 
 
 class C2DB:
@@ -22,6 +23,7 @@ class C2DB:
         self.app.route('/material/<id>')(self.material)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<id>/<filename>')(self.png)
+        self.app.route('/stop/<code:int>')(self.stop)
 
         self.sections = [AtomsSection(),
                          DOSSection(),
@@ -53,6 +55,11 @@ class C2DB:
                         sections=sections,
                         footer=footer)
 
+    def stop(self, code: int):
+        if code == 117:
+            sys.stderr.close()
+        return ''
+
     def callback(self) -> str:
         name = request.query.name
         id = request.query.id
@@ -60,7 +67,8 @@ class C2DB:
         return self.callbacks[name](material, int(request.query.data))
 
     def png(self, id: str, filename: str) -> bytes:
-        return (Path(id) / filename).read_bytes()
+        material = self.materials[id]
+        return (material.folder / filename).read_bytes()
 
 
 def main():
@@ -70,7 +78,7 @@ def main():
         id = folder.name
         materials[id] = Material(folder, id)
 
-    C2DB(materials).app.run(host='localhost', port=8080, debug=True)
+    C2DB(materials).app.run(host='0.0.0.0', port=8081, debug=True)
 
 
 if __name__ == '__main__':
