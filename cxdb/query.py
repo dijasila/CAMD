@@ -34,23 +34,33 @@ def parse1(q: str) -> str:
     n1 = len(q)
     p1 = q.count('(')
     p2 = q.count(')')
-    assert p1 == p2
+    if p1 != p2:
+        raise SyntaxError('Mismatched parenthesis')
+
+    # number of parsed characters (should match n1 when we are done):
     n = p1 + p2
+
     q = q.replace(',', ' and ')
     n2 = len(q)
     n += (n2 - n1) // 4
+
     q = q.replace('|', ' or ')
     n3 = len(q)
     n += (n3 - n2) // 3
-    h = []
+
+    h: list[str] = []  # value strings
     for x in ['=', '<', '>', '<=', '>=', '!=']:
         y = '==' if x == '=' else x
+
+        # Find Ag=7, Cu<=7, ...
         matches = reversed(list(re.finditer(fr'([A-Z][a-z]?{x}[0-9]+)', q)))
         for m in matches:
             i, j = m.span()
             k, v = m[1].split(x)
             q = q[:i] + f'(n.get({k!r}, 0) {y} {v})' + q[j:]
             n += j - i
+
+        # Find key=value, key>value, ...
         matches = reversed(
             list(re.finditer(fr'([a-z][a-z0-9_]+{x}[-A-Za-z0-9.+_]+)', q)))
         for m in matches:
@@ -60,19 +70,26 @@ def parse1(q: str) -> str:
             q = q[:i] + f'({k!r} in k and k[{k!r}] {y} #{len(h)})' + q[j:]
             h.append(v)
             n += j - i
+
+    # Find Ag7O14, ...
     matches = reversed(list(re.finditer(r'([A-Z][a-z]?[0-9]*)+', q)))
     for m in matches:
         i, j = m.span()
         if j < len(q) and q[j] == "'":
-            continue
+            continue  # we already dealt with this one
         f = Formula(m[0])
         qf = ' and '.join(f'(n.get({s!r}, 0) >= {n})'
                           for s, n in f.count().items())
         q = q[:i] + f'({qf})' + q[j:]
         n += j - i
+
+    # Insert value strings:
     for i, v in reversed(list(enumerate(h))):
         q = q.replace(f'#{i}', v)
-    assert n1 == n
+
+    if n1 != n:
+        raise SyntaxError('Bad query string')
+
     return q
 
 
