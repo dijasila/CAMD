@@ -41,7 +41,7 @@ class AtomsSection(Section):
 
     def get_html(self, material: Material) -> tuple[str, str]:
         return (HTML.format(id=material.id,
-                            formula=material.formula_html),
+                            formula=material.columns['formula'].string),
                 FOOTER.format(atoms_json=self.plot(material, 1)))
 
     def plot(self, material: Material, repeat: int = 1) -> str:

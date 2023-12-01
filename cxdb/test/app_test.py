@@ -21,9 +21,9 @@ def test_app(tmp_path):
     (f / 'dos.png').write_text('DOS')
     (f / 'bader.json').write_text('{"charges": [1.23, 0.0]}')
     c2db = C2DB({'h2': Material(f, 'h2')})
-    out = c2db.index('H=2')
+    out = c2db.index({'filter': 'H=2'})
     assert 'H<sub>2' in out
-    out = c2db.index('H=3,energy=42.0')
+    out = c2db.index({'filter': 'H=3,energy=42.0'})
     assert 'H<sub>2' not in out
     out = c2db.material('h2')
     assert 'Atoms' in out

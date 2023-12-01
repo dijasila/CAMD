@@ -1,16 +1,22 @@
-from functools import cached_property
 from pathlib import Path
+from typing import NamedTuple
 
 from ase.io import read
 from ase import Atoms
 from cxdb.query import parse
+from cxdb.paging import get_pages
+
+
+class Column(NamedTuple):
+    value: bool | int | float | str
+    string: str
 
 
 class Material:
-    header = ['formula',
-              'energy [eV]',
-              'volume [Å<sup>3</sup>]',
-              '']
+    headers = {'formula': 'Formula',
+               'energy': 'energy [eV]',
+               'volume': 'volume [Å<sup>3</sup>]',
+               'id': 'Unique ID'}
 
     def __init__(self, folder: Path, id: str):
         self.folder = folder
@@ -18,26 +24,50 @@ class Material:
         atoms = read(folder / 'rlx.traj')
         assert isinstance(atoms, Atoms)
         self.atoms = atoms
-        self.energy = self.atoms.get_potential_energy()
+
+        energy = self.atoms.get_potential_energy()
+        volume = self.atoms.get_volume()
+
         formula = self.atoms.symbols.formula.convert('periodic')
-        self.formula_html = formula.format('html')
-        self.key_value_pairs = {'energy': self.energy}
+        s11y, _, _ = formula.stoichiometry()
+
+        self.columns = {
+            'energy': Column(energy, f'{energy:.3f}'),
+            'volume': Column(volume, f'{volume:.3f}'),
+            'formula': Column(formula.format(), formula.format('html')),
+            's11y': Column(s11y.format(), s11y.format('html')),
+            'id': Column(id, id)}
+
+        self.values = {key: column.value
+                       for key, column in self.columns.items()}
         self.count = formula.count()
 
-    @cached_property
-    def columns(self) -> list[str]:
-        return [
-            self.formula_html,
-            f'{self.energy:.3f}',
-            f'{self.atoms.get_volume():.3f}']
+    def __getitem__(self, key):
+        return self.values[key]
 
     def check(self, func):
-        return func(self.count, self.key_value_pairs)
+        return func(self.count, self.values)
 
 
-def get_rows(materials, query):
-    func = parse(query)
-    rows = [(id, material.columns)
-            for id, material in materials.items()
-            if material.check(func)]
-    return rows, Material.header
+def get_rows(materials, session):
+    func = parse(session.filter)
+    rows = materials.values()
+
+    if session.sort:
+        def key(material):
+            return material.values.get(session.sort)
+        rows = sorted(rows, key=key)
+        if session.direction == -1:
+            rows = reversed(rows)
+    rows = [material for material in rows if material.check(func)]
+    page = session.page
+    n = session.rows_per_page
+    pages = get_pages(page, len(rows), n)
+    rows = rows[n * page:n * (page + 1)]
+    table = [(material.id,
+              [material.columns[name].string
+               for name in session.columns])
+             for material in rows]
+    return (table,
+            [(name, Material.headers[name]) for name in session.columns],
+            pages)

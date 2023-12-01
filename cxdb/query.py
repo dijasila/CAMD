@@ -34,6 +34,8 @@ def parse1(q: str) -> str:
     "(n.get('H', 0) > 7) and ((n.get('Ag', 0) == 1) or (n.get('Cu', 0) == 1))"
     """
     q = q.replace(' ', '')
+    if not q:
+        return 'True'
     n1 = len(q)
     p1 = q.count('(')
     p2 = q.count(')')

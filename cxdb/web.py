@@ -9,6 +9,7 @@ from cxdb.atoms import AtomsSection
 from cxdb.bader import BaderSection
 from cxdb.dos import DOSSection
 from cxdb.material import Material, get_rows
+from cxdb.session import Sessions
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 # STATIC_PATH ???
@@ -23,7 +24,7 @@ class C2DB:
         self.app.route('/material/<id>')(self.material)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<id>/<filename>')(self.png)
-        self.app.route('/stop/<code:int>')(self.stop)
+        self.app.route('/help')(self.help)
 
         self.sections = [AtomsSection(),
                          DOSSection(),
@@ -32,15 +33,32 @@ class C2DB:
         for section in self.sections:
             self.callbacks.update(section.callbacks)
 
-    def index(self, query: str | None = None) -> str:
-        query = query or request.query.get('query', '')
-        rows, header = get_rows(self.materials, query)
+        self.sessions = Sessions({'id', 'energy', 'volume', 'formula'})
+
+        self.stoichiometries = {'Any'}
+        for material in materials.values():
+            self.stoichiometries.add(material['s11y'])
+
+    def index(self,
+              query: dict | None = None) -> str:
+        if query is None:
+            query = request.query
+
+        session = self.sessions.get(int(query.get('sid', '-1')))
+        session.update(query)
+
+        rows, header, pages = get_rows(self.materials, session)
         return template('index.html',
                         query=query,
+                        stoichiometries=self.stoichiometries,
+                        session=session,
+                        pages=pages,
                         rows=rows,
                         header=header)
 
     def material(self, id: str) -> str:
+        if id == 'stop':
+            sys.stderr.close()
         material = self.materials[id]
         sections = []
         footer = ''
@@ -54,16 +72,14 @@ class C2DB:
                         sections=sections,
                         footer=footer)
 
-    def stop(self, code: int) -> str:
-        if code == 117:
-            sys.stderr.close()
-        return ''
-
     def callback(self) -> str:
         name = request.query.name
         id = request.query.id
         material = self.materials[id]
         return self.callbacks[name](material, int(request.query.data))
+
+    def help(self):
+        return template('help.html')
 
     def png(self, id: str, filename: str) -> bytes:
         material = self.materials[id]
