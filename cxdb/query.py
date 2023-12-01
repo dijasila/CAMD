@@ -21,6 +21,9 @@ def parse(q: str) -> Callable[[dict[str, int], dict[str, Any]], bool]:
 def parse1(q: str) -> str:
     """Quick'n'dirty hacky parsing of query string to Python expression.
 
+    In the Python expression, *n* is a dict mapping chemical symbols their
+    numbers and *k* is a key-value dict:
+
     >>> parse1('H2')
     "((n.get('H', 0) >= 2))"
     >>> parse1('H2,xc=PBE')
