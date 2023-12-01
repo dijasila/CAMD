@@ -47,14 +47,15 @@ class C2DB:
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(query)
 
-        rows, header, pages = get_rows(self.materials, session)
+        rows, header, pages, new_columns = get_rows(self.materials, session)
         return template('index.html',
                         query=query,
                         stoichiometries=self.stoichiometries,
                         session=session,
                         pages=pages,
                         rows=rows,
-                        header=header)
+                        header=header,
+                        new_columns=new_columns)
 
     def material(self, id: str) -> str:
         if id == 'stop':

@@ -70,4 +70,6 @@ def get_rows(materials, session):
              for material in rows]
     return (table,
             [(name, Material.headers[name]) for name in session.columns],
-            pages)
+            pages,
+            {(name, value) for name, value in Material.headers.items()
+             if name not in session.columns})
