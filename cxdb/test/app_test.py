@@ -3,12 +3,6 @@ from cxdb.material import Material
 from ase import Atoms
 from ase.calculators.emt import EMT
 
-h2 = """2
-
-H 0.0 0.0 0.0
-H 0.7 0.0 0.0
-"""
-
 
 def test_app(tmp_path):
     f = tmp_path / 'H2'
@@ -25,6 +19,9 @@ def test_app(tmp_path):
     assert 'H<sub>2' in out
     out = c2db.index({'filter': 'H=3,energy=42.0'})
     assert 'H<sub>2' not in out
+    c2db.index({'toggle': 'energy'})
+    c2db.index({'sort': 'energy'})
+    c2db.index({'page': '0'})
     out = c2db.material('h2')
     assert 'Atoms' in out
     assert 'Density of states' in out

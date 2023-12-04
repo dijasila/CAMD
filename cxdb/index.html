@@ -28,7 +28,7 @@
   % end
   <form>
   <input type="hidden" name="sid" value="{{ session.sid }}">
-   <select name="add">
+   <select name="toggle">
    % for name, value in new_columns:
     <option value="{{ name }}">{{ !value }}</option>
    % end

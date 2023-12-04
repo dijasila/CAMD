@@ -8,15 +8,15 @@ class Sessions:
         self.sessions: dict[int, Session] = {}
 
     def get(self, sid):
-        if len(self.sessions) > self.max_sessions:
-            self.sessions = {sid: session
-                             for sid, session
-                             in self.sessions.items()[self.max_sessions // 2:]}
-        print(sid, list(self.sessions), self.sid)
         if sid not in self.sessions:
             sid = self.sid
             self.sid += 1
             self.sessions[sid] = Session(sid, self.columns)
+            if len(self.sessions) > self.max_sessions:
+                self.sessions = {
+                    sid: session
+                    for sid, session
+                    in list(self.sessions.items())[self.max_sessions // 2:]}
         return self.sessions[sid]
 
 
