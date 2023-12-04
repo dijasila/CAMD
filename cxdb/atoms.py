@@ -14,6 +14,7 @@ from scipy.spatial import ConvexHull
 
 from cxdb.material import Material
 from cxdb.section import Section
+from cxdb.html import table
 
 HTML = """
 <h4>{formula}</h4>
@@ -46,7 +47,10 @@ class AtomsSection(Section):
         self.callbacks = {'atoms': self.plot}
 
     def get_html(self, material: Material) -> tuple[str, str]:
-        return (HTML.format(id=material.id,
+        tbl = table(None, [(name, material.columns[key].string)
+                           for key, name in material.headers.items()])
+        return (HTML.format(table=tbl,
+                            id=material.id,
                             formula=material.columns['formula'].string),
                 FOOTER.format(atoms_json=self.plot(material, 1)))
 
