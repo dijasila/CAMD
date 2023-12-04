@@ -5,7 +5,7 @@ class Sessions:
         self.columns = columns
         self.max_sessions = max_sessions
         self.sid = 0
-        self.sessions = {}
+        self.sessions: dict[int, Session] = {}
 
     def get(self, sid):
         if len(self.sessions) > self.max_sessions:
