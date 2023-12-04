@@ -17,7 +17,7 @@
    </select>
    <button type="submit">Search</button>
   </form>
-   <button type="submit" href="/help">Help</button>
+  <a href="/help">Help</a>
   <br/>
   % for page, text in pages:
   %  if page == -1:
@@ -26,13 +26,17 @@
   <a href="?sid={{ session.sid }}&page={{ page }}">{{ text }}</a>
   %  end
   % end
+  <form>
+  <input type="hidden" name="sid" value="{{ session.sid }}">
    <select name="add">
    % for name, value in new_columns:
     <option value="{{ name }}">{{ !value }}</option>
    % end
    </select>
+   </form>
   <br/>
   <table>
+  <thead>
    <tr>
    % for name, column in header:
     <th>
@@ -41,6 +45,8 @@
     </th>
    % end
    </tr>
+  <thead>
+  <tbody>
    % for id, columns in rows:
    <tr>
     % for column in columns:
@@ -48,6 +54,7 @@
     % end
    </tr>
    % end
+  </tbody>
   </table>
  </body>
 </html>

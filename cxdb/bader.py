@@ -14,5 +14,5 @@ class BaderSection(Section):
             return ('', '')
         charges = json.loads(path.read_text())['charges']
         return table(['#', 'Chemical symbol', 'Charges [|e|]'],
-                     [(n, s, c) for n, (s, c)
+                     [(n, s, f'{c:.2f}') for n, (s, c)
                       in enumerate(zip(material.atoms.symbols, charges))]), ''
