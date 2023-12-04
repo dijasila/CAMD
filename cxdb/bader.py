@@ -1,8 +1,8 @@
-import pandas as pd
 import json
 
 from cxdb.section import Section
 from cxdb.material import Material
+from cxdb.html import table
 
 
 class BaderSection(Section):
@@ -13,6 +13,6 @@ class BaderSection(Section):
         if not path.is_file():
             return ('', '')
         charges = json.loads(path.read_text())['charges']
-        df = pd.DataFrame(data={'Chemical symbol': material.atoms.symbols,
-                                'Charges': charges})
-        return (df.to_html(), '')
+        return table(['#', 'Chemical symbol', 'Charges [|e|]'],
+                     [(n, s, c) for n, (s, c)
+                      in enumerate(material.atoms.symbols, charges)]), ''

@@ -8,12 +8,18 @@ from cxdb.material import Material
 
 HTML = """
 <h4>{formula}</h4>
-<input
-  type="text"
-  name="repeat"
-  onchange="cb(this.value, 'atoms', '{id}')"
-  placeholder="repeat">
-<div id='atoms' class='atoms'></div>
+<div class="wrapper">
+ <div class="col1">
+  {table}
+ </div>
+ <div class="col2">
+  <input type="text"
+   name="repeat"
+   onchange="cb(this.value, 'atoms', '{id}')"
+   placeholder="repeat">
+  <div id='atoms' class='atoms'></div>
+ </div>
+</div>
 """
 
 FOOTER = """
