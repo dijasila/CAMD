@@ -5,26 +5,47 @@
  </head>
  <body>
   <form>
-   <input
-    type="text"
-    name="query"
-    value="{{ query }}"
-    placeholder="chemical symbol">
-   <button type="submit">Submit</button>
+  <input type="hidden" name="sid" value="{{ session.sid }}">
+   <input type="text"
+          name="filter"
+          value="{{ query.get('filter', '') }}"
+          placeholder="chemical symbol">
+   <select name="stoichiometry">
+   % for s11y in stoichiometries:
+    <option value="{{ s11y }}">{{ s11y }}</option>
+   % end
+   </select>
+   <button type="submit">Search</button>
   </form>
+   <button type="submit" href="/help">Help</button>
+  <br/>
+  % for page, text in pages:
+  %  if page == -1:
+  ...
+  %  else:
+  <a href="?sid={{ session.sid }}&page={{ page }}">{{ text }}</a>
+  %  end
+  % end
+   <select name="add">
+   % for name, value in new_columns:
+    <option value="{{ name }}">{{ !value }}</option>
+   % end
+   </select>
   <br/>
   <table>
    <tr>
-   % for column in header:
-    <th>{{ !column }}</th>
+   % for name, column in header:
+    <th>
+     <a href="?sid={{ session.sid }}&sort={{ name }}">{{ !column }}</a>
+     <a href="?sid={{ session.sid }}&toggle={{ name }}">-</a>
+    </th>
    % end
    </tr>
    % for id, columns in rows:
    <tr>
     % for column in columns:
-    <td>{{ !column }}</td>
+    <td><a href=/material/{{ id }}>{{ !column }}</a></td>
     % end
-    <td><a href=/material/{{ id }}>{{ id }}</a></td>
    </tr>
    % end
   </table>
