@@ -2,7 +2,7 @@ import json
 
 from cxdb.section import Section
 from cxdb.material import Material
-from cxdb.html import table
+from cxdb.utils import table
 
 
 class BaderSection(Section):
@@ -15,4 +15,4 @@ class BaderSection(Section):
         charges = json.loads(path.read_text())['charges']
         return table(['#', 'Chemical symbol', 'Charges [|e|]'],
                      [(n, s, c) for n, (s, c)
-                      in enumerate(material.atoms.symbols, charges)]), ''
+                      in enumerate(zip(material.atoms.symbols, charges))]), ''

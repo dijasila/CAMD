@@ -14,7 +14,7 @@ from scipy.spatial import ConvexHull
 
 from cxdb.material import Material
 from cxdb.section import Section
-from cxdb.html import table
+from cxdb.utils import table
 
 HTML = """
 <h4>{formula}</h4>
