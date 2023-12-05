@@ -73,11 +73,13 @@ class C2DB:
                         sections=sections,
                         footer=footer)
 
-    def callback(self) -> str:
-        name = request.query.name
-        id = request.query.id
+    def callback(self, query: dict | None = None) -> str:
+        if query is None:
+            query = request.query
+        name = query['name']
+        id = query['id']
         material = self.materials[id]
-        return self.callbacks[name](material, int(request.query.data))
+        return self.callbacks[name](material, int(query['data']))
 
     def help(self):
         return template('help.html')

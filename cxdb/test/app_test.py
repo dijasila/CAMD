@@ -26,3 +26,5 @@ def test_app(tmp_path):
     assert 'Atoms' in out
     assert 'Density of states' in out
     assert '1.23' in out
+    dct = c2db.callback(dict(name='atoms', id='h2', data='2'))
+    assert 'data' in dct
