@@ -1,24 +1,93 @@
+<!DOCTYPE html>
 <html>
  <head>
-  <link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css">
+ <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <title>C2DB</title>
  </head>
- <body>
-  <form>
-  <input type="hidden" name="sid" value="{{ session.sid }}">
-   <input type="text"
+  <body >
+    <div class="container" style="padding: 0px;">
+      <div class="row">
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+            <ul class="nav navbar-nav navbar-right">
+              <li>
+                <a href="https://cmr.fysik.dtu.dk/">CMR</a>
+              </li>
+              <li>
+                <a href="https://cmr.fysik.dtu.dk/c2db/c2db.html">
+                  More information</a>
+              </li>
+              <li>
+                <a href="/c2db/">Back to search page</a>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </div>
+    </div> <!--end of container-->
+
+<div class="container">
+  <div class="row" style="padding-bottom:15px;padding-right:50px">
+    <div class="col-lg-11">
+      <div class="col-lg-9"><h1>Computational 2D Materials Database</h1></div>
+      <div class="col-lg-2" style="float:right">
+        <img alt="C2DB logo" width=300 src="https://cmr.fysik.dtu.dk/_images/c2db-db.png">
+      </div>
+    </div>
+  </div>
+
+  <div class="well mt-2">
+    <form>
+      <input type="hidden" name="sid" value="{{ session.sid }}">
+      <input type="text"
           name="filter"
           value="{{ query.get('filter', '') }}"
           placeholder="chemical symbol">
-   <select name="stoichiometry">
-   % for name, html in stoichiometries:
-    <option value="{{ name }}">{{ !html }}</option>
-   % end
-   </select>
-   <button type="submit">Search</button>
-  </form>
-  <a href="/help">Help</a>
-  <br/>
+      <button type="submit">Search</button>
+      <br><br><b>Notice:</b> We are continuously expanding the database. Thus data may temporarily be incomplete for some materials.<br><br>
+      <table class="search">
+        <tr>
+          <td>
+ Stoichiometry (A, AB, AB2, ...) </td><td>:</td>
+          <td>
+          <select name="stoichiometry">
+          % for name, html in stoichiometries:
+              <option value="{{ name }}">{{ !html }}</option>
+          % end
+          </select>
+          </td>
+        </tr>
+        <tr>
+          <td> Number of chemical species </td><td>:</td>
+          <td>
+            <select name="nspecies" class="ase-input ase-button">
+
+              <option value="1">1</option>
+
+              <option value="2">2</option>
+
+              <option value="3">3</option>
+
+              <option value="4">4</option>
+
+              <option value="5">5</option>
+
+              <option value="6">6</option>
+
+              <option value="any" selected>Any</option>
+            </select>
+          </td>
+          <td>
+        </tr>
+      </table>
+      <div class="form-group" style="margin-bottom:0px;">
+        <small class="form-text text-muted">
+        <a href="/help" target="_blank">Help</a>
+        </small>
+      </div><br/>
+      <br/>
+    </form>
+  </div>
   % for page, text in pages:
   %  if page == -1:
   ...
@@ -34,7 +103,7 @@
    % end
    </select>
    <button type="submit">Add column</button>
-   </form>
+  </form>
   <br/>
   <table>
   <thead>
@@ -57,5 +126,6 @@
    % end
   </tbody>
   </table>
+ </div>
  </body>
 </html>
