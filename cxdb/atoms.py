@@ -23,7 +23,7 @@ HTML = """
   {table}
  </div>
  <div class="col2">
-  <select onchange="cb(this.value, 'atoms', '{id}')">
+  <select onchange="cb(this.value, 'atoms', '{uid}')">
    <option value="1">1</option>
    <option value="2">2</option>
    <option value="3">3</option>
@@ -49,16 +49,19 @@ class AtomsPanel(Panel):
     def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
 
-    def create_column_data(self, material):
+    def get_column_data(self, material):
         energy = material.atoms.get_potential_energy()
         return {'energy': (energy, f'{energy:.3f}')}
 
-    def get_html(self, material: Material) -> tuple[str, str]:
-        tbl = table(None, [(name, material.columns[key].string)
-                           for key, name in material.headers.items()])
+    def get_html(self,
+                 material: Material,
+                 column_names: dict[str, str]) -> tuple[str, str]:
+        tbl = table(None,
+                    [(column_names[name], material[name])
+                     for name in ['energy', 'volume', 'stoichiometry', 'uid']])
         return (HTML.format(table=tbl,
-                            id=material.id,
-                            formula=material.columns['formula'].string),
+                            uid=material.uid,
+                            formula=material['formula']),
                 FOOTER.format(atoms_json=self.plot(material, 1)))
 
     def plot(self, material: Material, repeat: int = 1) -> str:

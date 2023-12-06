@@ -8,7 +8,9 @@ from cxdb.utils import table
 class BaderPanel(Panel):
     title = 'Bader-charge analysis'
 
-    def get_html(self, material: Material) -> tuple[str, str]:
+    def get_html(self,
+                 material: Material,
+                 column_names: dict[str, str]) -> tuple[str, str]:
         path = material.folder / 'bader.json'
         if not path.is_file():
             return ('', '')

@@ -33,6 +33,7 @@ def parse1(q: str) -> str:
     >>> parse1('H>7,(Ag=1|Cu=1)')
     "(n.get('H', 0) > 7) and ((n.get('Ag', 0) == 1) or (n.get('Cu', 0) == 1))"
     """
+    q0 = q
     q = q.replace(' ', '')
     if not q:
         return 'True'
@@ -93,7 +94,7 @@ def parse1(q: str) -> str:
         q = q.replace(f'#{i}', v)
 
     if n1 != n:
-        raise SyntaxError('Bad query string')
+        raise SyntaxError(f'Bad query string: {q0!r}')
 
     return q
 

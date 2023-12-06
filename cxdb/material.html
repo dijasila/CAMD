@@ -5,11 +5,11 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js">
   </script>
   <script>
-   function cb(selection, name, id) {
+   function cb(selection, name, uid) {
        $.getJSON(
            {
                url: "/callback",
-               data: { 'data': selection, 'name': name, 'id': id },
+               data: { 'data': selection, 'name': name, 'uid': uid },
                success: function (result) {
                    Plotly.newPlot(name, result, {staticPlot: true});;
                    }
@@ -29,8 +29,8 @@
  </head>
  <body>
  <a href="/">Home</a>
- % for section_title, html in sections:
-  <h3>{{ section_title }}</h3>
+ % for panel_title, html in panels:
+  <h3>{{ panel_title }}</h3>
   {{ !html }}
  % end
  </body>

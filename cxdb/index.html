@@ -11,8 +11,8 @@
           value="{{ query.get('filter', '') }}"
           placeholder="chemical symbol">
    <select name="stoichiometry">
-   % for s11y in stoichiometries:
-    <option value="{{ s11y }}">{{ s11y }}</option>
+   % for name, html in stoichiometries:
+    <option value="{{ name }}">{{ !html }}</option>
    % end
    </select>
    <button type="submit">Search</button>
@@ -33,6 +33,7 @@
     <option value="{{ name }}">{{ !value }}</option>
    % end
    </select>
+   <button type="submit">Add column</button>
    </form>
   <br/>
   <table>
@@ -47,10 +48,10 @@
    </tr>
   <thead>
   <tbody>
-   % for id, columns in rows:
+   % for uid, columns in rows:
    <tr>
     % for column in columns:
-    <td><a href=/material/{{ id }}>{{ !column }}</a></td>
+    <td><a href=/material/{{ uid }}>{{ !column }}</a></td>
     % end
    </tr>
    % end

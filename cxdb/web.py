@@ -5,12 +5,11 @@ from pathlib import Path
 
 from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
 
-from cxdb.atoms import AtomsSection
-from cxdb.bader import BaderSection
-from cxdb.dos import DOSSection
+from cxdb.atoms import AtomsPanel
+from cxdb.bader import BaderPanel
+from cxdb.dos import DOSPanel
 from cxdb.material import Material, Materials
 from cxdb.session import Sessions
-from cxdb.panel import Panel
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -18,31 +17,26 @@ TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 class C2DB:
     def __init__(self,
                  materials: Materials,
-                 panels: list[Panel],
-                 column_names: dict[str, str],
                  initial_columns: set[str],
                  root: Path):
         self.materials = materials
-        self.panels = panels
-        self.column_names = column_names
         self.root = root
 
         self.app = Bottle()
         self.app.route('/')(self.index)
-        self.app.route('/material/<id>')(self.material)
+        self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
-        self.app.route('/png/<id>/<filename>')(self.png)
+        self.app.route('/png/<uid>/<filename>')(self.png)
         self.app.route('/help')(self.help)
 
-        self.callbacks = {}
-        for panel in self.panels:
-            self.callbacks.update(panel.callbacks)
+        self.callbacks = self.materials.get_callbacks()
 
         # User sessions (selcted columns, sorting, filter string, ...)
         self.sessions = Sessions(initial_columns)
 
-        # For selecting materials (A, AB, AB2, ...)
-        self.stoichiometries = {'Any'} + self.materials.stoichiometries()
+        # For selecting materials (Any, A, AB, AB2, ...)
+        self.stoichiometries = [
+            ('Any', 'Any')] + self.materials.stoichiometries()
 
     def index(self,
               query: dict | None = None) -> str:
@@ -52,7 +46,7 @@ class C2DB:
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(query)
 
-        rows, header, pages, new_columns = get_rows(self.materials, session)
+        rows, header, pages, new_columns = self.materials.get_rows(session)
         return template('index.html',
                         query=query,
                         stoichiometries=self.stoichiometries,
@@ -62,19 +56,20 @@ class C2DB:
                         header=header,
                         new_columns=new_columns)
 
-    def material(self, id: str) -> str:
-        if id == 'stop':
+    def material(self, uid: str) -> str:
+        if uid == 'stop':
             sys.stderr.close()
-        material = self.materials[id]
+        material = self.materials[uid]
         panels = []
         footer = ''
-        for panel in self.panels:
-            html1, html2 = panel.get_html(material)
+        for panel in self.materials.panels:
+            html1, html2 = panel.get_html(material,
+                                          self.materials.column_names)
             if html1:
                 panels.append((panel.title, html1))
                 footer += html2
         return template('material.html',
-                        title=id,
+                        title=uid,
                         panels=panels,
                         footer=footer)
 
@@ -82,39 +77,36 @@ class C2DB:
         if query is None:
             query = request.query
         name = query['name']
-        id = query['id']
-        material = self.materials[id]
+        uid = query['uid']
+        material = self.materials[uid]
         return self.callbacks[name](material, int(query['data']))
 
     def help(self):
         return template('help.html')
 
-    def png(self, id: str, filename: str) -> bytes:
-        material = self.materials[id]
-        return static_file(material.folder / filename, self.root)
+    def png(self, uid: str, filename: str) -> bytes:
+        material = self.materials[uid]
+        return static_file(str(material.folder / filename), self.root)
 
 
 def main() -> None:
-    panels = [AtomsSection(),
-              DOSSection(),
-              BaderSection()]
+    panels = [AtomsPanel(),
+              DOSPanel(),
+              BaderPanel()]
 
-    materials = Materials(panels)
-
+    mlist = []
     for arg in sys.argv[1:]:
         folder = Path(arg)
-        id = folder.name
-        material = Material(folder, id)
-        materials.add(material)
+        uid = folder.name
+        mlist.append(Material(folder, uid))
 
-        for panel in panels:
-            panel.update_column_data(material)
+    materials = Materials(mlist, panels)
 
-    initial_columns = {'id', 'energy', 'volume', 'formula'}
+    initial_columns = {'uid', 'energy', 'volume', 'formula'}
 
     root = Path.cwd()
 
-    C2DB(materials, panels, initial_columns, root).app.run(
+    C2DB(materials, initial_columns, root).app.run(
         host='0.0.0.0', port=8081, debug=True)
 
 

@@ -25,18 +25,20 @@ class Session:
         self.sid = sid
         self.columns = columns.copy()
         self.filter = ''
+        self.stoichiometry = 'Any'
         self.page = 0
         self.sort = ''
         self.direction = 1
         self.rows_per_page = 25
 
     def update(self, query):
-        filter = query.get('filter')
-        if filter:
-            if filter != self.filter:
-                self.filter = filter
-                self.page = 0
-                return
+        filter = query.get('filter', '')
+        s11y = query.get('stoichiometry', 'Any')
+        if filter != self.filter or s11y != self.stoichiometry:
+            self.filter = filter
+            self.stoichiometry = s11y
+            self.page = 0
+            return
 
         column = query.get('toggle')
         if column:

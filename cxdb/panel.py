@@ -1,16 +1,20 @@
-from typing import Callable
+from typing import Callable, Any
 from cxdb.material import Material
 
 
 class Panel:
     title: str
+    column_names: dict[str, str] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
-    def get_html(self, material: Material) -> tuple[str, str]:
+    def get_html(self,
+                 material: Material,
+                 column_names: dict[str, str]) -> tuple[str, str]:
         raise NotImplementedError
 
-    def get_column_data(self, material: Material) -> dict[str, tuple[Any, str]]:
-        raise NotImplementedError
+    def get_column_data(self,
+                        material: Material) -> dict[str, tuple[Any, str]]:
+        return {}
 
     def update_column_data(self, material: Material) -> None:
         data = self.get_column_data(material)
