@@ -1,4 +1,4 @@
-from cxdb.section import Section
+from cxdb.panel import Panel
 from cxdb.material import Material
 
 HTML = """
@@ -6,7 +6,7 @@ HTML = """
 """
 
 
-class DOSSection(Section):
+class DOSPanel(Panel):
     title = 'Density of states'
 
     def get_html(self, material: Material) -> tuple[str, str]:

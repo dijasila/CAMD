@@ -1,11 +1,11 @@
 import json
 
-from cxdb.section import Section
+from cxdb.panel import Panel
 from cxdb.material import Material
 from cxdb.utils import table
 
 
-class BaderSection(Section):
+class BaderPanel(Panel):
     title = 'Bader-charge analysis'
 
     def get_html(self, material: Material) -> tuple[str, str]:

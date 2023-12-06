@@ -13,7 +13,7 @@ from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from cxdb.material import Material
-from cxdb.section import Section
+from cxdb.panel import Panel
 from cxdb.utils import table
 
 HTML = """
@@ -41,11 +41,17 @@ Plotly.newPlot('atoms', graphs, {{}});
 """
 
 
-class AtomsSection(Section):
+class AtomsPanel(Panel):
     title = 'Atoms'
+
+    column_names = {'energy': 'energy [eV]'}
 
     def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
+
+    def create_column_data(self, material):
+        energy = material.atoms.get_potential_energy()
+        return {'energy': (energy, f'{energy:.3f}')}
 
     def get_html(self, material: Material) -> tuple[str, str]:
         tbl = table(None, [(name, material.columns[key].string)
