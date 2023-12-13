@@ -1,11 +1,19 @@
+from textwrap import wrap
+
 import numpy as np
-from cxdb.panel import Panel, creates
+from ase.io.jsonio import decode
+
 from cxdb.material import Material
+from cxdb.panel import Panel, creates
 
 HTML = """
 % for
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
 """
+
+
+def read_row_data(path):
+    return decode(path.read_text())['kwargs']['data']
 
 
 class ShiftPanel(Panel):
@@ -19,7 +27,7 @@ class ShiftPanel(Panel):
 
     @creates('shift1.png')
     def make_figures(self, material):
-        data = ...  # row.data.get('results-asr.shift.json')
+        data = read_row_data('results-asr.shift.json')
 
         # Make the table
         sym_chi = data.get('symm')
@@ -37,9 +45,8 @@ class ShiftPanel(Panel):
                 relation_new = ''
             else:
                 # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
-                relation_new = ''  # '\n'.join(wrap(relation, 50))
+                relation_new = '\n'.join(wrap(relation, 50))
             table.append((pol, relation_new))
-        """
         opt = {'type': 'table',
                'header': ['Element', 'Relations'],
                'rows': table}
@@ -53,14 +60,14 @@ class ShiftPanel(Panel):
             cols.append([opt, None])
         else:
             cols.append([fig(f'shift{npan}.png'), opt])
-        """
 
 
 def plot_shift(row, *filename):
-    import matplotlib.pyplot as plt
     import os
     from pathlib import Path
     from textwrap import wrap
+
+    import matplotlib.pyplot as plt
 
     # Read the data from the disk
     data = row.data.get('results-asr.shift.json')
