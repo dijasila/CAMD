@@ -18,6 +18,10 @@ def parse(q: str) -> Callable[[Index], set[int]]:
     >>> i = Index([({'H': 2}, {'xc': 'PBE'})])
     >>> f(i)
     {0}
+    >>> f = parse('gap > 5.0')
+    >>> i = Index([({'H': 2}, {'gap': 10.0}), ({'Si': 2}, {'gap': 1.1})])
+    >>> f(i)
+    {0}
     """
     q = parse1(q)
     return eval(f'lambda i: {q}')
@@ -150,7 +154,7 @@ class Index:
             for j, (n, i) in enumerate(data):
                 ids.append(i)
                 if n > m:
-                    indices.append(j)
+                    indices += [j] * (n - m)
                     m = n
             indices.append(j + 1)
             self.integers[symbol] = (nmin, nmax, ids, indices)
@@ -161,7 +165,7 @@ class Index:
             data.sort()
             ids = [i for value, i in data]
             values = [value for value, i in data]
-            self.floats[name] = (ids, values)
+            self.floats[name] = (values, ids)
 
     def key(self, name, op, value):
         if name in chemical_symbols:
@@ -209,7 +213,7 @@ class Index:
             op = '<'
         if op == '>':
             value = np.nextafter(value, value + 1)
-            op = '<='
+            op = '>='
         j1 = bisect(values, value)
         N = len(values)
         if op == '=':
@@ -251,10 +255,10 @@ class Index:
         if op == '>':
             if n >= nmax:
                 return set()
-            if n <= nmin:
-                n = nmin
+            if n < nmin:
+                n = nmin - 1
             d = n - nmin
-            j = indices[d]
+            j = indices[d + 1]
             return set(ids[j:])
         assert False, op
 
@@ -286,13 +290,15 @@ def bisect(values, value):
     j1 = 0
     j2 = N - 1
     while True:
-        j = (j1 + j2) // 2
+        j = (j1 + j2 + 1) // 2
         if values[j] < value:
+            if j == j1:
+                return j
             j1 = j
         else:
+            if j == j2:
+                return j
             j2 = j
-        if j1 == j2:
-            return j
 
 
 if __name__ == '__main__':
