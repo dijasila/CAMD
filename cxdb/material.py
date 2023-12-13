@@ -2,7 +2,7 @@ from pathlib import Path
 
 from ase.io import read
 from ase import Atoms
-from cxdb.query import parse
+from cxdb.query import parse, Index
 from cxdb.paging import get_pages
 from cxdb.session import Session
 
@@ -37,9 +37,6 @@ class Material:
     def __getitem__(self, name):
         return self.html_reprs[name]
 
-    def check(self, func):
-        return func(self.count, self.values)
-
 
 class Materials:
     def __init__(self, materials, panels):
@@ -58,6 +55,11 @@ class Materials:
             for panel in panels:
                 panel.update_column_data(material)
             self._materials[material.uid] = material
+
+        self.index = Index([(mat.count, mat.values)
+                            for mat in self._materials.values()])
+        self.i2uid = {i: mat.uid
+                      for i, mat in enumerate(self._materials.values())}
 
         self.panels = panels
 
@@ -84,15 +86,13 @@ class Materials:
                 filter += ','
             filter += f'stoichiometry={session.stoichiometry}'
         func = parse(filter)
-        rows = self._materials.values()
+        rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
 
         if session.sort:
             def key(material):
                 return material.values.get(session.sort)
-            rows = sorted(rows, key=key)
-            if session.direction == -1:
-                rows = reversed(rows)
-        rows = [material for material in rows if material.check(func)]
+            rows = sorted(rows, key=key, reverse=session.direction == -1)
+
         page = session.page
         n = session.rows_per_page
         pages = get_pages(page, len(rows), n)

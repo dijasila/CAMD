@@ -5,7 +5,7 @@ def table(header: list[str] | None, rows: list[Iterable]) -> str:
     """Create HTML table.
 
     >>> print(table(['A', 'B'], [[1.2, 'hello'], [2.0, 'hi!']]))
-    <table>
+    <table class="table table-striped">
      <thead>
       <tr>
        <th>A</th>
@@ -31,7 +31,7 @@ def table(header: list[str] | None, rows: list[Iterable]) -> str:
                 '</th>\n   <th>'.join(header) +
                 '</th>\n  </tr>\n </thead>\n')
     return (
-        f'<table>\n{head} <tbody>\n  <tr>\n   ' +
+        f'<table class="table table-striped">\n{head} <tbody>\n  <tr>\n   ' +
         '\n  </tr>\n  <tr>\n   '.join(
             '\n   '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
