@@ -19,7 +19,7 @@ class ShiftPanel(Panel):
 
     @creates('shift1.png')
     def make_figures(self, material):
-        data = row.data.get('results-asr.shift.json')
+        data = ...  # row.data.get('results-asr.shift.json')
 
         # Make the table
         sym_chi = data.get('symm')
@@ -37,8 +37,9 @@ class ShiftPanel(Panel):
                 relation_new = ''
             else:
                 # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
-                relation_new = '\n'.join(wrap(relation, 50))
+                relation_new = ''  # '\n'.join(wrap(relation, 50))
             table.append((pol, relation_new))
+        """
         opt = {'type': 'table',
                'header': ['Element', 'Relations'],
                'rows': table}
@@ -52,6 +53,7 @@ class ShiftPanel(Panel):
             cols.append([opt, None])
         else:
             cols.append([fig(f'shift{npan}.png'), opt])
+        """
 
 
 def plot_shift(row, *filename):
@@ -77,7 +79,7 @@ def plot_shift(row, *filename):
     # Plot the data and add the axis labels
     sym_chi = data['symm']
     if len(sym_chi) == 1:
-        raise CentroSymmetric
+        raise ValueError  # CentroSymmetric
     sigma = data['sigma']
 
     if not sigma:

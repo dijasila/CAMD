@@ -1,8 +1,9 @@
+from __future__ import annotations
 import functools
 import re
 import sys
 from collections import defaultdict
-from typing import Any, Callable
+from typing import Callable
 
 import numpy as np
 from ase.data import chemical_symbols
@@ -10,7 +11,7 @@ from ase.formula import Formula
 
 
 @functools.lru_cache
-def parse(q: str) -> Callable[[dict[str, int], dict[str, Any]], bool]:
+def parse(q: str) -> Callable[[Index], set[int]]:
     """Convert query string to Python function.
 
     >>> f = parse('H2,xc=PBE')
@@ -132,6 +133,8 @@ class Index:
                     self.strings[name][value].add(i)
                 elif isinstance(value, float):
                     floats[name].append((value, i))
+                elif isinstance(value, int, bool):
+                    integers[name].append((int(value), i))
                 else:
                     1 / 0
 
@@ -154,6 +157,7 @@ class Index:
 
         self.floats = {}
         for name, data in floats.items():
+            assert name not in self.integers
             data.sort()
             ids = [i for value, i in data]
             values = [value for value, i in data]
@@ -190,6 +194,11 @@ class Index:
 
         if name in self.floats:
             return self.float_key(name, op, value)
+
+        if name in self.integers:
+            return self.integer_key(name, op, value)
+
+        return set()
 
     def float_key(self, name, op, value):
         values, ids = self.floats[name]
@@ -260,6 +269,15 @@ class Index:
 
 
 def bisect(values, value):
+    """Find index of value in sorted list of floats.
+
+    >>> bisect([0.0, 1.0, 2.0], 1.5)
+    2
+    >>> bisect([0.0, 1.0, 2.0], 2.0)
+    2
+    >>> bisect([0.0, 1.0, 2.0], 2.5)
+    3
+    """
     if values[0] >= value:
         return 0
     N = len(values)
