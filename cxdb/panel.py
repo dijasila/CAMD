@@ -2,6 +2,16 @@ from typing import Callable, Any
 from cxdb.material import Material
 
 
+def creates(*filenames):
+    def deco(func1):
+        def func2(material):
+            if (material.folder / filenames[0]).is_file():
+                return
+            func1(material)
+        return func2
+    return deco
+
+
 class Panel:
     title: str
     column_names: dict[str, str] = {}
