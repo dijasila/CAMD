@@ -53,9 +53,24 @@
   </div>
 </nav>
 <div class="container-lg">
- % for panel_title, html in panels:
-  <h3>{{ panel_title }}</h3>
+
+% for p, (panel_title, html) in enumerate(panels):
+<p class="d-inline-flex gap-1">
+  <button
+    class="btn btn-primary"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#collapse{{ p }}"
+    aria-expanded="false"
+    aria-controls="collapseExample">
+    {{ panel_title }}
+  </button>
+</p>
+<div class="collapse" id="collapse{{ p }}">
+  <div class="card card-body">
   {{ !html }}
+  </div>
+</div>
  % end
 </div>
 </body>
