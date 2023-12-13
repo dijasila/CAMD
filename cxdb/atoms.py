@@ -17,12 +17,12 @@ from cxdb.panel import Panel
 from cxdb.utils import table
 
 HTML = """
-<h4>{formula}</h4>
-<div class="wrapper">
- <div class="col1">
+<h4>Basic properties: {formula}</h4>
+<div class="row">
+ <div class="col-6">
   {table}
  </div>
- <div class="col2">
+ <div class="col-6">
   <select onchange="cb(this.value, 'atoms', '{uid}')">
    <option value="1">1</option>
    <option value="2">2</option>
@@ -65,6 +65,7 @@ class AtomsPanel(Panel):
                 FOOTER.format(atoms_json=self.plot(material, 1)))
 
     def plot(self, material: Material, repeat: int = 1) -> str:
+        print(material, repeat)
         assert repeat < 5, 'DOS!'
         atoms = material.atoms * repeat
         fig = plot_atoms(atoms)

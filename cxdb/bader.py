@@ -5,6 +5,13 @@ from cxdb.material import Material
 from cxdb.utils import table
 
 
+HTML = """
+<div class="row">
+{table}
+</div>
+"""
+
+
 class BaderPanel(Panel):
     title = 'Bader-charge analysis'
 
@@ -15,6 +22,10 @@ class BaderPanel(Panel):
         if not path.is_file():
             return ('', '')
         charges = json.loads(path.read_text())['charges']
-        return table(['#', 'Chemical symbol', 'Charges [|e|]'],
-                     [(n, s, f'{c:.2f}') for n, (s, c)
-                      in enumerate(zip(material.atoms.symbols, charges))]), ''
+        return (
+            HTML.format(
+                table=table(['#', 'Chemical symbol', 'Charges [|e|]'],
+                            [(n, s, f'{c:.2f}') for n, (s, c)
+                             in enumerate(zip(material.atoms.symbols,
+                                              charges))])),
+            '')
