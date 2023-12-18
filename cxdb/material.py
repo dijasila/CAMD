@@ -1,4 +1,5 @@
 from pathlib import Path
+from math import nan
 
 from ase.io import read
 from ase import Atoms
@@ -91,9 +92,12 @@ class Materials:
         func = parse(filter)
         rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
 
-        if session.sort:
+        if rows and session.sort:
+            missing = '' if session.sort in self.index.strings else nan
+
             def key(material):
-                return material.values.get(session.sort)
+                return material.values.get(session.sort, missing)
+
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
         page = session.page

@@ -33,7 +33,6 @@ def expand(db_file: str) -> None:
 
 
 class BilayerAtomsPanel(AtomsPanel):
-    columns = ['uid', 'energy', 'number_of_layers']
     column_names = AtomsPanel.column_names | {
         'binding_energy_zscan': 'Binding energy (zscan)',
         'number_of_layers': 'Number of layers',
@@ -52,6 +51,8 @@ class BilayerAtomsPanel(AtomsPanel):
         'layer_group_number': 'Layer group number',
         'space_group': 'Space group',
         'space_group_number': 'Space group number'}
+
+    columns = list(column_names)
 
     def get_column_data(self, material):
         dct = json.loads((material.folder / 'data.json').read_text())
