@@ -137,7 +137,7 @@ class Index:
                     self.strings[name][value].add(i)
                 elif isinstance(value, float):
                     floats[name].append((value, i))
-                elif isinstance(value, int, bool):
+                elif isinstance(value, (int, bool)):
                     integers[name].append((int(value), i))
                 else:
                     1 / 0
@@ -149,7 +149,7 @@ class Index:
             indices = [0]
             nmin = data[0][0]
             nmax = data[-1][0]
-            assert nmax - nmin < 100, nmax - nmin  # Too wide range!
+            assert nmax - nmin < 100, (symbol, nmax, nmin)  # Too wide range!
             m = nmin
             for j, (n, i) in enumerate(data):
                 ids.append(i)

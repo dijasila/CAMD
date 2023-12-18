@@ -8,10 +8,10 @@ from cxdb.session import Session
 
 
 class Material:
-    def __init__(self, folder: Path, uid: str):
+    def __init__(self, folder: Path, uid: str, filename='structure.xyz'):
         self.folder = folder
         self.uid = uid
-        atoms = read(folder / 'rlx.traj')
+        atoms = read(folder / filename)
         assert isinstance(atoms, Atoms)
         self.atoms = atoms
 
@@ -30,12 +30,15 @@ class Material:
         self.add_column('uid', uid, uid)
 
     def add_column(self, name: str, value, html: str) -> None:
-        assert name not in self.values
+        assert name not in self.values, (name, self.values)
         self.values[name] = value
         self.html_reprs[name] = html
 
     def __getitem__(self, name):
         return self.html_reprs[name]
+
+    def get(self, name, default=''):
+        return self.html_reprs.get(name, default)
 
 
 class Materials:
@@ -98,7 +101,7 @@ class Materials:
         pages = get_pages(page, len(rows), n)
         rows = rows[n * page:n * (page + 1)]
         table = [(material.uid,
-                  [material[name] for name in session.columns])
+                  [material.get(name, '') for name in session.columns])
                  for material in rows]
         return (table,
                 [(name, self.column_names[name]) for name in session.columns],

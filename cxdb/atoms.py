@@ -46,6 +46,8 @@ class AtomsPanel(Panel):
 
     column_names = {'energy': 'energy [eV]'}
 
+    columns = ['energy', 'volume', 'stoichiometry', 'uid']
+
     def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
 
@@ -58,7 +60,8 @@ class AtomsPanel(Panel):
                  column_names: dict[str, str]) -> tuple[str, str]:
         tbl = table(None,
                     [(column_names[name], material[name])
-                     for name in ['energy', 'volume', 'stoichiometry', 'uid']])
+                     for name in self.columns
+                     if name in material.values])
         return (HTML.format(table=tbl,
                             uid=material.uid,
                             formula=material['formula']),
