@@ -15,7 +15,7 @@ def test_app(tmp_path):
     atoms.center(vacuum=2)
     atoms.calc = EMT()
     atoms.get_potential_energy()
-    atoms.write(f / 'rlx.traj')
+    atoms.write(f / 'structure.xyz')
     (f / 'dos.png').write_text('DOS')
     (f / 'bader.json').write_text('{"charges": [1.23, 0.0]}')
     c2db = C2DB(Materials([Material(f, 'h2')],

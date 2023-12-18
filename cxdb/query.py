@@ -149,7 +149,7 @@ class Index:
             indices = [0]
             nmin = data[0][0]
             nmax = data[-1][0]
-            assert nmax - nmin < 100, (symbol, nmax, nmin)  # Too wide range!
+            assert nmax - nmin < 100, (symbol, nmax, nmin)  # too wide range!
             m = nmin
             for j, (n, i) in enumerate(data):
                 ids.append(i)
