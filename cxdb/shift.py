@@ -1,5 +1,6 @@
 from textwrap import wrap
 
+import matplotlib.pyplot as plt
 import numpy as np
 from ase.io.jsonio import decode
 
@@ -47,42 +48,16 @@ class ShiftPanel(Panel):
                 # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
                 relation_new = '\n'.join(wrap(relation, 50))
             table.append((pol, relation_new))
-        opt = {'type': 'table',
-               'header': ['Element', 'Relations'],
-               'rows': table}
 
         # Make the figure list
         npan = len(sym_chi) - 1
-        files = ['shift{}.png'.format(ii + 1) for ii in range(npan)]
-        cols = [[fig(f'shift{2 * ii + 1}.png'),
-                 fig(f'shift{2 * ii + 2}.png')] for ii in range(int(npan / 2))]
-        if npan % 2 == 0:
-            cols.append([opt, None])
-        else:
-            cols.append([fig(f'shift{npan}.png'), opt])
+        files = ['shift{ii + 1}.png' for ii in range(npan)]
+        plot_shift(data, 1.2, files, nd=2)
+
+        # 'header': ['Element', 'Relations']
 
 
-def plot_shift(row, *filename):
-    import os
-    from pathlib import Path
-    from textwrap import wrap
-
-    import matplotlib.pyplot as plt
-
-    # Read the data from the disk
-    data = row.data.get('results-asr.shift.json')
-    gap = row.get('gap_dir_nosoc')
-    atoms = row.toatoms()
-    pbc = atoms.pbc.tolist()
-    nd = np.sum(pbc)
-    if data is None:
-        return
-
-    # Remove the files if it is already exist
-    for fname in filename:
-        if (Path(fname).is_file()):
-            os.remove(fname)
-
+def plot_shift(data, gap, filenames, nd=2):
     # Plot the data and add the axis labels
     sym_chi = data['symm']
     if len(sym_chi) == 1:
@@ -95,7 +70,7 @@ def plot_shift(row, *filename):
     fileind = 0
     axes = []
 
-    for pol in sorted(sigma.keys()):
+    for filename, pol in zip(filenames, sorted(sigma.keys())):
         # Make the axis and add y=0 axis
         shift_l = sigma[pol]
         ax = plt.figure().add_subplot(111)

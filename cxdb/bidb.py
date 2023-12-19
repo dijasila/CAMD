@@ -10,7 +10,7 @@ from cxdb.web import C2DB
 
 
 def expand(db_file: str) -> None:
-    monolayers = defaultdict(dict)
+    monolayers: defaultdict[str, dict[str, int]] = defaultdict(dict)
     for row in connect(db_file).select():
         f = Formula(row.formula)
         ab, xy, n = f.stoichiometry()
@@ -70,7 +70,7 @@ class BilayerAtomsPanel(AtomsPanel):
 
 
 def main() -> None:
-    mlist = []
+    mlist: list[Material] = []
     for f in Path().glob('*/*/*/'):
         if f.name == 'monolayer':
             uid = f.parent.name
