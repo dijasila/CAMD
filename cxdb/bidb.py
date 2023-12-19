@@ -1,3 +1,4 @@
+from __future__ import annotations
 import json
 from collections import defaultdict
 from pathlib import Path
@@ -128,4 +129,5 @@ def main(root: Path) -> CXDBApp:
 if __name__ == '__main__':
     if 0:
         expand('bidb.db')
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    else:
+        main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)

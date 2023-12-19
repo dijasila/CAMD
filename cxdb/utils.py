@@ -4,6 +4,15 @@ from typing import Iterable, Sequence
 def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
     """Create HTML table.
 
+    Example:
+
+    === =====
+    A   B
+    === =====
+    1.2 hello
+    2.0 hi!
+    === =====
+
     >>> print(table(['A', 'B'], [[1.2, 'hello'], [2.0, 'hi!']]))
     <table class="table table-striped">
      <thead>
