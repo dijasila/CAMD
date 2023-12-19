@@ -3,7 +3,7 @@ from math import nan
 
 from ase.io import read
 from ase import Atoms
-from cxdb.query import parse, Index
+from cxdb.filter import parse, Index
 from cxdb.paging import get_pages
 from cxdb.session import Session
 

@@ -112,7 +112,7 @@ def str2obj(s: str) -> bool | int | float | str:
     7.4
     """
     x = {'True': True, 'False': False}.get(s)
-    if x:
+    if x is not None:
         return x
     for type in [int, float]:
         try:
@@ -123,10 +123,13 @@ def str2obj(s: str) -> bool | int | float | str:
 
 
 class Index:
-    def __init__(self, rows):
+    def __init__(self,
+                 rows: list[tuple[dict[str, int],
+                                  dict[str, bool | int | float | str]]]):
         integers = defaultdict(list)
         floats = defaultdict(list)
-        self.strings = defaultdict(lambda: defaultdict(set))
+        self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
+            defaultdict(lambda: defaultdict(set))
         self.ids = set()
         for i, (count, keys) in enumerate(rows):
             self.ids.add(i)
@@ -143,15 +146,15 @@ class Index:
                     1 / 0
 
         self.integers = {}
-        for symbol, data in integers.items():
-            data.sort()
+        for symbol, idata in integers.items():
+            idata.sort()
             ids = []
             indices = [0]
-            nmin = data[0][0]
-            nmax = data[-1][0]
+            nmin = idata[0][0]
+            nmax = idata[-1][0]
             assert nmax - nmin < 100, (symbol, nmax, nmin)  # too wide range!
             m = nmin
-            for j, (n, i) in enumerate(data):
+            for j, (n, i) in enumerate(idata):
                 ids.append(i)
                 if n > m:
                     indices += [j] * (n - m)
@@ -160,20 +163,26 @@ class Index:
             self.integers[symbol] = (nmin, nmax, ids, indices)
 
         self.floats = {}
-        for name, data in floats.items():
+        for name, fdata in floats.items():
             assert name not in self.integers
-            data.sort()
-            ids = [i for value, i in data]
-            values = [value for value, i in data]
+            fdata.sort()
+            ids = [i for value, i in fdata]
+            values = [value for value, i in fdata]
             self.floats[name] = (values, ids)
 
-    def key(self, name, op, value):
+    def key(self,
+            name: str,
+            op: str,
+            value: bool | int | float | str) -> set[int]:
         if name in chemical_symbols:
             n = value
+            assert isinstance(n, int)
             if name not in self.integers:
                 if op == '=' and n != 0:
                     return set()
                 if op == '<' and n == 0:
+                    return set()
+                if op == '!=' and n == 0:
                     return set()
                 if op == '>' and n == 0:
                     return set()
@@ -183,6 +192,7 @@ class Index:
             return self.integer_key(name, op, n)
 
         if name in self.strings:
+            value = str(value)
             if op == '=':
                 if value in self.strings[name]:
                     return self.strings[name][value]
@@ -197,14 +207,16 @@ class Index:
             1 / 0
 
         if name in self.floats:
+            assert isinstance(value, float)
             return self.float_key(name, op, value)
 
         if name in self.integers:
+            assert isinstance(value, (int, bool))
             return self.integer_key(name, op, value)
 
         return set()
 
-    def float_key(self, name, op, value):
+    def float_key(self, name: str, op: str, value: float) -> set[int]:
         values, ids = self.floats[name]
         if op == '!=':
             return self.ids - self.float_key(name, '=', value)
@@ -226,9 +238,9 @@ class Index:
             return set(ids[:j1])
         if op == '>=':
             return set(ids[j1:])
-        1 / 0
+        raise SyntaxError
 
-    def integer_key(self, name, op, n):
+    def integer_key(self, name: str, op: str, n: int) -> set[int]:
         nmin, nmax, ids, indices = self.integers[name]
         if op == '=':
             if nmin <= n <= nmax:
@@ -262,17 +274,18 @@ class Index:
             return set(ids[j:])
         assert False, op
 
-    def formula(self, f):
+    def formula(self, f: str) -> set[int]:
         ids = None
         for symbol, n in Formula(f).count().items():
             if ids is None:
-                ids = self.integer_key(symbol, '>=', n)
+                ids = self.key(symbol, '>=', n)
             else:
-                ids &= self.integer_key(symbol, '>=', n)
+                ids &= self.key(symbol, '>=', n)
+        assert ids is not None
         return ids
 
 
-def bisect(values, value):
+def bisect(values: list[float], value: float) -> int:
     """Find index of value in sorted list of floats.
 
     >>> bisect([0.0, 1.0, 2.0], 1.5)
