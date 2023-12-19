@@ -19,17 +19,19 @@ from cxdb.utils import table
 HTML = """
 <h4>Basic properties: {formula}</h4>
 <div class="row">
- <div class="col-6">
-  {table}
- </div>
- <div class="col-6">
-  <select onchange="cb(this.value, 'atoms', '{uid}')">
-   <option value="1">1</option>
-   <option value="2">2</option>
-   <option value="3">3</option>
-  </select>
-  <div id='atoms' class='atoms'></div>
- </div>
+  <div class="col-6">
+   {table}
+  </div>
+  <div class="col-6">
+    <label>Repeat:</label>
+    <select onchange="cb(this.value, 'atoms', '{uid}')">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+    </select>
+    <div id='atoms' class='atoms'></div>
+    {axes}
+  </div>
 </div>
 """
 
@@ -63,9 +65,23 @@ class AtomsPanel(Panel):
                      for name in self.columns
                      if name in material.values])
         return (HTML.format(table=tbl,
+                            axes=self.axes(material),
                             uid=material.uid,
                             formula=material['formula']),
                 FOOTER.format(atoms_json=self.plot(material, 1)))
+
+    def axes(self, material: Material) -> str:
+        atoms = material.atoms
+        tbl1 = table(
+            ['Axis', 'x [Å]', 'y [Å]', 'y [Å]', 'Periodic'],
+            [[i + 1, *[f'{x:.3f}' for x in axis], 'Yes' if p else 'No']
+             for i, (axis, p) in enumerate(zip(atoms.cell, atoms.pbc))])
+        C = atoms.get_cell_lengths_and_angles()
+        tbl2 = table(
+            None,
+            [['Lengths [Å]', *[f'{x:.3f}' for x in C[:3]]],
+             ['Angles [°]', *[f'{x:.3f}' for x in C[3:]]]])
+        return tbl1 + tbl2
 
     def plot(self, material: Material, repeat: int = 1) -> str:
         print(material, repeat)

@@ -98,7 +98,7 @@ def main() -> None:
     for arg in sys.argv[1:]:
         folder = Path(arg)
         uid = folder.name
-        mlist.append(Material(folder, uid))
+        mlist.append(Material(folder, uid, filename='rlx.traj'))
 
     materials = Materials(mlist, panels)
 
