@@ -143,7 +143,7 @@ class Index:
                 elif isinstance(value, (int, bool)):
                     integers[name].append((int(value), i))
                 else:
-                    1 / 0
+                    raise ValueError
 
         self.integers = {}
         for symbol, idata in integers.items():
@@ -204,7 +204,7 @@ class Index:
                     if val != value:
                         result.update(ids)
                 return result
-            1 / 0
+            raise ValueError
 
         if name in self.floats:
             assert isinstance(value, float)
@@ -262,7 +262,7 @@ class Index:
             if n > nmax:
                 n = nmax
             d = n - nmin
-            j = indices[d]
+            j = indices[d + 1]
             return set(ids[:j])
         if op == '>':
             if n >= nmax:

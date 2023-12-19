@@ -6,7 +6,7 @@ from ase.db import connect
 from ase.formula import Formula
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
-from cxdb.web import C2DB
+from cxdb.web import CXDBApp
 
 
 def expand(db_file: str) -> None:
@@ -69,9 +69,9 @@ class BilayerAtomsPanel(AtomsPanel):
         return data
 
 
-def main() -> None:
+def main(root: Path) -> CXDBApp:
     mlist: list[Material] = []
-    for f in Path().glob('*/*/*/'):
+    for f in root.glob('*/*/*/'):
         if f.name == 'monolayer':
             uid = f.parent.name
         else:
@@ -86,13 +86,10 @@ def main() -> None:
 
     initial_columns = {'uid', 'energy', 'formula'}
 
-    root = Path.cwd()
-
-    C2DB(materials, initial_columns, root).app.run(
-        host='0.0.0.0', port=8081, debug=True)
+    return CXDBApp(materials, initial_columns, root)
 
 
 if __name__ == '__main__':
     if 0:
         expand('bidb.db')
-    main()
+    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)

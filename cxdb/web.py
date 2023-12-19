@@ -14,7 +14,7 @@ from cxdb.session import Sessions
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
-class C2DB:
+class CXDBApp:
     def __init__(self,
                  materials: Materials,
                  initial_columns: set[str],
@@ -106,7 +106,7 @@ def main() -> None:
 
     root = Path.cwd()
 
-    C2DB(materials, initial_columns, root).app.run(
+    CXDBApp(materials, initial_columns, root).app.run(
         host='0.0.0.0', port=8081, debug=True)
 
 
