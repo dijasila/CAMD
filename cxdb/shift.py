@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from ase.io.jsonio import decode
 
-from cxdb.material import Material
+from cxdb.material import Material, Materials
 from cxdb.panel import Panel, creates
 
 HTML = """
@@ -22,7 +22,7 @@ class ShiftPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 column_names: dict[str, str]) -> tuple[str, str]:
+                 materials: Materials) -> tuple[str, str]:
         self.make_figures(material)
         return (HTML.format(uid=material.uid), '')
 

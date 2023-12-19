@@ -7,6 +7,8 @@ from ase.formula import Formula
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
 from cxdb.web import CXDBApp
+from cxdb.panel import Panel
+from cxdb.utils import table
 
 
 def expand(db_file: str) -> None:
@@ -69,6 +71,38 @@ class BilayerAtomsPanel(AtomsPanel):
         return data
 
 
+class StackingsPanel(Panel):
+    title = 'Stackings'
+    column_names = {'nstackings': 'Number of Stackings'}
+
+    def get_html(self,
+                 material: Material,
+                 materials: Materials) -> tuple[str, str]:
+        if material.values['number_of_layers'] == 2:
+            return ('', '')
+        rows = []
+        for f in self.bilayer_folders(material):
+            uid = f'{material.uid}-{f.name}'
+            bilayer = materials[uid]
+            rows.append([f'<a href="{uid}">{uid}</a>',
+                         bilayer['binding_energy_zscan']])
+        tbl = table(['Stacking', 'Binding energy'], rows)
+        return tbl, ''
+
+    def bilayer_folders(self, material) -> list[Path]:
+        return [f for f in material.folder.glob('../*/')
+                if f.name != 'monolayer']
+
+    def get_column_data(self,
+                        material: Material
+                        ) -> dict[str,
+                                  tuple[bool | int | float | str, str]]:
+        if material.values['number_of_layers'] == 1:
+            n = len(self.bilayer_folders(material))
+            return {'nstackings': (n, str(n))}
+        return {}
+
+
 def main(root: Path) -> CXDBApp:
     mlist: list[Material] = []
     for f in root.glob('*/*/*/'):
@@ -81,7 +115,9 @@ def main(root: Path) -> CXDBApp:
         mlist.append(Material(f, uid))
     print()
 
-    panels = [BilayerAtomsPanel()]
+    panels = [BilayerAtomsPanel(),
+              StackingsPanel()]
+
     materials = Materials(mlist, panels)
 
     initial_columns = {'uid', 'energy', 'formula'}

@@ -1,7 +1,7 @@
-from typing import Iterable
+from typing import Iterable, Sequence
 
 
-def table(header: list[str] | None, rows: list[Iterable]) -> str:
+def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
     """Create HTML table.
 
     >>> print(table(['A', 'B'], [[1.2, 'hello'], [2.0, 'hi!']]))

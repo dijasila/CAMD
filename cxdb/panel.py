@@ -1,5 +1,5 @@
 from typing import Callable, Any
-from cxdb.material import Material
+from cxdb.material import Material, Materials
 
 
 def creates(*filenames):
@@ -15,11 +15,12 @@ def creates(*filenames):
 class Panel:
     title: str
     column_names: dict[str, str] = {}
+
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
     def get_html(self,
                  material: Material,
-                 column_names: dict[str, str]) -> tuple[str, str]:
+                 materials: Materials) -> tuple[str, str]:
         raise NotImplementedError
 
     def get_column_data(self,

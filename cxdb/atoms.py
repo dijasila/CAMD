@@ -12,7 +12,7 @@ from ase.io import read
 from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
-from cxdb.material import Material
+from cxdb.material import Material, Materials
 from cxdb.panel import Panel
 from cxdb.utils import table
 
@@ -59,9 +59,9 @@ class AtomsPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 column_names: dict[str, str]) -> tuple[str, str]:
+                 materials: Materials) -> tuple[str, str]:
         tbl = table(None,
-                    [(column_names[name], material[name])
+                    [(materials.column_names[name], material[name])
                      for name in self.columns
                      if name in material.values])
         return (HTML.format(table=tbl,
@@ -76,7 +76,7 @@ class AtomsPanel(Panel):
             ['Axis', 'x [Å]', 'y [Å]', 'y [Å]', 'Periodic'],
             [[i + 1, *[f'{x:.3f}' for x in axis], 'Yes' if p else 'No']
              for i, (axis, p) in enumerate(zip(atoms.cell, atoms.pbc))])
-        C = atoms.get_cell_lengths_and_angles()
+        C = atoms.cell.cellpar()
         tbl2 = table(
             None,
             [['Lengths [Å]', *[f'{x:.3f}' for x in C[:3]]],
@@ -84,7 +84,6 @@ class AtomsPanel(Panel):
         return tbl1 + tbl2
 
     def plot(self, material: Material, repeat: int = 1) -> str:
-        print(material, repeat)
         assert repeat < 5, 'DOS!'
         atoms = material.atoms * repeat
         fig = plot_atoms(atoms)

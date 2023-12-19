@@ -1,5 +1,5 @@
 from cxdb.panel import Panel
-from cxdb.material import Material
+from cxdb.material import Material, Materials
 
 HTML = """
 <div class="row">
@@ -13,5 +13,5 @@ class DOSPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 column_names: dict[str, str]) -> tuple[str, str]:
+                 materials: Materials) -> tuple[str, str]:
         return (HTML.format(uid=material.uid), '')

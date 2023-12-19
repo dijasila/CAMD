@@ -63,8 +63,7 @@ class CXDBApp:
         panels = []
         footer = ''
         for panel in self.materials.panels:
-            html1, html2 = panel.get_html(material,
-                                          self.materials.column_names)
+            html1, html2 = panel.get_html(material, self.materials)
             if html1:
                 panels.append((panel.title, html1))
                 footer += html2
