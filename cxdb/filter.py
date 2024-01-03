@@ -305,8 +305,6 @@ def bisect(values: list[float], value: float) -> int:
     while True:
         j = (j1 + j2 + 1) // 2
         if values[j] < value:
-            if j == j1:
-                return j
             j1 = j
         else:
             if j == j2:
