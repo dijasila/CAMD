@@ -57,19 +57,15 @@ class BilayerAtomsPanel(AtomsPanel):
 
     columns = list(column_names)
 
-    def get_column_data(self, material):
+    def update_data(self, material):
         dct = json.loads((material.folder / 'data.json').read_text())
-        data = {}
         for key, value in dct.items():
             if key not in self.column_names:
                 continue
             if key in {'space_group_number', 'space_group_number',
                        'cod_id', 'icsd_id'}:
                 value = str(value)
-            data[key] = (value,
-                         str(value) if not isinstance(value, float)
-                         else f'{value:.3f}')
-        return data
+            material.add_column(key, value)
 
 
 class StackingsPanel(Panel):
@@ -94,14 +90,11 @@ class StackingsPanel(Panel):
         return [f for f in material.folder.glob('../*/')
                 if f.name != 'monolayer']
 
-    def get_column_data(self,
-                        material: Material
-                        ) -> dict[str,
-                                  tuple[bool | int | float | str, str]]:
-        if material.values['number_of_layers'] == 1:
+    def update_data(self,
+                    material: Material) -> None:
+        if material.number_of_layers == 1:
             n = len(self.bilayer_folders(material))
-            return {'nstackings': (n, str(n))}
-        return {}
+            material.add_column('nstackings', n)
 
 
 def main(root: Path) -> CXDBApp:

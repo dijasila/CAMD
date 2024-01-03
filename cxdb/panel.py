@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable
 from cxdb.material import Material, Materials
 
 
@@ -23,11 +23,5 @@ class Panel:
                  materials: Materials) -> tuple[str, str]:
         raise NotImplementedError
 
-    def get_column_data(self,
-                        material: Material) -> dict[str, tuple[Any, str]]:
-        return {}
-
-    def update_column_data(self, material: Material) -> None:
-        data = self.get_column_data(material)
-        for name, (value, html) in data.items():
-            material.add_column(name, value, html)
+    def update_data(self, material: Material) -> None:
+        pass
