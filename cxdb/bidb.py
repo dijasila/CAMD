@@ -75,7 +75,7 @@ class StackingsPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        if material.values['number_of_layers'] == 2:
+        if material.number_of_layers == 2:
             return ('', '')
         rows = []
         for f in self.bilayer_folders(material):

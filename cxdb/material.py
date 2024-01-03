@@ -115,7 +115,7 @@ class Materials:
             missing = '' if session.sort in self.index.strings else nan
 
             def key(material):
-                return material.values.get(session.sort, missing)
+                return material._values.get(session.sort, missing)
 
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
