@@ -26,7 +26,7 @@ class Material:
 
         self._data: dict[str, Any] = {}
         self._html_reprs: dict[str, str] = {}
-        self._values = {}
+        self._values: dict[str, bool | int | float | str] = {}
 
         self.add_column('volume', volume)
         self.add_column('formula', formula.format(), formula.format('html'))

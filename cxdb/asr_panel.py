@@ -52,7 +52,7 @@ class ASRPanel(Panel):
         uid = material.uid
         row = Row(material)
         (p,) = self.webpanel(None, row, {})
-        columns = []
+        columns: list[list[str]] = []
         for column in p['columns']:
             columns.append([])
             for thing in column:
@@ -74,6 +74,6 @@ class ASRPanel(Panel):
                     break
         self.title = p['title']
         return (HTML.format(title=p['title'],
-                            col1=columns[0],
-                            col2=columns[1]),
+                            col1='\n'.join(columns[0]),
+                            col2='\n'.join(columns[1])),
                 '')

@@ -6,6 +6,7 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+from ase import Atoms
 from ase.io import read
 
 from cxdb.asr_panel import ASRPanel
@@ -18,6 +19,7 @@ def copy(pattern: str) -> None:
     names: defaultdict[str, int] = defaultdict(int)
     for dir in Path().glob(pattern):
         atoms = read(dir / 'gs.gpw')
+        assert isinstance(atoms, Atoms)
         f = atoms.symbols.formula
         ab, xy, n = f.stoichiometry()
         name = f'{ab}/{n}{xy}'
