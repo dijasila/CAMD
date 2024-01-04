@@ -1,6 +1,7 @@
 import json
 import sys
 from functools import cache
+from math import nan
 
 import numpy as np
 import plotly
@@ -68,7 +69,7 @@ class AtomsPanel(Panel):
                             axes=self.axes(material),
                             uid=material.uid,
                             formula=material['formula']),
-                FOOTER.format(atoms_json=self.plot(material, 1)))
+                FOOTER.format(atoms_json=self.plot(material, 3)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms
@@ -85,13 +86,25 @@ class AtomsPanel(Panel):
 
     def plot(self, material: Material, repeat: int = 1) -> str:
         assert repeat < 5, 'DOS!'
-        atoms = material.atoms * repeat
-        fig = plot_atoms(atoms)
+        atoms = material.atoms
+        unitcell = atoms.cell.copy()
+        atoms = material.atoms.repeat([repeat if p else 1 for p in atoms.pbc])
+        fig = plot_atoms(atoms, unitcell)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
-def plot_atoms(atoms: Atoms) -> go.Figure:
+UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
+            [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1],
+            [nan, nan, nan], [1, 0, 0], [1, 0, 1],
+            [nan, nan, nan], [0, 1, 0], [0, 1, 1],
+            [nan, nan, nan], [1, 1, 0], [1, 1, 1]]
+
+
+def plot_atoms(atoms: Atoms,
+               unitcell: np.ndarray | None = None) -> go.Figure:
     data = []
+
+    # Atoms:
     points = SPHERE_POINTS
     triangles = triangulate_sphere()
     i, j, k = triangles.T
@@ -101,6 +114,8 @@ def plot_atoms(atoms: Atoms) -> go.Figure:
                          i=i, j=j, k=k, opacity=1,
                          color=color(Z))
         data.append(mesh)
+
+    # Bonds:
     p = atoms.positions
     i, j, D, S = neighbor_list('ijDS', atoms,
                                cutoff=covalent_radii[atoms.numbers] * 1.2)
@@ -110,11 +125,14 @@ def plot_atoms(atoms: Atoms) -> go.Figure:
     xyz[:, 1::3] = (p[i] + D).T
     xyz[:, 2::3] = np.nan
     x, y, z = xyz
-    data.append(go.Scatter3d(x=x,
-                             y=y,
-                             z=z,
-                             mode='lines')
-                )
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+
+    # Unit cell:
+    if unitcell is None:
+        unitcell = atoms.cell
+    x, y, z = (UNITCELL @ unitcell).T
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+
     fig = go.Figure(data=data)
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     fig.update_xaxes(showgrid=False)

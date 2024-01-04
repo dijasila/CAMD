@@ -18,7 +18,6 @@ class Material:
         assert isinstance(atoms, Atoms)
         self.atoms = atoms
 
-        volume = self.atoms.get_volume()
         formula = self.atoms.symbols.formula.convert('periodic')
         s11y, _, _ = formula.stoichiometry()
 
@@ -28,7 +27,6 @@ class Material:
         self._html_reprs: dict[str, str] = {}
         self._values: dict[str, bool | int | float | str] = {}
 
-        self.add_column('volume', volume)
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
         self.add_column('uid', uid)
@@ -49,7 +47,7 @@ class Material:
             if isinstance(value, float):
                 html = f'{value:.3f}'
             else:
-                html = str(html)
+                html = str(value)
         self._html_reprs[name] = html
 
     def __getattr__(self, name):
@@ -61,12 +59,15 @@ class Material:
     def get(self, name, default=''):
         return self._html_reprs.get(name, default)
 
+    def check_columns(self, column_names):
+        for name in self._values:
+            assert name in column_names, name
+
 
 class Materials:
     def __init__(self, materials, panels):
         self.column_names = {
             'formula': 'Formula',
-            'volume': 'volume [Å<sup>3</sup>]',
             'stoichiometry': 'Stoichiometry',
             'uid': 'Unique ID'}
 
@@ -78,6 +79,7 @@ class Materials:
         for material in materials:
             for panel in panels:
                 panel.update_data(material)
+            material.check_columns(self.column_names)
             self._materials[material.uid] = material
 
         self.index = Index([(mat._count, mat._values)

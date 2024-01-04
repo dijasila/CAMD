@@ -15,9 +15,10 @@ from cxdb.material import Material, Materials
 from cxdb.web import CXDBApp
 
 
-def copy(pattern: str) -> None:
+def copy(path: Path, pattern: str) -> None:
     names: defaultdict[str, int] = defaultdict(int)
-    for dir in Path().glob(pattern):
+    print(pattern)
+    for dir in path.glob(pattern):
         atoms = read(dir / 'gs.gpw')
         assert isinstance(atoms, Atoms)
         f = atoms.symbols.formula
@@ -30,7 +31,8 @@ def copy(pattern: str) -> None:
         atoms.write(folder / 'structure.xyz')
         for result in dir.glob('results-asr.*.json'):
             if '@' in result.name:
-                pass  # continue
+                if result.name != 'results-asr.gs@calculate.json':
+                    continue
             (folder / result.name).write_text(result.read_text())
 
 
@@ -44,7 +46,8 @@ class C2DBAtomsPanel(AtomsPanel):
         'area': 'Area [Å<sup>2</sup>]',
         'magstate': 'Magnetic',
         'ehull': 'Energy above convex hull [eV/atom]',
-        'gap_pbe': 'Band gap (PBE) [eV]'}
+        'gap_pbe': 'Band gap (PBE) [eV]',
+        'has_inversion_symmetry': ''}
 
     columns = list(column_names)
 
@@ -73,13 +76,13 @@ def main(root: Path) -> CXDBApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = {'uid', 'energy', 'formula'}
+    initial_columns = {'magstate', 'ehull', 'eform', 'gap', 'formula'}
 
     return CXDBApp(materials, initial_columns, root)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
-        copy(sys.argv[1])
+    if len(sys.argv) == 3:
+        copy(Path(sys.argv[1]), sys.argv[2])
     else:
         main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)

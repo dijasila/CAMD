@@ -35,7 +35,10 @@ class Data:
         self.folder = folder
 
     def get(self, name, default=None):
-        return decode((self.folder / name).read_text())  # ['kwargs']['data']
+        dct = decode((self.folder / name).read_text())
+        if 'kwargs' in dct:
+            return dct['kwargs']['data']
+        return dct
 
     def __getitem__(self, name):
         return self.get(name)
@@ -52,16 +55,14 @@ class ASRPanel(Panel):
         uid = material.uid
         row = Row(material)
         (p,) = self.webpanel(None, row, {})
+
         columns: list[list[str]] = []
         for column in p['columns']:
             columns.append([])
             for thing in column:
-                if thing['type'] == 'figure':
-                    filename = thing['filename']
-                    html = f'<img src="/png/{uid}/{filename}" />'
-                else:
-                    1 / 0
+                html = thing2html(thing, uid)
                 columns[-1].append(html)
+
         for desc in p['plot_descriptions']:
             for filename in desc['filenames']:
                 f = material.folder / filename
@@ -72,8 +73,19 @@ class ASRPanel(Panel):
                         f.write_bytes(f0.read_bytes())
                         f0.unlink()
                     break
+
         self.title = p['title']
         return (HTML.format(title=p['title'],
                             col1='\n'.join(columns[0]),
                             col2='\n'.join(columns[1])),
                 '')
+
+
+def thing2html(thing: dict, uid: str) -> str:
+    if thing['type'] == 'figure':
+        filename = thing['filename']
+        html = f'<img src="/png/{uid}/{filename}" />'
+    else:
+        1 / 0
+    return html
+
