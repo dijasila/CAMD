@@ -43,20 +43,31 @@ Plotly.newPlot('atoms', graphs, {{}});
 </script>
 """
 
+DIMS = ['', 'length', 'area', 'volume']
+
 
 class AtomsPanel(Panel):
     title = 'Atoms'
 
-    column_names = {'energy': 'energy [eV]'}
-
-    columns = ['energy', 'volume', 'stoichiometry', 'uid']
-
-    def __init__(self) -> None:
+    def __init__(self, ndims: int) -> None:
         self.callbacks = {'atoms': self.plot}
+        self.ndims = ndims
+        self.column_names = {}
+        self.columns = ['stoichiometry', 'uid']
+        if ndims:
+            if ndims == 1:
+                unit = 'Å'
+            else:
+                unit = f'Å<sup>{ndims}</sup>'
+            name = DIMS[ndims]
+            self.column_names[name] = f'{name.title()} [{unit}]'
+            self.columns.append(name)
 
     def update_data(self, material):
-        energy = material.atoms.get_potential_energy()
-        material.add_column('energy', energy)
+        if self.ndims > 0:
+            pbc = material.atoms.pbc
+            vol = abs(np.linalg.det(material.atoms.cell[pbc][:, pbc]))
+            material.add_column(DIMS[self.ndims], vol)
 
     def get_html(self,
                  material: Material,

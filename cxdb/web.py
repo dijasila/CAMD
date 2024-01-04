@@ -89,7 +89,7 @@ class CXDBApp:
 
 
 def main() -> None:
-    panels = [AtomsPanel(),
+    panels = [AtomsPanel(3),
               DOSPanel(),
               BaderPanel()]
 

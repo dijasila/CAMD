@@ -5,7 +5,6 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
 from ase import Atoms
 from ase.io import read
 
@@ -42,18 +41,20 @@ def read_results(material, name):
 
 
 class C2DBAtomsPanel(AtomsPanel):
-    column_names = AtomsPanel.column_names | {
-        'area': 'Area [Å<sup>2</sup>]',
-        'magstate': 'Magnetic',
-        'ehull': 'Energy above convex hull [eV/atom]',
-        'gap_pbe': 'Band gap (PBE) [eV]',
-        'has_inversion_symmetry': ''}
-
-    columns = list(column_names)
+    def __init__(self):
+        super().__init__(2)
+        self.column_names = AtomsPanel.column_names | {
+            'magstate': 'Magnetic',
+            'ehull': 'Energy above convex hull [eV/atom]',
+            'gap_pbe': 'Band gap (PBE) [eV]',
+            'energy': 'Energy [eV]',
+            'has_inversion_symmetry': 'Inversion symmetry'}
+        self.columns = list(self.column_names)
 
     def update_data(self, material):
-        area = abs(np.linalg.det(material.atoms.cell[:2, :2]))
-        material.add_column('area', area)
+        super().update_data(material)
+        energy = material.atoms.get_potential_energy()
+        material.add_column('energy', energy)
         magstate = read_results(material, 'magstate')['magstate']
         material.add_column('magstate', magstate)
         has_inversion_symmetry = read_results(

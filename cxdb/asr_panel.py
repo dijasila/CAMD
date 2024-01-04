@@ -88,4 +88,3 @@ def thing2html(thing: dict, uid: str) -> str:
     else:
         1 / 0
     return html
-

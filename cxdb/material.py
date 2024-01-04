@@ -74,6 +74,7 @@ class Materials:
         for panel in panels:
             assert panel.column_names.keys().isdisjoint(self.column_names)
             self.column_names.update(panel.column_names)
+            print(panel, list(self.column_names))
 
         self._materials = {}
         for material in materials:

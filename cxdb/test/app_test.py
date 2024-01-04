@@ -19,15 +19,15 @@ def test_app(tmp_path):
     (f / 'dos.png').write_text('DOS')
     (f / 'bader.json').write_text('{"charges": [1.23, 0.0]}')
     c2db = CXDBApp(Materials([Material(f, 'h2')],
-                             [AtomsPanel(), DOSPanel(), BaderPanel()]),
-                   {'uid', 'energy', 'volume', 'formula'},
+                             [AtomsPanel(3), DOSPanel(), BaderPanel()]),
+                   {'uid', 'volume', 'formula'},
                    tmp_path)
     out = c2db.index({'filter': 'H=2'})
     assert 'H<sub>2' in out
     out = c2db.index({'filter': 'H=3,energy=42.0'})
     assert 'H<sub>2' not in out
-    c2db.index({'toggle': 'energy'})
-    c2db.index({'sort': 'energy'})
+    c2db.index({'toggle': 'volume'})
+    c2db.index({'sort': 'volume'})
     c2db.index({'page': '0'})
     out = c2db.material('h2')
     assert 'Atoms' in out
