@@ -35,20 +35,24 @@ def copy(path: Path, pattern: str) -> None:
             (folder / result.name).write_text(result.read_text())
 
 
-def read_results(material, name):
-    return json.loads(
+def read_results(material, name, hmm=False):
+    dct = json.loads(
         (material.folder / f'results-asr.{name}.json').read_text())
+    if hmm:
+        dct = dct['kwargs']['data']
+    return dct
 
 
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
         super().__init__(2)
-        self.column_names = AtomsPanel.column_names | {
-            'magstate': 'Magnetic',
-            'ehull': 'Energy above convex hull [eV/atom]',
-            'gap_pbe': 'Band gap (PBE) [eV]',
-            'energy': 'Energy [eV]',
-            'has_inversion_symmetry': 'Inversion symmetry'}
+        self.column_names.update(
+            magstate='Magnetic',
+            ehull='Energy above convex hull [eV/atom]',
+            hform='Heat of formation [eV/atom]',
+            gap='Band gap (PBE) [eV]',
+            energy='Energy [eV]',
+            has_inversion_symmetry='Inversion symmetry')
         self.columns = list(self.column_names)
 
     def update_data(self, material):
@@ -58,9 +62,12 @@ class C2DBAtomsPanel(AtomsPanel):
         magstate = read_results(material, 'magstate')['magstate']
         material.add_column('magstate', magstate)
         has_inversion_symmetry = read_results(
-            material,
-            'structureinfo')['kwargs']['data']['has_inversion_symmetry']
+            material, 'structureinfo', 1)['has_inversion_symmetry']
         material.add_column('has_inversion_symmetry', has_inversion_symmetry)
+        gap = read_results(material, 'gs', 1)['gap']
+        material.add_column('gap', gap)
+        hform = read_results(material, 'convex_hull', 1)['hform']
+        material.add_column('hform', hform)
 
 
 def main(root: Path) -> CXDBApp:
@@ -73,11 +80,12 @@ def main(root: Path) -> CXDBApp:
     print()
 
     panels = [C2DBAtomsPanel(),
-              ASRPanel('bandstructure')]
+              ASRPanel('bandstructure'),
+              ASRPanel('phonons')]
 
     materials = Materials(mlist, panels)
 
-    initial_columns = {'magstate', 'ehull', 'eform', 'gap', 'formula'}
+    initial_columns = {'magstate', 'ehull', 'hform', 'gap', 'formula', 'area'}
 
     return CXDBApp(materials, initial_columns, root)
 
