@@ -9,6 +9,7 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
+from cxdb.panel import Panel
 from cxdb.asr_panel import ASRPanel
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
@@ -98,7 +99,7 @@ def main(root: Path) -> CXDBApp:
         mlist.append(Material(f, uid))
     print()
 
-    panels = [C2DBAtomsPanel()]
+    panels: list[Panel] = [C2DBAtomsPanel()]
     for name in ['bandstructure',
                  'phonons',
                  'bader']:
