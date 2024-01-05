@@ -313,4 +313,4 @@ def bisect(values: list[float], value: float) -> int:
 
 
 if __name__ == '__main__':
-    print(parse1(' '.join(sys.argv[1:])))
+    print(parse1(' '.join(sys.argv[1:])))  # pragma: nocover

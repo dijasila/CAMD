@@ -76,7 +76,3 @@ def test_index2():
         i.float_key('gap', '~', 27)
     with pytest.raises(AssertionError):
         i.integer_key('na', '~', 27)
-
-
-# def test_filter_cli(monkeypatch):
-#     monkeypatch.setattr(sys, 'argv', ['', 'Cu=0'])
