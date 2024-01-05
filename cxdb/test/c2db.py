@@ -22,6 +22,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
         wfs = writer.child('wave_functions')
         wfs.write(fermi_levels=np.array([-0.123]))
 
+    # Create fake ASR result-files:
     (dir / 'results-asr.magstate.json').write_text('{"magstate": "NM"}')
     (dir / 'results-asr.structureinfo.json').write_text(
         '{"kwargs": {"data": {"has_inversion_symmetry": false}}}')
@@ -34,6 +35,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
         '{"kwargs": {"data": {"uid": "MoS2-b3b4685fb6e1"}}}')
 
+    # Bandstructure:
     kpts = atoms.cell.bandpath('GK', npoints=5)
     bs = BandStructure(kpts, np.zeros((1, 5, 2)), reference=-0.5)
     nosoc = copy.deepcopy(bs.todict())
@@ -44,6 +46,20 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     soc['sz_mk'] = np.zeros((4, 5))
     dct = Result.fromdata(bs_soc=soc, bs_nosoc=nosoc).todict()
     (dir / 'results-asr.bandstructure.json').write_text(encode(dct))
+
+    # Phonons:
+    dct = {'path': kpts,
+           'omega_kl': np.zeros((2, 7)),
+           'q_qc': np.array([[0, 0, 0], [0, 0.5, 0]]),
+           'interp_freqs_kl': np.zeros((5, 7))}
+    (dir / 'results-asr.phonons.json').write_text(encode(dct))
+
+    (dir / 'results-asr.bader.json').write_text("""
+    {"kwargs":
+      {"data":
+       {"bader_charges":
+        {"__ndarray__": [[3], "float64", [1.24, -0.62, -0.62]]},
+        "sym_a": ["Mo", "S", "S"]}}}""")
 
 
 def create_tree(dir: Path):

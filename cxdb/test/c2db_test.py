@@ -12,4 +12,4 @@ def test_c2db(tmp_path):
     app.index()
     print(app.materials._materials)
     html = app.material('1MoS2-1')
-    assert '15.000' in html
+    assert '1.24' in html  # Bader charge
