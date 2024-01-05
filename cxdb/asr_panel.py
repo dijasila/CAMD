@@ -1,8 +1,10 @@
 """Hack to use webpanel functions from ASR."""
 import importlib
+from pathlib import Path
 
-from ase.io.jsonio import decode
 from ase.db.core import KeyDescription
+from ase.io.jsonio import decode
+
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
 from cxdb.utils import table
@@ -21,7 +23,7 @@ HTML = """
 
 
 class Row:
-    def __init__(self, material):
+    def __init__(self, material: Material):
         self.data = Data(material.folder)
         self.magstate = material.magstate
         self.has_inversion_symmetry = material.has_inversion_symmetry
@@ -29,7 +31,7 @@ class Row:
         self.minhessianeig = 117.0
         self.evac = material.evac
 
-    def get(self, name, default=None):
+    def get(self, name: str, default=None):
         if hasattr(self, name):
             return getattr(self, name)
         print('MISSING:', name, default)
@@ -37,7 +39,7 @@ class Row:
 
 
 class Data:
-    def __init__(self, folder):
+    def __init__(self, folder: Path):
         self.folder = folder
 
     def get(self, name, default=None):
@@ -54,7 +56,7 @@ class Data:
 
 
 class ASRPanel(Panel):
-    def __init__(self, name, index=None):
+    def __init__(self, name: str):
         self.name = name
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel

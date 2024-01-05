@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import functools
 import json
+import shutil
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -9,10 +10,10 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
-from cxdb.panel import Panel
 from cxdb.asr_panel import ASRPanel
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
+from cxdb.panel import Panel
 from cxdb.web import CXDBApp
 
 RESULT_FILES = [
@@ -31,7 +32,7 @@ def copy_materials(path: Path, patterns: list[str]) -> None:
             copy_material(dir, names)
 
 
-def copy_material(dir, names):
+def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     atoms = read(dir / 'gs.gpw')
     assert isinstance(atoms, Atoms)
 
@@ -49,7 +50,7 @@ def copy_material(dir, names):
     for name in RESULT_FILES:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
-            (folder / result.name).write_text(result.read_text())
+            shutil.copyfile(result, folder / result.name)
 
     data = {}
     rr = functools.partial(read_results, dir)
@@ -64,10 +65,10 @@ def copy_material(dir, names):
 
     data['energy'] = atoms.get_potential_energy()
 
-    (folder / 'data.json').write_text(json.dumps(data))
+    (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
 
-def read_results(folder, name):
+def read_results(folder: Path, name: str) -> dict:
     dct = json.loads((folder / f'results-asr.{name}.json').read_text())
     if 'kwargs' in dct:
         dct = dct['kwargs']['data']
@@ -88,7 +89,7 @@ class C2DBAtomsPanel(AtomsPanel):
             evac='Vacuum level [eV]')
         self.columns = list(self.column_names)
 
-    def update_data(self, material):
+    def update_data(self, material: Material):
         super().update_data(material)
         data = json.loads((material.folder / 'data.json').read_text())
         for key, value in data.items():
