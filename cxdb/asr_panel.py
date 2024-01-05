@@ -1,8 +1,8 @@
+"""Hack to use webpanel functions from ASR."""
 import importlib
-from pathlib import Path
 
 from ase.io.jsonio import decode
-
+from ase.db.core import KeyDescription
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
 from cxdb.utils import table
@@ -27,6 +27,7 @@ class Row:
         self.has_inversion_symmetry = material.has_inversion_symmetry
         self.cell = material.atoms.cell
         self.minhessianeig = 117.0
+        self.evac = material.evac
 
     def get(self, name, default=None):
         if hasattr(self, name):
@@ -45,40 +46,45 @@ class Data:
             return dct['kwargs']['data']
         return dct
 
+    def __contains__(self, name):
+        return False
+
     def __getitem__(self, name):
         return self.get(name)
 
 
 class ASRPanel(Panel):
     def __init__(self, name, index=None):
+        self.name = name
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel
-        self.key_descriptions = mod.Result.key_descriptions
+        self.result_class = mod.Result
+        self.key_descriptions = {
+            key: KeyDescription(key, desc)
+            for key, desc in self.result_class.key_descriptions.items()}
 
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         uid = material.uid
         row = Row(material)
-        (p,) = self.webpanel(None, row, self.key_descriptions)
+        result = self.result_class(
+            row.data.get(f'results-asr.{self.name}.json'))
+        (p,) = self.webpanel(result, row, self.key_descriptions)
 
-        columns: list[list[str]] = []
-        for column in p['columns']:
-            columns.append([])
+        columns: list[list[str]] = [[], []]
+        for i, column in enumerate(p['columns']):
             for thing in column:
                 html = thing2html(thing, uid)
-                columns[-1].append(html)
+                columns[i].append(html)
 
-        for desc in p['plot_descriptions']:
+        for desc in p.get('plot_descriptions', []):
             paths = [material.folder / filename
                      for filename in desc['filenames']]
             for f in paths:
                 if not f.is_file():
+                    # Call plot-function:
                     desc['function'](row, *paths)
-                    # for filename in desc['filenames']:
-                    #     f0 = Path(filename)
-                    #     f.write_bytes(f0.read_bytes())
-                    #     f0.unlink()
                     break
 
         self.title = p['title']
