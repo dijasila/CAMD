@@ -51,10 +51,7 @@ class Session:
         if column:
             print(column, self.sort, self.direction)
             if column == self.sort:
-                if self.direction == 1:
-                    self.direction = -1
-                else:
-                    self.sort = ''
+                self.direction *= -1
             else:
                 self.sort = column
                 self.direction = 1

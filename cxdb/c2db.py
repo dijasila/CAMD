@@ -102,7 +102,7 @@ def main(root: Path) -> CXDBApp:
         uid = f'{f.parent.name}-{f.name}'
         if len(mlist) % 20 == 0:
             print(end='.', flush=True)
-        mlist.append(Material(f, uid))
+        mlist.append(Material.from_file(f / 'structure.xyz', uid))
     print()
 
     panels: list[Panel] = [C2DBAtomsPanel()]

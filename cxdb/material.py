@@ -1,3 +1,4 @@
+from __future__ import annotations
 from math import nan
 from pathlib import Path
 from typing import Any
@@ -11,11 +12,9 @@ from cxdb.session import Session
 
 
 class Material:
-    def __init__(self, folder: Path, uid: str, filename='structure.xyz'):
+    def __init__(self, folder: Path, uid: str, atoms: Atoms):
         self.folder = folder
         self.uid = uid
-        atoms = read(folder / filename)
-        assert isinstance(atoms, Atoms)
         self.atoms = atoms
 
         formula = self.atoms.symbols.formula.convert('periodic')
@@ -30,6 +29,12 @@ class Material:
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
         self.add_column('uid', uid)
+
+    @classmethod
+    def from_file(cls, file: Path, uid: str) -> Material:
+        atoms = read(file)
+        assert isinstance(atoms, Atoms)
+        return cls(file.parent, uid, atoms)
 
     def add(self,
             name: str,
