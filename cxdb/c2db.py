@@ -34,6 +34,7 @@ def copy_materials(path: Path, patterns: list[str]) -> None:
 def copy_material(dir, names):
     atoms = read(dir / 'gs.gpw')
     assert isinstance(atoms, Atoms)
+
     f = atoms.symbols.formula
     ab, xy, n = f.stoichiometry()
     name = f'{ab}/{n}{xy}'
@@ -41,10 +42,14 @@ def copy_material(dir, names):
     names[name] = m
     folder = Path(name) / str(m)
     folder.mkdir(exist_ok=False, parents=True)
+
     atoms.write(folder / 'structure.xyz')
+
+    # Copy result json-files:
     for name in RESULT_FILES:
         result = dir / f'results-asr.{name}.json'
-        (folder / result.name).write_text(result.read_text())
+        if result.is_file():
+            (folder / result.name).write_text(result.read_text())
 
     data = {}
     rr = functools.partial(read_results, dir)
