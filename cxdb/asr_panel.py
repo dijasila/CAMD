@@ -103,6 +103,5 @@ def thing2html(thing: dict, uid: str) -> str:
     elif thing['type'] == 'table':
         html = table(thing['header'], thing['rows'])
     else:
-        print(thing)
-        1 / 0
+        raise ValueError
     return html

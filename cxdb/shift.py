@@ -5,7 +5,7 @@ import numpy as np
 from ase.io.jsonio import decode
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel, creates
+from cxdb.panel import Panel
 
 HTML = """
 % for
@@ -26,7 +26,6 @@ class ShiftPanel(Panel):
         self.make_figures(material)
         return (HTML.format(uid=material.uid), '')
 
-    @creates('shift1.png')
     def make_figures(self, material):
         data = read_row_data('results-asr.shift.json')
 
