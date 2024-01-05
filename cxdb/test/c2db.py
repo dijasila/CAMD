@@ -71,4 +71,4 @@ def create_tree(dir: Path):
 
 
 if __name__ == '__main__':
-    create_tree(Path())  # pragma: nocover
+    create_tree(Path())  # pragma: no cover

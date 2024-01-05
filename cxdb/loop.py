@@ -4,7 +4,7 @@ from pathlib import Path
 from time import time
 
 
-def main(folder: Path) -> None:
+def main(folder: Path) -> None:  # pragma: no cover
     while True:
         t = time()
         subprocess.run(f'python3 -m cxdb.web {folder}/*/', shell=True)
@@ -14,6 +14,6 @@ def main(folder: Path) -> None:
         subprocess.run('git pull'.split())
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     folder = Path(sys.argv[1])
     main(folder)

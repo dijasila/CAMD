@@ -110,7 +110,11 @@ class Materials:
     def __getitem__(self, uid):
         return self._materials[uid]
 
-    def get_rows(self, session: Session):
+    def get_rows(self,
+                 session: Session) -> tuple[list[tuple[str, list[str]]],
+                                            list[tuple[str, str]],
+                                            list[tuple[int, str]],
+                                            dict[str, str]]:
         filter = session.filter
         if session.stoichiometry != 'Any':
             if filter:
