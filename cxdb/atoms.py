@@ -218,4 +218,6 @@ def color(Z: int) -> str:
 
 
 if __name__ == '__main__':
-    plot_atoms(read(sys.argv[1])).show()  # pragma: nocover
+    atoms = read(sys.argv[1])  # pragma: nocover
+    assert isinstance(atoms, Atoms)  # pragma: nocover
+    plot_atoms(atoms).show()  # pragma: nocover
