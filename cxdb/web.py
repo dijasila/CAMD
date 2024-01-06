@@ -57,7 +57,7 @@ class CXDBApp:
                         new_columns=new_columns)
 
     def material(self, uid: str) -> str:
-        if uid == 'stop':
+        if uid == 'stop':  # pragma: no cover
             sys.stderr.close()
         material = self.materials[uid]
         panels = []
@@ -74,7 +74,7 @@ class CXDBApp:
 
     def callback(self, query: dict | None = None) -> str:
         if query is None:
-            query = request.query
+            query = request.query  # pragma: no cover
         name = query['name']
         uid = query['uid']
         material = self.materials[uid]
@@ -88,7 +88,7 @@ class CXDBApp:
         return static_file(str(material.folder / filename), self.root)
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     panels = [AtomsPanel(3),
               DOSPanel(),
               BaderPanel()]

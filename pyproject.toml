@@ -32,4 +32,6 @@ exclude_also = [
     "if __name__ == .__main__.:",
 
     # Don't complain about abstract methods, they aren't run:
-    "@(abc\\.)?abstractmethod"]
+    "@(abc\\.)?abstractmethod",
+
+    "if TYPE_CHECKING:"]

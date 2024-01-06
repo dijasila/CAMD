@@ -37,3 +37,5 @@ def test_app(tmp_path):
     assert '1.23' in out
     dct = c2db.callback(dict(name='atoms', uid='h2', data='2'))
     assert 'data' in dct
+    c2db.png('h2', 'dos.png')
+    c2db.help()

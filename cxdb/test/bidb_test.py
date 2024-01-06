@@ -14,6 +14,8 @@ def test_bidb(tmp_path):
                  number_of_layers=2,
                  monolayer_uid='H-xyz',
                  bilayer_uid='H-xyz-stacking',
+                 cod_id='A23462346',
+                 extra=27,
                  binding_energy_zscan=15.0)
         atoms = Atoms('H')
         atoms.center(vacuum=1)
