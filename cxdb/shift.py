@@ -57,7 +57,7 @@ def plot_shift(data, gap, filenames, nd=2):
     assert len(sym_chi) != 1, sym_chi  # CentroSymmetric
     sigma = data['sigma']
     if not sigma:
-        return  # pragma: no cov
+        return  # pragma: no cover
     w_l = data['freqs']
 
     axes = []
@@ -85,7 +85,7 @@ def plot_shift(data, gap, filenames, nd=2):
         polstr = f'{pol}'
         if nd == 2:
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'}$ [nm$\mu$A/V$^2$]')
-        else:  # pragma: no cov
+        else:  # pragma: no cover
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'} [$\mu$A/V$^2$]')
         ax.ticklabel_format(axis='both', style='plain', scilimits=(-2, 2))
 
