@@ -113,7 +113,7 @@ def main(root: Path) -> CXDBApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = {'magstate', 'ehull', 'hform', 'gap', 'formula', 'area'}
+    initial_columns = ['magstate', 'ehull', 'hform', 'gap', 'formula', 'area']
 
     return CXDBApp(materials, initial_columns, root)
 

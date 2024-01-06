@@ -8,4 +8,4 @@ def test_1d():
 
 
 def test_plot():
-    plot_atoms(Atoms('H', [1, 1, 1], cell=[2, 2, 2]))
+    plot_atoms(Atoms('H', [[1, 1, 1]], cell=[2, 2, 2]))

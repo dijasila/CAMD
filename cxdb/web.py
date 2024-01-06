@@ -17,7 +17,7 @@ TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 class CXDBApp:
     def __init__(self,
                  materials: Materials,
-                 initial_columns: set[str],
+                 initial_columns: list[str],
                  root: Path):
         self.materials = materials
         self.root = root
@@ -101,7 +101,7 @@ def main() -> None:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = {'uid', 'energy', 'volume', 'formula'}
+    initial_columns = ['uid', 'energy', 'volume', 'formula']
 
     root = Path.cwd()
 

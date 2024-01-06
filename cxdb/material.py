@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+from collections.abc import Container
 from math import nan
 from pathlib import Path
 from typing import Any
@@ -8,6 +10,7 @@ from ase.io import read
 
 from cxdb.filter import Index, parse
 from cxdb.paging import get_pages
+from cxdb.panel import Panel
 from cxdb.session import Session
 
 
@@ -55,22 +58,24 @@ class Material:
                 html = str(value)
         self._html_reprs[name] = html
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return self._data[name]
 
-    def __getitem__(self, name):
+    def __getitem__(self, name: str) -> str:
         return self._html_reprs[name]
 
-    def get(self, name, default=''):
+    def get(self, name: str, default: str = '') -> str:
         return self._html_reprs.get(name, default)
 
-    def check_columns(self, column_names):
+    def check_columns(self, column_names: Container[str]) -> None:
         for name in self._values:
             assert name in column_names, name
 
 
 class Materials:
-    def __init__(self, materials, panels):
+    def __init__(self,
+                 materials: list[Material],
+                 panels: list[Panel]):
         self.column_names = {
             'formula': 'Formula',
             'stoichiometry': 'Stoichiometry',
@@ -81,7 +86,7 @@ class Materials:
             self.column_names.update(panel.column_names)
             print(panel, list(self.column_names))
 
-        self._materials = {}
+        self._materials: dict[str, Material] = {}
         for material in materials:
             for panel in panels:
                 panel.update_data(material)
@@ -114,7 +119,7 @@ class Materials:
                  session: Session) -> tuple[list[tuple[str, list[str]]],
                                             list[tuple[str, str]],
                                             list[tuple[int, str]],
-                                            dict[str, str]]:
+                                            list[tuple[str, str]]]:
         filter = session.filter
         if session.stoichiometry != 'Any':
             if filter:
@@ -141,5 +146,5 @@ class Materials:
         return (table,
                 [(name, self.column_names[name]) for name in session.columns],
                 pages,
-                {(name, value) for name, value in self.column_names.items()
-                 if name not in session.columns})
+                [(name, value) for name, value in self.column_names.items()
+                 if name not in session.columns])

@@ -207,7 +207,7 @@ class Index:
             raise ValueError
 
         if name in self.floats:
-            assert isinstance(value, float)
+            assert isinstance(value, (int, float))
             return self.float_key(name, op, value)
 
         if name in self.integers:

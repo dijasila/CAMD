@@ -13,7 +13,7 @@ def test_session():
     s.update({'toggle': 'a'})
     assert s.columns == ['b']
     s.update({'toggle': 'a'})
-    assert s.columns == ['a', 'b']
+    assert s.columns == ['b', 'a']
     s.update({'sort': 'a'})
     s.update({'sort': 'a'})
     assert s.direction == -1

@@ -1,6 +1,6 @@
 class Sessions:
     def __init__(self,
-                 columns: set[str],
+                 columns: list[str],
                  max_sessions=200):
         self.columns = columns
         self.max_sessions = max_sessions
@@ -21,9 +21,11 @@ class Sessions:
 
 
 class Session:
-    def __init__(self, sid, columns):
+    def __init__(self,
+                 sid: int,
+                 columns: list[str]):
         self.sid = sid
-        self.columns = columns.copy()
+        self.columns = list(columns)
         self.filter = ''
         self.stoichiometry = 'Any'
         self.page = 0
@@ -45,11 +47,10 @@ class Session:
             if column in self.columns:
                 self.columns.remove(column)
             else:
-                self.columns.add(column)
+                self.columns.append(column)
 
         column = query.get('sort')
         if column:
-            print(column, self.sort, self.direction)
             if column == self.sort:
                 self.direction *= -1
             else:

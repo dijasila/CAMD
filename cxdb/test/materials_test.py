@@ -11,9 +11,7 @@ def test_mat():
     atoms.center(vacuum=2)
     materials = Materials(
         [Material(Path(), 'x', atoms)],
-        [AtomsPanel(3)],
-        {'uid', 'volume', 'formula'},
-        Path())
+        [AtomsPanel(3)])
     s = Session(1, ['uid'])
     rows, header, pages, new_columns = materials.get_rows(s)
     assert len(rows) == 1

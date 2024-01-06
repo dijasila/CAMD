@@ -1,6 +1,8 @@
+from __future__ import annotations
 import abc
-from typing import Callable
-from cxdb.material import Material, Materials
+from typing import Callable, TYPE_CHECKING
+if TYPE_CHECKING:
+    from cxdb.material import Material, Materials
 
 
 class Panel(abc.ABC):
