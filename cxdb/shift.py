@@ -2,19 +2,14 @@ from textwrap import wrap
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ase.io.jsonio import decode
 
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
+from cxdb.asr_panel import read_result_file
 
 HTML = """
-% for
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
 """
-
-
-def read_row_data(path):
-    return decode(path.read_text())['kwargs']['data']
 
 
 class ShiftPanel(Panel):
@@ -27,7 +22,7 @@ class ShiftPanel(Panel):
         return (HTML.format(uid=material.uid), '')
 
     def make_figures(self, material):
-        data = read_row_data('results-asr.shift.json')
+        data = read_result_file(material.folder / 'results-asr.shift.json')
 
         # Make the table
         sym_chi = data.get('symm')
@@ -50,7 +45,7 @@ class ShiftPanel(Panel):
 
         # Make the figure list
         npan = len(sym_chi) - 1
-        files = ['shift{ii + 1}.png' for ii in range(npan)]
+        files = [material.folder / f'shift{ii + 1}.png' for ii in range(npan)]
         plot_shift(data, 1.2, files, nd=2)
 
         # 'header': ['Element', 'Relations']
@@ -62,11 +57,10 @@ def plot_shift(data, gap, filenames, nd=2):
     if len(sym_chi) == 1:
         raise ValueError  # CentroSymmetric
     sigma = data['sigma']
-
     if not sigma:
         return
     w_l = data['freqs']
-    fileind = 0
+
     axes = []
 
     for filename, pol in zip(filenames, sorted(sigma.keys())):
@@ -98,7 +92,6 @@ def plot_shift(data, gap, filenames, nd=2):
 
         # Remove the extra space and save the figure
         plt.tight_layout()
-        plt.savefig(filename[fileind])
-        fileind += 1
+        plt.savefig(filename)
         axes.append(ax)
         plt.close()

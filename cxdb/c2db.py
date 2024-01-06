@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import functools
 import json
 import shutil
 import sys
@@ -10,18 +9,20 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
-from cxdb.asr_panel import ASRPanel
+from cxdb.asr_panel import ASRPanel, read_result_file
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
 from cxdb.web import CXDBApp
+from cxdb.shift import ShiftPanel
 
 RESULT_FILES = [
     'bandstructure',
     'phonons',
     'gs',
     'gs@calculate',
-    'bader']
+    'bader',
+    'shift']
 
 
 def copy_materials(path: Path, patterns: list[str]) -> None:
@@ -52,27 +53,22 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         if result.is_file():
             shutil.copyfile(result, folder / result.name)
 
+    def rrf(name: str) -> dict:
+        return read_result_file(dir / f'results-asr.{name}.json')
+
     data = {}
-    rr = functools.partial(read_results, dir)
-    data['magstate'] = rr('magstate')['magstate']
-    data['has_inversion_symmetry'] = rr(
+    data['magstate'] = rrf('magstate')['magstate']
+    data['has_inversion_symmetry'] = rrf(
         'structureinfo')['has_inversion_symmetry']
-    gs = rr('gs')
+    gs = rrf('gs')
     data['gap'] = gs['gap']
     data['evac'] = gs['evac']
-    data['hform'] = rr('convex_hull')['hform']
-    data['uid0'] = rr('database.material_fingerprint')['uid']
+    data['hform'] = rrf('convex_hull')['hform']
+    data['uid0'] = rrf('database.material_fingerprint')['uid']
 
     data['energy'] = atoms.get_potential_energy()
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
-
-
-def read_results(folder: Path, name: str) -> dict:
-    dct = json.loads((folder / f'results-asr.{name}.json').read_text())
-    if 'kwargs' in dct:
-        dct = dct['kwargs']['data']
-    return dct
 
 
 class C2DBAtomsPanel(AtomsPanel):
@@ -110,6 +106,7 @@ def main(root: Path) -> CXDBApp:
                  'phonons',
                  'bader']:
         panels.append(ASRPanel(name))
+    panels.append(ShiftPanel())
 
     materials = Materials(mlist, panels)
 

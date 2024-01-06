@@ -54,12 +54,22 @@ def create_data(dir: Path, atoms: Atoms) -> None:
            'interp_freqs_kl': np.zeros((5, 7))}
     (dir / 'results-asr.phonons.json').write_text(encode(dct))
 
+    # Bader:
     (dir / 'results-asr.bader.json').write_text("""
     {"kwargs":
       {"data":
        {"bader_charges":
         {"__ndarray__": [[3], "float64", [1.24, -0.62, -0.62]]},
         "sym_a": ["Mo", "S", "S"]}}}""")
+
+    # Shift:
+    freqs = np.linspace(0, 10, 11)
+    sigma = freqs * (1 + 0j)
+    dct = {
+        'symm': {'zero': 'xxx=xxz=...', 'yyy': 'yyy=-xyx=-yxx=-xxy'},
+        'sigma': {'yyy': sigma},
+        'freqs': freqs}
+    (dir / 'results-asr.shift.json').write_text(encode(dct))
 
 
 def create_tree(dir: Path):

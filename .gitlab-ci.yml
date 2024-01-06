@@ -9,9 +9,9 @@ tests:
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .
     - coverage run --source=cxdb -m pytest -v --color=yes
-    - coverage report -i --precision=2 --fail-under=20
+    - coverage report -i --precision=2 --fail-under=100
     - coverage html
-    - mypy -p cxdb
+    - mypy
     - flake8 cxdb
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:

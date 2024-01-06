@@ -22,6 +22,13 @@ HTML = """
 """
 
 
+def read_result_file(path: Path) -> dict:
+    dct = decode(path.read_text())
+    if 'kwargs' in dct:
+        dct = dct['kwargs']['data']
+    return dct
+
+
 class Row:
     def __init__(self, material: Material):
         self.data = Data(material.folder)
