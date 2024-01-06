@@ -34,10 +34,10 @@ class ShiftPanel(Panel):
                     pol = 'Others'
                     relation = '0=' + relation
                 else:
-                    continue
+                    continue  # pragma: no cover
 
             if (len(relation) == 3):
-                relation_new = ''
+                relation_new = ''  # pragma: no cover
             else:
                 # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
                 relation_new = '\n'.join(wrap(relation, 50))
@@ -54,11 +54,10 @@ class ShiftPanel(Panel):
 def plot_shift(data, gap, filenames, nd=2):
     # Plot the data and add the axis labels
     sym_chi = data['symm']
-    if len(sym_chi) == 1:
-        raise ValueError  # CentroSymmetric
+    assert len(sym_chi) != 1, sym_chi  # CentroSymmetric
     sigma = data['sigma']
     if not sigma:
-        return
+        return  # pragma: no cov
     w_l = data['freqs']
 
     axes = []
@@ -86,7 +85,7 @@ def plot_shift(data, gap, filenames, nd=2):
         polstr = f'{pol}'
         if nd == 2:
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'}$ [nm$\mu$A/V$^2$]')
-        else:
+        else:  # pragma: no cov
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'} [$\mu$A/V$^2$]')
         ax.ticklabel_format(axis='both', style='plain', scilimits=(-2, 2))
 
