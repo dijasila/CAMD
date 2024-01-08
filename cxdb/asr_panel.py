@@ -1,4 +1,4 @@
-"""Hack to use webpanel functions from ASR."""
+"""Hack to use webpanel() functions from ASR."""
 import importlib
 from pathlib import Path
 
@@ -30,6 +30,7 @@ def read_result_file(path: Path) -> dict:
 
 
 class Row:
+    """Fake row object."""
     def __init__(self, material: Material):
         self.data = Data(material.folder)
         self.magstate = material.magstate
@@ -63,6 +64,7 @@ class Data:
 
 
 class ASRPanel(Panel):
+    """Generic ASR-panel."""
     def __init__(self, name: str):
         self.name = name
         mod = importlib.import_module(f'asr.{name}')
@@ -75,10 +77,14 @@ class ASRPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
+        """Create row and result objects and call webpanel() function."""
         uid = material.uid
         row = Row(material)
-        result = self.result_class(
-            row.data.get(f'results-asr.{self.name}.json'))
+        try:
+            dct = row.data.get(f'results-asr.{self.name}.json')
+        except FileNotFoundError:
+            return ('', '')
+        result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
 
         columns: list[list[str]] = [[], []]
@@ -104,6 +110,7 @@ class ASRPanel(Panel):
 
 
 def thing2html(thing: dict, uid: str) -> str:
+    """Convert webpanel() output to HTML."""
     if thing['type'] == 'figure':
         filename = thing['filename']
         html = f'<img src="/png/{uid}/{filename}" />'
