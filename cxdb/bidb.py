@@ -36,40 +36,37 @@ def expand(db_file: str) -> None:
 
 
 class BilayerAtomsPanel(AtomsPanel):
-    column_names = AtomsPanel.column_names | {
-        'binding_energy_zscan': 'Binding energy (zscan)',
-        'number_of_layers': 'Number of layers',
-        'monolayer_uid': 'Monolayer ID',
-        'bilayer_uid': 'Bilayer ID',
-        'dynamically_stable': 'Dynamically stable',
-        'magnetic': 'Magnetic',
-        'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
-        'slide_stability': 'Slide Stability',
-        'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
-        'ehull': 'Energy above convex hull [eV/atom]',
-        'gap_pbe': 'Band gap (PBE)',
-        'icsd_id': 'ICSD id of parent bulk structure',
-        'cod_id': 'COD id of parent bulk structure',
-        'layer_group': 'Layer group',
-        'layer_group_number': 'Layer group number',
-        'space_group': 'Space group',
-        'space_group_number': 'Space group number'}
+    def __init__(self):
+        super().__init__(2)
+        self.column_names.update(
+            {'binding_energy_zscan': 'Binding energy (zscan)',
+             'number_of_layers': 'Number of layers',
+             'monolayer_uid': 'Monolayer ID',
+             'bilayer_uid': 'Bilayer ID',
+             'dynamically_stable': 'Dynamically stable',
+             'magnetic': 'Magnetic',
+             'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+             'slide_stability': 'Slide Stability',
+             'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
+             'ehull': 'Energy above convex hull [eV/atom]',
+             'gap_pbe': 'Band gap (PBE)',
+             'icsd_id': 'ICSD id of parent bulk structure',
+             'cod_id': 'COD id of parent bulk structure',
+             'layer_group': 'Layer group',
+             'layer_group_number': 'Layer group number',
+             'space_group': 'Space group',
+             'space_group_number': 'Space group number'})
+        self.columns = list(self.column_names)
 
-    columns = list(column_names)
-
-    def get_column_data(self, material):
+    def update_data(self, material):
         dct = json.loads((material.folder / 'data.json').read_text())
-        data = {}
         for key, value in dct.items():
             if key not in self.column_names:
                 continue
             if key in {'space_group_number', 'space_group_number',
                        'cod_id', 'icsd_id'}:
                 value = str(value)
-            data[key] = (value,
-                         str(value) if not isinstance(value, float)
-                         else f'{value:.3f}')
-        return data
+            material.add_column(key, value)
 
 
 class StackingsPanel(Panel):
@@ -79,7 +76,7 @@ class StackingsPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        if material.values['number_of_layers'] == 2:
+        if material.number_of_layers == 2:
             return ('', '')
         rows = []
         for f in self.bilayer_folders(material):
@@ -94,14 +91,11 @@ class StackingsPanel(Panel):
         return [f for f in material.folder.glob('../*/')
                 if f.name != 'monolayer']
 
-    def get_column_data(self,
-                        material: Material
-                        ) -> dict[str,
-                                  tuple[bool | int | float | str, str]]:
-        if material.values['number_of_layers'] == 1:
+    def update_data(self,
+                    material: Material) -> None:
+        if material.number_of_layers == 1:
             n = len(self.bilayer_folders(material))
-            return {'nstackings': (n, str(n))}
-        return {}
+            material.add_column('nstackings', n)
 
 
 def main(root: Path) -> CXDBApp:
@@ -113,7 +107,7 @@ def main(root: Path) -> CXDBApp:
             uid = f'{f.parent.name}-{f.name}'
         if len(mlist) % 20 == 0:
             print(end='.', flush=True)
-        mlist.append(Material(f, uid))
+        mlist.append(Material.from_file(f / 'structure.xyz', uid))
     print()
 
     panels = [BilayerAtomsPanel(),
@@ -121,7 +115,7 @@ def main(root: Path) -> CXDBApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = {'uid', 'energy', 'formula'}
+    initial_columns = ['uid', 'area', 'formula']
 
     return CXDBApp(materials, initial_columns, root)
 

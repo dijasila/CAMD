@@ -2,19 +2,14 @@ from textwrap import wrap
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ase.io.jsonio import decode
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel, creates
+from cxdb.panel import Panel
+from cxdb.asr_panel import read_result_file
 
 HTML = """
-% for
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
 """
-
-
-def read_row_data(path):
-    return decode(path.read_text())['kwargs']['data']
 
 
 class ShiftPanel(Panel):
@@ -26,9 +21,8 @@ class ShiftPanel(Panel):
         self.make_figures(material)
         return (HTML.format(uid=material.uid), '')
 
-    @creates('shift1.png')
     def make_figures(self, material):
-        data = read_row_data('results-asr.shift.json')
+        data = read_result_file(material.folder / 'results-asr.shift.json')
 
         # Make the table
         sym_chi = data.get('symm')
@@ -40,10 +34,10 @@ class ShiftPanel(Panel):
                     pol = 'Others'
                     relation = '0=' + relation
                 else:
-                    continue
+                    continue  # pragma: no cover
 
             if (len(relation) == 3):
-                relation_new = ''
+                relation_new = ''  # pragma: no cover
             else:
                 # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
                 relation_new = '\n'.join(wrap(relation, 50))
@@ -51,7 +45,7 @@ class ShiftPanel(Panel):
 
         # Make the figure list
         npan = len(sym_chi) - 1
-        files = ['shift{ii + 1}.png' for ii in range(npan)]
+        files = [material.folder / f'shift{ii + 1}.png' for ii in range(npan)]
         plot_shift(data, 1.2, files, nd=2)
 
         # 'header': ['Element', 'Relations']
@@ -60,14 +54,12 @@ class ShiftPanel(Panel):
 def plot_shift(data, gap, filenames, nd=2):
     # Plot the data and add the axis labels
     sym_chi = data['symm']
-    if len(sym_chi) == 1:
-        raise ValueError  # CentroSymmetric
+    assert len(sym_chi) != 1, sym_chi  # CentroSymmetric
     sigma = data['sigma']
-
     if not sigma:
-        return
+        return  # pragma: no cover
     w_l = data['freqs']
-    fileind = 0
+
     axes = []
 
     for filename, pol in zip(filenames, sorted(sigma.keys())):
@@ -93,13 +85,12 @@ def plot_shift(data, gap, filenames, nd=2):
         polstr = f'{pol}'
         if nd == 2:
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'}$ [nm$\mu$A/V$^2$]')
-        else:
+        else:  # pragma: no cover
             ax.set_ylabel(r'$\sigma^{(2)}_{' + polstr + r'} [$\mu$A/V$^2$]')
         ax.ticklabel_format(axis='both', style='plain', scilimits=(-2, 2))
 
         # Remove the extra space and save the figure
         plt.tight_layout()
-        plt.savefig(filename[fileind])
-        fileind += 1
+        plt.savefig(filename)
         axes.append(ax)
         plt.close()

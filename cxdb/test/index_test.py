@@ -42,6 +42,8 @@ def test_index():
     assert f(i) == set()
     f = parse('i1<=42')
     assert f(i) == {0}
+    f = parse('i1<=43')
+    assert f(i) == {0}
 
     f = parse('b1=False')
     assert f(i) == {0}
@@ -68,3 +70,9 @@ def test_index2():
     with pytest.raises(ValueError):
         i.key('gap', '<', 'high')
     assert i.key('xx', '=', 117) == set()
+
+    i = Index([({'H': 2}, {'gap': 2.2, 'na': 27})])
+    with pytest.raises(SyntaxError):
+        i.float_key('gap', '~', 27)
+    with pytest.raises(AssertionError):
+        i.integer_key('na', '~', 27)

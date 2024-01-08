@@ -207,7 +207,7 @@ class Index:
             raise ValueError
 
         if name in self.floats:
-            assert isinstance(value, float)
+            assert isinstance(value, (int, float))
             return self.float_key(name, op, value)
 
         if name in self.integers:
@@ -305,8 +305,6 @@ def bisect(values: list[float], value: float) -> int:
     while True:
         j = (j1 + j2 + 1) // 2
         if values[j] < value:
-            if j == j1:
-                return j
             j1 = j
         else:
             if j == j2:
@@ -315,4 +313,4 @@ def bisect(values: list[float], value: float) -> int:
 
 
 if __name__ == '__main__':
-    print(parse1(' '.join(sys.argv[1:])))
+    print(parse1(' '.join(sys.argv[1:])))  # pragma: no cover

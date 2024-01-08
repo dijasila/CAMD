@@ -1,66 +1,99 @@
-from pathlib import Path
-from math import nan
+from __future__ import annotations
 
-from ase.io import read
+from collections.abc import Container
+from math import nan
+from pathlib import Path
+from typing import Any
+
 from ase import Atoms
-from cxdb.filter import parse, Index
+from ase.io import read
+
+from cxdb.filter import Index, parse
 from cxdb.paging import get_pages
+from cxdb.panel import Panel
 from cxdb.session import Session
 
 
 class Material:
-    def __init__(self, folder: Path, uid: str, filename='structure.xyz'):
+    def __init__(self, folder: Path, uid: str, atoms: Atoms):
         self.folder = folder
         self.uid = uid
-        atoms = read(folder / filename)
-        assert isinstance(atoms, Atoms)
         self.atoms = atoms
 
-        volume = self.atoms.get_volume()
         formula = self.atoms.symbols.formula.convert('periodic')
         s11y, _, _ = formula.stoichiometry()
 
-        self.count: dict[str, int] = formula.count()
+        self._count: dict[str, int] = formula.count()
 
-        self.values: dict[str, bool | int | float | str] = {}
-        self.html_reprs: dict[str, str] = {}
+        self._data: dict[str, Any] = {}
+        self._html_reprs: dict[str, str] = {}
+        self._values: dict[str, bool | int | float | str] = {}
 
-        self.add_column('volume', volume, f'{volume:.3f}')
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
-        self.add_column('uid', uid, uid)
+        self.add_column('uid', uid)
 
-    def add_column(self, name: str, value, html: str) -> None:
-        assert name not in self.values, (name, self.values)
-        self.values[name] = value
-        self.html_reprs[name] = html
+    @classmethod
+    def from_file(cls, file: Path, uid: str) -> Material:
+        atoms = read(file)
+        assert isinstance(atoms, Atoms)
+        return cls(file.parent, uid, atoms)
 
-    def __getitem__(self, name):
-        return self.html_reprs[name]
+    def add(self,
+            name: str,
+            value) -> None:
+        assert name not in self._data, (name, self._data)
+        self._data[name] = value
 
-    def get(self, name, default=''):
-        return self.html_reprs.get(name, default)
+    def add_column(self,
+                   name: str,
+                   value,
+                   html: str | None = None) -> None:
+        self.add(name, value)
+        self._values[name] = value
+        if html is None:
+            if isinstance(value, float):
+                html = f'{value:.3f}'
+            else:
+                html = str(value)
+        self._html_reprs[name] = html
+
+    def __getattr__(self, name: str) -> Any:
+        return self._data[name]
+
+    def __getitem__(self, name: str) -> str:
+        return self._html_reprs[name]
+
+    def get(self, name: str, default: str = '') -> str:
+        return self._html_reprs.get(name, default)
+
+    def check_columns(self, column_names: Container[str]) -> None:
+        for name in self._values:
+            assert name in column_names, name
 
 
 class Materials:
-    def __init__(self, materials, panels):
+    def __init__(self,
+                 materials: list[Material],
+                 panels: list[Panel]):
         self.column_names = {
             'formula': 'Formula',
-            'volume': 'volume [Å<sup>3</sup>]',
             'stoichiometry': 'Stoichiometry',
             'uid': 'Unique ID'}
 
         for panel in panels:
             assert panel.column_names.keys().isdisjoint(self.column_names)
             self.column_names.update(panel.column_names)
+            print(panel, list(self.column_names))
 
-        self._materials = {}
+        self._materials: dict[str, Material] = {}
         for material in materials:
             for panel in panels:
-                panel.update_column_data(material)
+                panel.update_data(material)
+            material.check_columns(self.column_names)
             self._materials[material.uid] = material
 
-        self.index = Index([(mat.count, mat.values)
+        self.index = Index([(mat._count, mat._values)
                             for mat in self._materials.values()])
         self.i2uid = {i: mat.uid
                       for i, mat in enumerate(self._materials.values())}
@@ -76,14 +109,17 @@ class Materials:
     def stoichiometries(self):
         s = []
         for material in self._materials.values():
-            s.append((material.values['stoichiometry'],
-                      material['stoichiometry']))
+            s.append((material.stoichiometry, material['stoichiometry']))
         return s
 
     def __getitem__(self, uid):
         return self._materials[uid]
 
-    def get_rows(self, session: Session):
+    def get_rows(self,
+                 session: Session) -> tuple[list[tuple[str, list[str]]],
+                                            list[tuple[str, str]],
+                                            list[tuple[int, str]],
+                                            list[tuple[str, str]]]:
         filter = session.filter
         if session.stoichiometry != 'Any':
             if filter:
@@ -96,7 +132,7 @@ class Materials:
             missing = '' if session.sort in self.index.strings else nan
 
             def key(material):
-                return material.values.get(session.sort, missing)
+                return material._values.get(session.sort, missing)
 
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
@@ -110,5 +146,5 @@ class Materials:
         return (table,
                 [(name, self.column_names[name]) for name in session.columns],
                 pages,
-                {(name, value) for name, value in self.column_names.items()
-                 if name not in session.columns})
+                [(name, value) for name, value in self.column_names.items()
+                 if name not in session.columns])

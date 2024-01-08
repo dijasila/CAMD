@@ -2,7 +2,7 @@ from textual.app import App
 from textual.widgets import Header, Footer, Input, Select, DataTable
 
 
-class CXDB(App):
+class CXDB(App):  # pragma: no cover
     BINDINGS = [('d', 'toggle_dark', 'Toggle dark mode')]
 
     def compose(self):
@@ -22,5 +22,5 @@ class CXDB(App):
         print(event)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     CXDB().run()
