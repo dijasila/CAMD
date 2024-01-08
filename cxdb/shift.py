@@ -29,7 +29,7 @@ class ShiftPanel(Panel):
         data = read_result_file(result_file)
 
         # Make the table
-        sym_chi = data.get('symm')
+        sym_chi = data['symm']
         table = []
         for pol in sorted(sym_chi.keys()):
             relation = sym_chi[pol]

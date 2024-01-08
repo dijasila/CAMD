@@ -16,10 +16,19 @@ def parse(q: str) -> Callable[[Index], set[int]]:
 
     >>> f = parse('H2,xc=PBE')
     >>> i = Index([({'H': 2}, {'xc': 'PBE'})])
+    Rows: 1
+    Strings: 1
+    Integers: 1
+    Floats: 0
     >>> f(i)
     {0}
     >>> f = parse('gap > 5.0')
-    >>> i = Index([({'H': 2}, {'gap': 10.0}), ({'Si': 2}, {'gap': 1.1})])
+    >>> i = Index([({'H': 2}, {'gap': 10.0}),
+    ...            ({'Si': 2}, {'gap': 1.1})])
+    Rows: 2
+    Strings: 0
+    Integers: 2
+    Floats: 2
     >>> f(i)
     {0}
     """
