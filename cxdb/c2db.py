@@ -1,8 +1,17 @@
+"""C2DB web-app.
+
+This module has code to convert ~cmr/C2DB/tree/ folders and friends
+(see PATTERNS variable below) to canonical tree layout.
+
+Also contains simple web-app that can run off the tree of folders.
+
+Goal is to have the code decoupled from ASE, GPAW and ASR.
+Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
+"""
 from __future__ import annotations
 
 import json
 import shutil
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -32,19 +41,39 @@ PATTERNS = [
     'tree_LDP/A*/*/*/',
     'tree_CDVAE/A*/*/*/',
     'tree_intercalated/A*/*/*/',
-    'push-manti-tree/A*/*/*/',
-    '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/']
+    'push-manti-tree/A*/*/*/']
+# '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
 def copy_all_c2db_materials():
-    root = '/home/niflheim2/cmr/C2DB-ASR'
+    """Copy C2DB files to uniform tree structure.
+
+    Tree structure::
+
+       <stoichiometry>/<formula-units><fomula>/<id>/
+
+    Example::
+
+       AB2/1MoS2/1/
+       AB2/1MoS2/2/
+       ...
+
+    Build tree like this::
+
+        $ cd /tmp
+        $ mkdir tree
+        $ cd tree
+        $ python -c "from cxdb.c2db import *; copy_all_c2db_materials()"
+
+    """
+    root = Path('/home/niflheim2/cmr/C2DB-ASR')
     copy_materials(root, PATTERNS)
 
 
-def copy_materials(path: Path, patterns: list[str]) -> None:
+def copy_materials(root: Path, patterns: list[str]) -> None:
     dirs = [dir
             for pattern in patterns
-            for dir in path.glob(pattern)
+            for dir in root.glob(pattern)
             if dir.name[0] != '.']
     names: defaultdict[str, int] = defaultdict(int)
     with progress.Progress() as pb:
@@ -61,12 +90,32 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     atoms = read(gpw)
     assert isinstance(atoms, Atoms)
 
+    # Find uid (example: "1MoS2-1"):
     f = atoms.symbols.formula
     ab, xy, n = f.stoichiometry()
     name = f'{ab}/{n}{xy}'
     m = names[name] + 1
     names[name] = m
     folder = Path(name) / str(m)
+
+    def rrf(name: str) -> dict:
+        return read_result_file(dir / f'results-asr.{name}.json')
+
+    data = {}
+    try:
+        data['magstate'] = rrf('magstate')['magstate']
+        data['has_inversion_symmetry'] = rrf(
+            'structureinfo')['has_inversion_symmetry']
+        gs = rrf('gs')
+        data['gap'] = gs['gap']
+        data['evac'] = gs['evac']
+        data['hform'] = rrf('convex_hull')['hform']
+        data['uid0'] = rrf('database.material_fingerprint')['uid']
+    except FileNotFoundError:
+        return
+
+    data['energy'] = atoms.get_potential_energy()
+
     folder.mkdir(exist_ok=False, parents=True)
 
     atoms.write(folder / 'structure.xyz')
@@ -76,21 +125,6 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
             shutil.copyfile(result, folder / result.name)
-
-    def rrf(name: str) -> dict:
-        return read_result_file(dir / f'results-asr.{name}.json')
-
-    data = {}
-    data['magstate'] = rrf('magstate')['magstate']
-    data['has_inversion_symmetry'] = rrf(
-        'structureinfo')['has_inversion_symmetry']
-    gs = rrf('gs')
-    data['gap'] = gs['gap']
-    data['evac'] = gs['evac']
-    data['hform'] = rrf('convex_hull')['hform']
-    data['uid0'] = rrf('database.material_fingerprint')['uid']
-
-    data['energy'] = atoms.get_potential_energy()
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
@@ -117,6 +151,7 @@ class C2DBAtomsPanel(AtomsPanel):
 
 
 def main(root: Path) -> CXDBApp:
+    """Create C2DB app."""
     mlist: list[Material] = []
     files = list(root.glob('A*/*/*/'))
     with progress.Progress() as pb:
