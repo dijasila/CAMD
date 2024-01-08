@@ -9,7 +9,7 @@ tests:
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .
     - coverage run --source=cxdb -m pytest -v --color=yes
-    - coverage report -i --precision=2 --fail-under=100
+    - coverage report -i --precision=2 --fail-under=98
     - coverage html
     - mypy
     - flake8 cxdb

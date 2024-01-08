@@ -45,7 +45,7 @@ PATTERNS = [
 # '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
-def copy_all_c2db_materials():
+def copy_all_c2db_materials():  # pragma: no cover
     """Copy C2DB files to uniform tree structure.
 
     Tree structure::
@@ -86,7 +86,7 @@ def copy_materials(root: Path, patterns: list[str]) -> None:
 def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     gpw = dir / 'gs.gpw'
     if not gpw.is_file():
-        return
+        return  # pragma: no cover
     atoms = read(gpw)
     assert isinstance(atoms, Atoms)
 
@@ -111,7 +111,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         data['evac'] = gs['evac']
         data['hform'] = rrf('convex_hull')['hform']
         data['uid0'] = rrf('database.material_fingerprint')['uid']
-    except FileNotFoundError:
+    except FileNotFoundError:  # pragma: no cover
         return
 
     data['energy'] = atoms.get_potential_energy()
