@@ -6,6 +6,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+import rich.progress as progress
 from ase import Atoms
 from ase.io import read
 
@@ -13,8 +14,8 @@ from cxdb.asr_panel import ASRPanel, read_result_file
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
-from cxdb.web import CXDBApp
 from cxdb.shift import ShiftPanel
+from cxdb.web import CXDBApp
 
 RESULT_FILES = [
     'bandstructure',
@@ -24,17 +25,40 @@ RESULT_FILES = [
     'bader',
     'shift']
 
+PATTERNS = [
+    'tree/A*/*/*/',
+    'ICSD-COD/*el/*/',
+    'adhoc_materials/*/',
+    'tree_LDP/A*/*/*/',
+    'tree_CDVAE/A*/*/*/',
+    'tree_intercalated/A*/*/*/',
+    'push-manti-tree/A*/*/*/',
+    '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/']
+
+
+def copy_all_c2db_materials():
+    root = '/home/niflheim2/cmr/C2DB-ASR'
+    copy_materials(root, PATTERNS)
+
 
 def copy_materials(path: Path, patterns: list[str]) -> None:
+    dirs = [dir
+            for pattern in patterns
+            for dir in path.glob(pattern)
+            if dir.name[0] != '.']
     names: defaultdict[str, int] = defaultdict(int)
-    for pattern in patterns:
-        print(pattern)
-        for dir in path.glob(pattern):
+    with progress.Progress() as pb:
+        pid = pb.add_task('Copying matrerials:', total=len(dirs))
+        for dir in dirs:
             copy_material(dir, names)
+            pb.advance(pid)
 
 
 def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
-    atoms = read(dir / 'gs.gpw')
+    gpw = dir / 'gs.gpw'
+    if not gpw.is_file():
+        return
+    atoms = read(gpw)
     assert isinstance(atoms, Atoms)
 
     f = atoms.symbols.formula
@@ -94,12 +118,13 @@ class C2DBAtomsPanel(AtomsPanel):
 
 def main(root: Path) -> CXDBApp:
     mlist: list[Material] = []
-    for f in root.glob('A*/*/*/'):
-        uid = f'{f.parent.name}-{f.name}'
-        if len(mlist) % 20 == 0:
-            print(end='.', flush=True)
-        mlist.append(Material.from_file(f / 'structure.xyz', uid))
-    print()
+    files = list(root.glob('A*/*/*/'))
+    with progress.Progress() as pb:
+        pid = pb.add_task('Reading matrerials:', total=len(files))
+        for f in files:
+            uid = f'{f.parent.name}-{f.name}'
+            mlist.append(Material.from_file(f / 'structure.xyz', uid))
+            pb.advance(pid)
 
     panels: list[Panel] = [C2DBAtomsPanel()]
     for name in ['bandstructure',
@@ -116,7 +141,4 @@ def main(root: Path) -> CXDBApp:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) >= 3:
-        copy_materials(Path(sys.argv[1]), sys.argv[2:])
-    else:
-        main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)

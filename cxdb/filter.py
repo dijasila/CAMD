@@ -131,19 +131,29 @@ class Index:
         self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
             defaultdict(lambda: defaultdict(set))
         self.ids = set()
+
+        print('Rows:', len(rows), flush=True)
+        ni = 0
+        ns = 0
+        nf = 0
         for i, (count, keys) in enumerate(rows):
             self.ids.add(i)
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
+                ni += 1
             for name, value in keys.items():
                 if isinstance(value, str):
                     self.strings[name][value].add(i)
+                    ns += 1
                 elif isinstance(value, float):
                     floats[name].append((value, i))
+                    nf += 1
                 elif isinstance(value, (int, bool)):
                     integers[name].append((int(value), i))
+                    ni += 1
                 else:
                     raise ValueError
+        print(f'Strings: {ns}', flush=True)
 
         self.integers = {}
         for symbol, idata in integers.items():
@@ -161,6 +171,7 @@ class Index:
                     m = n
             indices.append(j + 1)
             self.integers[symbol] = (nmin, nmax, ids, indices)
+        print(f'Integers: {ni}', flush=True)
 
         self.floats = {}
         for name, fdata in floats.items():
@@ -169,6 +180,7 @@ class Index:
             ids = [i for value, i in fdata]
             values = [value for value, i in fdata]
             self.floats[name] = (values, ids)
+        print(f'Floats: {nf}', flush=True)
 
     def key(self,
             name: str,

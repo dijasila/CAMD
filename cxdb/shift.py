@@ -2,6 +2,7 @@ from textwrap import wrap
 
 import matplotlib.pyplot as plt
 import numpy as np
+from pathlib import Path
 
 from cxdb.material import Material, Materials
 from cxdb.panel import Panel
@@ -18,11 +19,14 @@ class ShiftPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        self.make_figures(material)
+        result_file = material.folder / 'results-asr.shift.json'
+        if not result_file.is_file():
+            return ('', '')
+        self.make_figures(result_file)
         return (HTML.format(uid=material.uid), '')
 
-    def make_figures(self, material):
-        data = read_result_file(material.folder / 'results-asr.shift.json')
+    def make_figures(self, result_file: Path):
+        data = read_result_file(result_file)
 
         # Make the table
         sym_chi = data.get('symm')
@@ -45,7 +49,8 @@ class ShiftPanel(Panel):
 
         # Make the figure list
         npan = len(sym_chi) - 1
-        files = [material.folder / f'shift{ii + 1}.png' for ii in range(npan)]
+        files = [result_file.with_name(f'shift{ii + 1}.png')
+                 for ii in range(npan)]
         plot_shift(data, 1.2, files, nd=2)
 
         # 'header': ['Element', 'Relations']
