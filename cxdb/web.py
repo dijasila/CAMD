@@ -36,7 +36,7 @@ class CXDBApp:
 
         # For selecting materials (Any, A, AB, AB2, ...)
         self.stoichiometries = [
-            ('Any', 'Any')] + self.materials.stoichiometries()
+            ('Any', 'Any')] + list(self.materials.stoichiometries())
 
     def index(self,
               query: dict | None = None) -> str:

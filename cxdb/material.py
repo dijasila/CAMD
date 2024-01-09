@@ -105,10 +105,10 @@ class Materials:
             callbacks.update(panel.callbacks)
         return callbacks
 
-    def stoichiometries(self):
-        s = []
+    def stoichiometries(self) -> set[tuple[str, str]]:
+        s = set()
         for material in self._materials.values():
-            s.append((material.stoichiometry, material['stoichiometry']))
+            s.add((material.stoichiometry, material['stoichiometry']))
         return s
 
     def __getitem__(self, uid):
