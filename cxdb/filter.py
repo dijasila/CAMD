@@ -39,8 +39,7 @@ def parse(q: str) -> Callable[[Index], set[int]]:
 def parse1(q: str) -> str:
     """Quick'n'dirty hacky parsing of query string to Python expression.
 
-    In the Python expression, *n* is a dict mapping chemical symbols their
-    numbers and *k* is a key-value dict:
+    In the Python expression, *i* is an Index object.
 
     >>> parse1('H2')
     "(i.formula('H2'))"
