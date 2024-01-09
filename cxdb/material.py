@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Container
 from math import nan
 from pathlib import Path
-from typing import Any
+from typing import Any, Sequence
 
 from ase import Atoms
 from ase.io import read
@@ -95,7 +95,7 @@ class Material:
 class Materials:
     def __init__(self,
                  materials: list[Material],
-                 panels: list[Panel]):
+                 panels: Sequence[Panel]):
         self.column_names = {
             'formula': 'Formula',
             'stoichiometry': 'Stoichiometry',
