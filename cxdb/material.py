@@ -16,6 +16,19 @@ from cxdb.session import Session
 
 class Material:
     def __init__(self, folder: Path, uid: str, atoms: Atoms):
+        """Object representing a material and associated data.
+
+        >>> mat = Material(Path(), 'x1', Atoms('H2O'))
+        >>> mat.formula
+        'OH2'
+        >>> mat['formula']
+        'OH<sub>2</sub>'
+        >>> mat.stoichiometry
+        'AB2'
+        >>> mat.add_column('energy', -1.23456)
+        >>> mat.energy, mat['energy']
+        (-1.23456, '-1.235')
+        """
         self.folder = folder
         self.uid = uid
         self.atoms = atoms
@@ -40,16 +53,11 @@ class Material:
         assert isinstance(atoms, Atoms)
         return cls(file.parent, uid, atoms)
 
-    def add(self,
-            name: str,
-            value) -> None:
-        assert name not in self._data, (name, self._data)
-        self._data[name] = value
-
     def add_column(self,
                    name: str,
-                   value,
+                   value: bool | int | float | str,
                    html: str | None = None) -> None:
+        """Add data that can be used for filtering of materials."""
         self.add(name, value)
         self._values[name] = value
         if html is None:
@@ -59,16 +67,27 @@ class Material:
                 html = str(value)
         self._html_reprs[name] = html
 
+    def add(self,
+            name: str,
+            value) -> None:
+        """Add any kind of data."""
+        assert name not in self._data, (name, self._data)
+        self._data[name] = value
+
     def __getattr__(self, name: str) -> Any:
+        """Get data by attribute."""
         return self._data[name]
 
     def __getitem__(self, name: str) -> str:
+        """Get HTML string for data."""
         return self._html_reprs[name]
 
     def get(self, name: str, default: str = '') -> str:
+        """Get HTML string for data."""
         return self._html_reprs.get(name, default)
 
     def check_columns(self, column_names: Container[str]) -> None:
+        """Make sure we don't have unknown columns."""
         for name in self._values:
             assert name in column_names, name
 
@@ -110,6 +129,7 @@ class Materials:
         return callbacks
 
     def stoichiometries(self) -> list[str]:
+        """Construct list of stoichiometries present."""
         s = set()
         for material in self:
             s.add(material.stoichiometry)
