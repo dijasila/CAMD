@@ -18,9 +18,9 @@ class CXDBApp:
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
-                 root: Path):
+                 root: Path | None = None):
         self.materials = materials
-        self.root = root
+        self.root = root or Path()
 
         self.route()
 
