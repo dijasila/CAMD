@@ -58,9 +58,9 @@ def app_from_db(db,
     return CMRProjectApp(materials, initial_columns)
 
 
-def main():
+def main(filenames: list[str]) -> CMRProjectsApp:
     projects = {}
-    for filename in sys.argv[1:]:
+    for filename in filenames:
         path = Path(filename)
         name = path.stem
         db = connect(path)
@@ -71,4 +71,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8080, debug=True)
+    main(sys.argv[1:]).app.run(host='0.0.0.0', port=8080, debug=True)
