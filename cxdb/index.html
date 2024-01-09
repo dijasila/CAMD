@@ -72,16 +72,17 @@
     % end
     </select>
     <label class="form-label">
-      Number of chemical species</label>
-      <select name="nspecies" class="form-select">
-        <option value="">Any</option>
-      % for i in range(1, 5):
-        <option value="{{ i }}"
-                {{ 'selected' if query.get('nspecies') == str(i) else '' }}>
-          {{ i }}
-        </option>
-      % end
-      </select>
+      Number of chemical species
+    </label>
+    <select name="nspecies" class="form-select">
+      <option value="">Any</option>
+    % for i in range(1, maxnspecies + 1):
+      <option value="{{ i }}"
+              {{ 'selected' if query.get('nspecies') == str(i) else '' }}>
+        {{ i }}
+      </option>
+    % end
+    </select>
   </div>
 </form>
 </div>

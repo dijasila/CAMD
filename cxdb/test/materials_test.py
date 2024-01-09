@@ -15,12 +15,12 @@ def test_mat():
     s = Session(1, ['uid'])
     rows, header, pages, new_columns = materials.get_rows(s)
     assert len(rows) == 1
-    s.update({'filter': 'volume>1', 'stoichiometry': 'A'})
+    s.update('volume>1,stoichiometry=A', {})
     rows, header, pages, new_columns = materials.get_rows(s)
     assert len(rows) == 1
-    s.update({'stoichiometry': 'A'})
+    s.update('stoichiometry=A', {})
     rows, header, pages, new_columns = materials.get_rows(s)
     assert len(rows) == 1
-    s.update({'stoichiometry': 'AB'})
+    s.update('stoichiometry=AB', {})
     rows, header, pages, new_columns = materials.get_rows(s)
     assert len(rows) == 0

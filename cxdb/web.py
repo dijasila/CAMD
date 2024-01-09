@@ -36,6 +36,9 @@ class CXDBApp:
 
         # For selecting materials (Any, A, AB, AB2, ...)
         self.stoichiometries = ['Any'] + self.materials.stoichiometries()
+        self.maxnspecies = max(material.nspecies
+                               for material
+                               in self.materials._materials.values())
 
     def index(self,
               query: dict | None = None) -> str:
@@ -49,6 +52,7 @@ class CXDBApp:
         return template('index.html',
                         query=query,
                         stoichiometries=self.stoichiometries,
+                        maxnspecies=self.maxnspecies,
                         session=session,
                         pages=pages,
                         rows=rows,
