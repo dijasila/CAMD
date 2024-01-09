@@ -31,6 +31,7 @@ class Material:
 
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
+        self.add_column('nspecies', len(self._count))
         self.add_column('uid', uid)
 
     @classmethod
@@ -79,6 +80,7 @@ class Materials:
         self.column_names = {
             'formula': 'Formula',
             'stoichiometry': 'Stoichiometry',
+            'nspecies': 'Number of species',
             'uid': 'Unique ID'}
 
         for panel in panels:
@@ -105,11 +107,11 @@ class Materials:
             callbacks.update(panel.callbacks)
         return callbacks
 
-    def stoichiometries(self) -> set[tuple[str, str]]:
+    def stoichiometries(self) -> list[str]:
         s = set()
         for material in self._materials.values():
-            s.add((material.stoichiometry, material['stoichiometry']))
-        return s
+            s.add(material.stoichiometry)
+        return list(s)
 
     def __getitem__(self, uid):
         return self._materials[uid]
@@ -138,14 +140,10 @@ class Materials:
             stuff for pagination buttons (see get_pages() function).
 
         new_columns:
-            list of (column name, columns html-string) for columns not
+            list of (column name, columns html-string) tuples for columns not
             shown.
         """
         filter = session.filter
-        if session.stoichiometry != 'Any':
-            if filter:
-                filter += ','
-            filter += f'stoichiometry={session.stoichiometry}'
         func = parse(filter)
         rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
 

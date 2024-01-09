@@ -35,8 +35,7 @@ class CXDBApp:
         self.sessions = Sessions(initial_columns)
 
         # For selecting materials (Any, A, AB, AB2, ...)
-        self.stoichiometries = [
-            ('Any', 'Any')] + list(self.materials.stoichiometries())
+        self.stoichiometries = ['Any'] + self.materials.stoichiometries()
 
     def index(self,
               query: dict | None = None) -> str:
@@ -44,7 +43,7 @@ class CXDBApp:
             query = request.query
 
         session = self.sessions.get(int(query.get('sid', '-1')))
-        session.update(query)
+        session.update(self.get_filter_string(query), query)
 
         rows, header, pages, new_columns = self.materials.get_rows(session)
         return template('index.html',
@@ -55,6 +54,29 @@ class CXDBApp:
                         rows=rows,
                         header=header,
                         new_columns=new_columns)
+
+    def get_filter_string(self, query: dict) -> str:
+        """Generate filter string from URL query.
+
+        Example::
+
+            {'filter': Cu=1,gap>1.5',
+             'stoichiometry': 'AB2',
+             'nspecies': ''}
+
+        will give the string "Cu=1,gap>1.5,stoichiometry=AB2".
+        """
+        filters = []
+        filter = query.get('filter', '')
+        if filter:
+            filters.append(filter)
+        s11y = query.get('stoichiometry', 'Any')
+        if s11y != 'Any':
+            filters.append(f'stoichiometry={s11y}')
+        nspecies = query.get('nspecies', '')
+        if nspecies:
+            filters.append(f'nspecies={nspecies}')
+        return ','.join(filters)
 
     def material(self, uid: str) -> str:
         if uid == 'stop':  # pragma: no cover
@@ -101,7 +123,7 @@ def main() -> None:  # pragma: no cover
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['uid', 'energy', 'volume', 'formula']
+    initial_columns = ['uid', 'volume', 'formula']
 
     root = Path.cwd()
 
