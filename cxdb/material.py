@@ -105,10 +105,10 @@ class Materials:
             callbacks.update(panel.callbacks)
         return callbacks
 
-    def stoichiometries(self):
-        s = []
+    def stoichiometries(self) -> set[tuple[str, str]]:
+        s = set()
         for material in self._materials.values():
-            s.append((material.stoichiometry, material['stoichiometry']))
+            s.add((material.stoichiometry, material['stoichiometry']))
         return s
 
     def __getitem__(self, uid):
@@ -119,6 +119,28 @@ class Materials:
                                             list[tuple[str, str]],
                                             list[tuple[int, str]],
                                             list[tuple[str, str]]]:
+        """Filter rows for table.
+
+        Example::
+
+            rows, header, pages, new_columns = materials.get_rows(session)
+
+        The returned values are:
+
+        rows:
+            list of rows, where each row is a tuple of uid and list of
+            html-strings.
+
+        header:
+            list of (column name, column html-string) tuples.
+
+        pages:
+            stuff for pagination buttons (see get_pages() function).
+
+        new_columns:
+            list of (column name, columns html-string) for columns not
+            shown.
+        """
         filter = session.filter
         if session.stoichiometry != 'Any':
             if filter:
