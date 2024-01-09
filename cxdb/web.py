@@ -22,12 +22,7 @@ class CXDBApp:
         self.materials = materials
         self.root = root
 
-        self.app = Bottle()
-        self.app.route('/')(self.index)
-        self.app.route('/material/<uid>')(self.material)
-        self.app.route('/callback')(self.callback)
-        self.app.route('/png/<uid>/<filename>')(self.png)
-        self.app.route('/help')(self.help)
+        self.route()
 
         self.callbacks = self.materials.get_callbacks()
 
@@ -38,6 +33,14 @@ class CXDBApp:
         self.stoichiometries = ['Any'] + self.materials.stoichiometries()
         self.maxnspecies = max(material.nspecies
                                for material in self.materials)
+
+    def route(self):
+        self.app = Bottle()
+        self.app.route('/')(self.index)
+        self.app.route('/material/<uid>')(self.material)
+        self.app.route('/callback')(self.callback)
+        self.app.route('/png/<uid>/<filename>')(self.png)
+        self.app.route('/help')(self.help)
 
     def index(self,
               query: dict | None = None) -> str:
