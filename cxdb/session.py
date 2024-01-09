@@ -27,18 +27,16 @@ class Session:
         self.sid = sid
         self.columns = list(columns)
         self.filter = ''
-        self.stoichiometry = 'Any'
         self.page = 0
         self.sort = ''
         self.direction = 1
         self.rows_per_page = 25
 
-    def update(self, query):
-        filter = query.get('filter', '')
-        s11y = query.get('stoichiometry', 'Any')
-        if filter != self.filter or s11y != self.stoichiometry:
+    def update(self,
+               filter: str,
+               query: dict) -> None:
+        if filter != self.filter:
             self.filter = filter
-            self.stoichiometry = s11y
             self.page = 0
             return
 

@@ -16,6 +16,19 @@ from cxdb.session import Session
 
 class Material:
     def __init__(self, folder: Path, uid: str, atoms: Atoms):
+        """Object representing a material and associated data.
+
+        >>> mat = Material(Path(), 'x1', Atoms('H2O'))
+        >>> mat.formula
+        'OH2'
+        >>> mat['formula']
+        'OH<sub>2</sub>'
+        >>> mat.stoichiometry
+        'AB2'
+        >>> mat.add_column('energy', -1.23456)
+        >>> mat.energy, mat['energy']
+        (-1.23456, '-1.235')
+        """
         self.folder = folder
         self.uid = uid
         self.atoms = atoms
@@ -31,6 +44,7 @@ class Material:
 
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
+        self.add_column('nspecies', len(self._count))
         self.add_column('uid', uid)
 
     @classmethod
@@ -39,16 +53,11 @@ class Material:
         assert isinstance(atoms, Atoms)
         return cls(file.parent, uid, atoms)
 
-    def add(self,
-            name: str,
-            value) -> None:
-        assert name not in self._data, (name, self._data)
-        self._data[name] = value
-
     def add_column(self,
                    name: str,
-                   value,
+                   value: bool | int | float | str,
                    html: str | None = None) -> None:
+        """Add data that can be used for filtering of materials."""
         self.add(name, value)
         self._values[name] = value
         if html is None:
@@ -58,16 +67,27 @@ class Material:
                 html = str(value)
         self._html_reprs[name] = html
 
+    def add(self,
+            name: str,
+            value) -> None:
+        """Add any kind of data."""
+        assert name not in self._data, (name, self._data)
+        self._data[name] = value
+
     def __getattr__(self, name: str) -> Any:
+        """Get data by attribute."""
         return self._data[name]
 
     def __getitem__(self, name: str) -> str:
+        """Get HTML string for data."""
         return self._html_reprs[name]
 
     def get(self, name: str, default: str = '') -> str:
+        """Get HTML string for data."""
         return self._html_reprs.get(name, default)
 
     def check_columns(self, column_names: Container[str]) -> None:
+        """Make sure we don't have unknown columns."""
         for name in self._values:
             assert name in column_names, name
 
@@ -79,6 +99,7 @@ class Materials:
         self.column_names = {
             'formula': 'Formula',
             'stoichiometry': 'Stoichiometry',
+            'nspecies': 'Number of species',
             'uid': 'Unique ID'}
 
         for panel in panels:
@@ -94,10 +115,12 @@ class Materials:
 
         self.index = Index([(mat._count, mat._values)
                             for mat in self._materials.values()])
-        self.i2uid = {i: mat.uid
-                      for i, mat in enumerate(self._materials.values())}
+        self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
+
+    def __iter__(self):
+        yield from self._materials.values()
 
     def get_callbacks(self):
         callbacks = {}
@@ -105,11 +128,12 @@ class Materials:
             callbacks.update(panel.callbacks)
         return callbacks
 
-    def stoichiometries(self) -> set[tuple[str, str]]:
+    def stoichiometries(self) -> list[str]:
+        """Construct list of stoichiometries present."""
         s = set()
-        for material in self._materials.values():
-            s.add((material.stoichiometry, material['stoichiometry']))
-        return s
+        for material in self:
+            s.add(material.stoichiometry)
+        return list(s)
 
     def __getitem__(self, uid):
         return self._materials[uid]
@@ -138,14 +162,10 @@ class Materials:
             stuff for pagination buttons (see get_pages() function).
 
         new_columns:
-            list of (column name, columns html-string) for columns not
+            list of (column name, columns html-string) tuples for columns not
             shown.
         """
         filter = session.filter
-        if session.stoichiometry != 'Any':
-            if filter:
-                filter += ','
-            filter += f'stoichiometry={session.stoichiometry}'
         func = parse(filter)
         rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
 

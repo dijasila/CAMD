@@ -61,20 +61,28 @@
   </div>
   <div>
     <label class="form-label">
-      Stoichiometry (A, AB, AB2, ...)
+      Stoichiometry (Any, A, AB, AB2, ...)
     </label>
     <select name="stoichiometry" class="form-select">
-    % for name, html in stoichiometries:
-     <option value="{{ name }}">{{ !html }}</option>
+    % for name in stoichiometries:
+      <option value="{{ name }}"
+              {{ 'selected' if query.get('stoichiometry') == name else '' }}>
+        {{ name }}
+      </option>
     % end
     </select>
     <label class="form-label">
-      Number of chemical species</label>
-      <select name="nspecies" class="form-select">
-      % for i in range(1, 5):
-        <option value="{{ i }}">{{ i }}</option>
-      % end
-      </select>
+      Number of chemical species
+    </label>
+    <select name="nspecies" class="form-select">
+      <option value="">Any</option>
+    % for i in range(1, maxnspecies + 1):
+      <option value="{{ i }}"
+              {{ 'selected' if query.get('nspecies') == str(i) else '' }}>
+        {{ i }}
+      </option>
+    % end
+    </select>
   </div>
 </form>
 </div>
