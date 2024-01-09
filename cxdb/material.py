@@ -96,10 +96,12 @@ class Materials:
 
         self.index = Index([(mat._count, mat._values)
                             for mat in self._materials.values()])
-        self.i2uid = {i: mat.uid
-                      for i, mat in enumerate(self._materials.values())}
+        self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
+
+    def __iter__(self):
+        yield from self._materials.values()
 
     def get_callbacks(self):
         callbacks = {}
@@ -109,7 +111,7 @@ class Materials:
 
     def stoichiometries(self) -> list[str]:
         s = set()
-        for material in self._materials.values():
+        for material in self:
             s.add(material.stoichiometry)
         return list(s)
 

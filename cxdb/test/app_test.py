@@ -26,6 +26,8 @@ def test_app(tmp_path):
     assert 'H<sub>2' in out
     out = c2db.index({'filter': 'H=3,energy=42.0'})
     assert 'H<sub>2' not in out
+    out = c2db.index({'stoichiometry': 'A', 'nspecies': '1'})
+    assert 'H<sub>2' in out
     c2db.index({'toggle': 'volume'})
     c2db.index({'toggle': 'volume'})
     c2db.index({'sort': 'volume'})
