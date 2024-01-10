@@ -15,7 +15,7 @@ class Panel(abc.ABC):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        ...
+        raise NotImplementedError
 
     def update_data(self, material: Material) -> None:
         pass

@@ -1,6 +1,7 @@
 import os
 
-from cxdb.c2db import copy_materials, main
+from cxdb.c2db.copy_files import copy_materials
+from cxdb.c2db.app import main
 from cxdb.test.c2db import create_tree
 
 
