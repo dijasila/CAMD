@@ -16,6 +16,7 @@ class CMRProjectsApp:
         self.projects = projects
         self.app = Bottle()
         self.app.route('/')(self.overview)
+        self.app.route('/favicon.ico')(self.favicon)
         self.app.route('/<project_name>')(self.index)
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
@@ -30,7 +31,7 @@ class CMRProjectsApp:
              'Description'],
             [[f'<a href="/{name}">{project.title}</a>',
               len(project.materials),
-              f'<a diwnload="" href="/{name}/download">{name}.db</a>',
+              f'<a download="" href="/{name}/download">{name}.db</a>',
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, project in self.projects.items()])
 
@@ -46,6 +47,10 @@ class CMRProjectsApp:
 
     def download_db_file(self, project_name: str) -> bytes:
         path = self.projects[project_name].dbpath
+        return static_file(path.name, path.parent)
+
+    def favicon(self) -> bytes:
+        path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
 
 
