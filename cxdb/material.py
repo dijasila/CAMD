@@ -122,6 +122,9 @@ class Materials:
     def __iter__(self):
         yield from self._materials.values()
 
+    def __len__(self):
+        return len(self._materials)
+
     def get_callbacks(self):
         callbacks = {}
         for panel in self.panels:
