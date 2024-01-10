@@ -15,9 +15,10 @@ def project(func):
 
 
 def create_project_description(name):
-    """Get PD for known CMR projects or create a generic one."""
+    """Create ProjectDescription for CMR projects."""
     if name in _projects:
         return _projects[name]()
+    # Unknown CMR name.  Create a generic one:
     return ProjectDescription(name, {}, ['formula', 'uid'])
 
 
@@ -59,4 +60,4 @@ def solar():
         ['uid', 'formula', 'Unit', 'KS_gap', 'E_homo', 'E_lumo',
          'E_gap', 'E_opt', 'rho'],
         extra=['CAN_SMILES', 'InChI', 'SMILES', 'Name', 'fold'],
-        ndims=1)
+        ndims=0)

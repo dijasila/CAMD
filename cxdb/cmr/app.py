@@ -8,12 +8,12 @@ from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
 from cxdb.utils import table
 from cxdb.web import CXDBApp
-from cxdb.cmr_projects import create_project_description
+from cxdb.cmr.projects import create_project_description
 
 
 class CMRProjectsApp:
-    def __init__(self, projects):
-        self.projects = projects
+    def __init__(self, project_apps):
+        self.project_apps = project_apps
         self.app = Bottle()
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
@@ -29,24 +29,24 @@ class CMRProjectsApp:
              'Number of materials',
              'Download data',
              'Description'],
-            [[f'<a href="/{name}">{project.title}</a>',
-              len(project.materials),
+            [[f'<a href="/{name}">{app.title}</a>',
+              len(app.materials),
               f'<a download="" href="/{name}/download">{name}.db</a>',
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
-             for name, project in self.projects.items()])
+             for name, app in self.project_apps.items()])
 
     def index(self, project_name) -> str:
-        html = self.projects[project_name].index()
+        html = self.project_apps[project_name].index()
         return html.replace('/material/', f'/{project_name}/row/')
 
     def material(self, project_name, uid) -> str:
-        return self.projects[project_name].material(uid)
+        return self.project_apps[project_name].material(uid)
 
     def callback(self, project_name):
-        return self.projects[project_name].callback()
+        return self.project_apps[project_name].callback()
 
     def download_db_file(self, project_name: str) -> bytes:
-        path = self.projects[project_name].dbpath
+        path = self.project_apps[project_name].dbpath
         return static_file(path.name, path.parent)
 
     def favicon(self) -> bytes:
@@ -94,15 +94,15 @@ def app_from_db(dbpath,
 
 
 def main(filenames: list[str]) -> CMRProjectsApp:
-    projects = {}
+    project_apps = {}
     for filename in filenames:
         path = Path(filename)
         name = path.stem
         project_description = create_project_description(name)
         app = app_from_db(path, project_description)
-        projects[name] = app
+        project_apps[name] = app
 
-    return CMRProjectsApp(projects)
+    return CMRProjectsApp(project_apps)
 
 
 if __name__ == '__main__':
