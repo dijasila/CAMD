@@ -55,10 +55,30 @@ class CMRProjectsApp:
 
 
 class CMRProjectApp(CXDBApp):
-    def __init__(self, materials, dbpath, title, initial_columns):
+    def __init__(self,
+                 materials,
+                 initial_columns,
+                 dbpath,
+                 title,
+                 search):
         super().__init__(materials, initial_columns)
         self.dbpath = dbpath
         self.title = title
+        self.search_words, self.search_html = search
+
+    def get_filter_string(self, query):
+        filter = super().get_filter_string(query)
+        for word in self.search_words:
+            q = query.get(word, '')
+            if q:
+                filter += f',{word}={q}'
+        return filter.lstrip(',')
+
+    def index(self) -> str:
+        html = super().index()
+        if not self.search_html:
+            return html
+        return html.replace('<!-- EXTRA SELECT BLOCKS -->', self.search_html)
 
     def route(self):
         pass
@@ -90,7 +110,8 @@ def app_from_db(dbpath,
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
-    return CMRProjectApp(materials, dbpath, pd.title, initial_columns)
+    return CMRProjectApp(materials, initial_columns,
+                         dbpath, pd.title, pd.search)
 
 
 def main(filenames: list[str]) -> CMRProjectsApp:
