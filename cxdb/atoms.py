@@ -1,3 +1,13 @@
+"""Panel for showing the atomic structure and additional tables.
+
+Content:
+
+* ball and stick plotly plot
+* repeat-unit-cell button
+* download button TODO
+* unit cell vectors
+* tables
+"""
 from __future__ import annotations
 import json
 import sys
@@ -105,6 +115,7 @@ class AtomsPanel(Panel):
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
+# The 12 edges of a cube:
 UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
             [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1],
             [nan, nan, nan], [1, 0, 0], [1, 0, 1],
@@ -114,6 +125,7 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
 
 def plot_atoms(atoms: Atoms,
                unitcell: np.ndarray | None = None) -> go.Figure:
+    """Ball and stick plotly figure."""
     data = []
 
     # Atoms:
@@ -153,6 +165,7 @@ def plot_atoms(atoms: Atoms,
     return fig
 
 
+# 50 Lebedev quadrature points:
 SPHERE_POINTS = np.array(
     [[-1.0, 0.0, 0.0],
      [1.0, 0.0, 0.0],
@@ -218,7 +231,7 @@ def color(Z: int) -> str:
     return f'rgb({a},{b},{c})'
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     atoms = read(sys.argv[1])
     assert isinstance(atoms, Atoms)
     plot_atoms(atoms).show()

@@ -1,3 +1,17 @@
+"""Code for efficient filtering of rows.
+
+Example filter string:
+
+* ``Cu>1``: more than 1 Cu atom
+* ``gap>1.1``: "gap" larger than 1.1
+* ``xc=PBE``: "xc" equal to "PBE"
+* ``MoS2``: one or more MoS2 formula units
+
+Strings can be combined with ``,`` (and) and ``|`` (or).  Grouping can be
+done using ``(`` and ``)``:
+
+* ``(Cu>1, gap>1.1) | Fe=0``
+"""
 from __future__ import annotations
 import functools
 import re
@@ -12,7 +26,7 @@ from ase.formula import Formula
 
 @functools.lru_cache
 def parse(q: str) -> Callable[[Index], set[int]]:
-    """Convert query string to Python function.
+    """Convert filter string to Python function.
 
     >>> f = parse('H2,xc=PBE')
     >>> i = Index([({'H': 2}, {'xc': 'PBE'})])
@@ -37,7 +51,7 @@ def parse(q: str) -> Callable[[Index], set[int]]:
 
 
 def parse1(q: str) -> str:
-    """Quick'n'dirty hacky parsing of query string to Python expression.
+    """Quick'n'dirty hacky parsing of filter string to Python expression.
 
     In the Python expression, *i* is an Index object.
 
@@ -106,7 +120,7 @@ def parse1(q: str) -> str:
         q = q.replace(f'#{i}', v)
 
     if n1 != n:
-        raise SyntaxError(f'Bad query string: {q0!r}')
+        raise SyntaxError(f'Bad filter string: {q0!r}')
 
     return q
 
@@ -131,6 +145,7 @@ def str2obj(s: str) -> bool | int | float | str:
 
 
 class Index:
+    """Indices for speeding up row filtering."""
     def __init__(self,
                  rows: list[tuple[dict[str, int],
                                   dict[str, bool | int | float | str]]]):

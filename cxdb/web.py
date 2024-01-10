@@ -1,3 +1,4 @@
+"""Base web-app class."""
 from __future__ import annotations
 
 import sys
@@ -24,13 +25,16 @@ class CXDBApp:
 
         self.route()
 
+        # For updating plots:
         self.callbacks = self.materials.get_callbacks()
 
-        # User sessions (selcted columns, sorting, filter string, ...)
+        # User sessions (selected columns, sorting, filter string, ...)
         self.sessions = Sessions(initial_columns)
 
         # For selecting materials (Any, A, AB, AB2, ...)
         self.stoichiometries = ['Any'] + self.materials.stoichiometries()
+
+        # For nspecies selection:
         self.maxnspecies = max(material.nspecies
                                for material in self.materials)
 
@@ -44,6 +48,7 @@ class CXDBApp:
 
     def index(self,
               query: dict | None = None) -> str:
+        """Page showing table of selected materials."""
         if query is None:
             query = request.query
 
@@ -85,6 +90,7 @@ class CXDBApp:
         return ','.join(filters)
 
     def material(self, uid: str) -> str:
+        """Page showing one selected material."""
         if uid == 'stop':  # pragma: no cover
             sys.stderr.close()
         material = self.materials[uid]

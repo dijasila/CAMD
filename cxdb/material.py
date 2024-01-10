@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Container
 from math import nan
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Sequence, Generator
 
 from ase import Atoms
 from ase.io import read
@@ -119,10 +119,10 @@ class Materials:
 
         self.panels = panels
 
-    def __iter__(self):
+    def __iter__(self) -> Generator[Material, None, None]:
         yield from self._materials.values()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._materials)
 
     def get_callbacks(self):
@@ -138,7 +138,7 @@ class Materials:
             s.add(material.stoichiometry)
         return list(s)
 
-    def __getitem__(self, uid):
+    def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]
 
     def get_rows(self,
