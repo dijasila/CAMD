@@ -42,8 +42,8 @@ class CMRProjectsApp:
     def material(self, project_name, uid) -> str:
         return self.project_apps[project_name].material(uid)
 
-    def callback(self, project_name):
-        return self.project_apps[project_name].callback()
+    def callback(self, project_name, query: dict | None = None):
+        return self.project_apps[project_name].callback(query)
 
     def download_db_file(self, project_name: str) -> bytes:
         path = self.project_apps[project_name].dbpath

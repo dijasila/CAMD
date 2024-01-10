@@ -23,3 +23,9 @@ def test_cmr(tmp_path):
     app.overview()
     app.index('abc')
     app.material('abc', '1')
+    app.index('solar')
+    app.material('solar', '1')
+    app.download_db_file('abc')
+    app.favicon()
+    dct = app.callback('abc', dict(name='atoms', uid='1', data='1'))
+    assert 'data' in dct
