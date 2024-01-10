@@ -37,6 +37,7 @@ class ProjectDescription:
         self.uid = uid
         self.ndims = ndims
         self.extra = extra or []
+        self.search = search
 
 
 @project
