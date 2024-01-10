@@ -20,7 +20,7 @@ def test_cmr(tmp_path):
         atoms.center(vacuum=1)
         db.write(atoms, KS_gap=27.3, DeltaU=1.3)
     dbfile3 = tmp_path / 'adsorption.db'
-    with connect(dbfile2) as db:
+    with connect(dbfile3) as db:
         atoms = Atoms('N2', [(0, 0, 0), (1.1, 0, 0)])
         atoms.center(vacuum=1)
         db.write(atoms, surf_mat='Sc', adsorbate='H')
