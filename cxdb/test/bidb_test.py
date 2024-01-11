@@ -1,4 +1,4 @@
-from cxdb.bidb import main, expand
+from cxdb.bidb.app import main, expand
 from ase.db import connect
 from ase import Atoms
 import os
