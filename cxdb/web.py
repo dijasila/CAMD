@@ -11,6 +11,7 @@ from cxdb.bader import BaderPanel
 from cxdb.dos import DOSPanel
 from cxdb.material import Material, Materials
 from cxdb.session import Sessions
+from cxdb.utils import Select
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -31,12 +32,18 @@ class CXDBApp:
         # User sessions (selected columns, sorting, filter string, ...)
         self.sessions = Sessions(initial_columns)
 
-        # For selecting materials (Any, A, AB, AB2, ...)
-        self.stoichiometries = ['Any'] + self.materials.stoichiometries()
+        self.search = []
+
+        # For selecting materials (A, AB, AB2, ...):
+        self.search.append(
+            Select('Stoichiometry', 'stoichiometry',
+                   [''] + self.materials.stoichiometries()))
 
         # For nspecies selection:
-        self.maxnspecies = max(material.nspecies
-                               for material in self.materials)
+        maxnspecies = max(material.nspecies for material in self.materials)
+        self.search.append(
+            Select('Number of chemical species', 'nspecies',
+                   [''] + [str(i) for i in range(1, maxnspecies)]))
 
     def route(self):
         self.app = Bottle()
@@ -52,14 +59,15 @@ class CXDBApp:
         if query is None:
             query = request.query
 
+        filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
-        session.update(self.get_filter_string(query), query)
-
+        session.update(filter_string, query)
+        search = '\n'.join(s.render(query) for s in self.search)
         rows, header, pages, new_columns = self.materials.get_rows(session)
+
         return template('index.html',
                         query=query,
-                        stoichiometries=self.stoichiometries,
-                        maxnspecies=self.maxnspecies,
+                        search=search,
                         session=session,
                         pages=pages,
                         rows=rows,
@@ -81,12 +89,8 @@ class CXDBApp:
         filter = query.get('filter', '')
         if filter:
             filters.append(filter)
-        s11y = query.get('stoichiometry', 'Any')
-        if s11y != 'Any':
-            filters.append(f'stoichiometry={s11y}')
-        nspecies = query.get('nspecies', '')
-        if nspecies:
-            filters.append(f'nspecies={nspecies}')
+        for s in self.search:
+            filters += s.get_filter_strings(query)
         return ','.join(filters)
 
     def material(self, uid: str) -> str:

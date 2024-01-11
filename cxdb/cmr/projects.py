@@ -4,6 +4,7 @@ See https://cmr.fysik.dtu.dk/
 """
 from __future__ import annotations
 from typing import Callable
+from cxdb.utils import Select
 
 _projects: dict[str, Callable[[], ProjectDescription]] = {}
 
@@ -30,14 +31,14 @@ class ProjectDescription:
                  uid: str = 'id',
                  ndims: int | None = None,
                  extra: list[str] | None = None,
-                 search=([], '')):
+                 search: list | None = None):
         self.title = title
         self.column_names = column_names
         self.initial_columns = initial_columns
         self.uid = uid
         self.ndims = ndims
         self.extra = extra or []
-        self.search = search
+        self.search = search or []
 
 
 @project
@@ -65,12 +66,6 @@ def solar():
         ndims=0)
 
 
-SURFACES = ('Sc Ti V Cr Mn Fe Co Ni Cu '
-            'Y Zr Nb Mo Ru Rh Pd Ag '
-            'Hf Ta W Re Os Ir Pt Au')
-ADSORBATES = 'H O N N2 CO NO CH OH'
-
-
 @project
 def adsorption():
     return ProjectDescription(
@@ -93,31 +88,12 @@ def adsorption():
          'BEEFvdW_adsorp', 'vdWDF2_adsorp', 'mBEEF_adsorp',
          'mBEEFvdW_adsorp', 'RPA_EXX_adsorp'],
         ndims=2,
-        search=(['surf_mat', 'adsorbate'], f"""
-                <label class="form-label">
-                  Surface material
-                </label>
-                <select name="surf_mat" class="form-select">
-                  <option value="">-</option>
-                  % for symb in {SURFACES!r}.split():
-                  <option value="{{ symb }}"
-                    {{ 'selected' if query.get('surf_mat') == symb else '' }}>
-                    {{ symb }}
-                  </option>
-                  % end
-                </select>
-                <label class="form-label">
-                  Surface material
-                </label>
-                <select name="adsorbate" class="form-select">
-                  <option value="">-</option>
-                  % for symb in {ADSORBATES!r}.split():
-                  <option value="{{ symb }}"
-                    {{ 'selected' if query.get('adsorbate') == symb else '' }}>
-                    {{ symb }}
-                  </option>
-                  % end
-                </select>"""))
+        search=[Select('Surface material', 'surf_mat',
+                       ('Sc Ti V Cr Mn Fe Co Ni Cu '
+                        'Y Zr Nb Mo Ru Rh Pd Ag '
+                        'Hf Ta W Re Os Ir Pt Au').split()),
+                Select('Adsorbate', 'adsorbate',
+                       'H O N N2 CO NO CH OH'.split())])
 
 
 if __name__ == '__main__':
