@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import json
 from collections import defaultdict
 from pathlib import Path
 
 from ase.db import connect
 from ase.formula import Formula
-from cxdb.atoms import AtomsPanel
+
 from cxdb.material import Material, Materials
-from cxdb.web import CXDBApp
-from cxdb.panel import Panel
+from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.panel import Panel
 from cxdb.utils import table
+from cxdb.web import CXDBApp
 
 
 def expand(db_file: str) -> None:

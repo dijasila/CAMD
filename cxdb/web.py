@@ -6,10 +6,7 @@ from pathlib import Path
 
 from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
 
-from cxdb.atoms import AtomsPanel
-from cxdb.bader import BaderPanel
-from cxdb.dos import DOSPanel
-from cxdb.material import Material, Materials
+from cxdb.material import Materials
 from cxdb.session import Sessions
 from cxdb.utils import Select
 
@@ -127,28 +124,3 @@ class CXDBApp:
     def png(self, uid: str, filename: str) -> bytes:
         material = self.materials[uid]
         return static_file(str(material.folder / filename), self.root)
-
-
-def main() -> None:  # pragma: no cover
-    panels = [AtomsPanel(3),
-              DOSPanel(),
-              BaderPanel()]
-
-    mlist = []
-    for arg in sys.argv[1:]:
-        folder = Path(arg)
-        uid = folder.name
-        mlist.append(Material.from_file(folder / 'rlx.traj', uid))
-
-    materials = Materials(mlist, panels)
-
-    initial_columns = ['uid', 'volume', 'formula']
-
-    root = Path.cwd()
-
-    CXDBApp(materials, initial_columns, root).app.run(
-        host='0.0.0.0', port=8081, debug=True)
-
-
-if __name__ == '__main__':
-    main()

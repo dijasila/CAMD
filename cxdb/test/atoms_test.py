@@ -1,10 +1,10 @@
 from ase import Atoms
 
-from cxdb.atoms import AtomsPanel, plot_atoms
+from cxdb.panels.atoms import AtomsPanel, plot_atoms
 
 
 def test_1d():
-    assert AtomsPanel(1).column_names['length'] == 'Length [Å]'
+    assert AtomsPanel().column_names['length'] == 'Length [Å]'
 
 
 def test_plot():

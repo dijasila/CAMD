@@ -21,6 +21,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 
+[project.scripts]
+cxdb = "cxdb.cli:main"
+
 [tool.mypy]
 packages = "cxdb"
 ignore_missing_imports = true

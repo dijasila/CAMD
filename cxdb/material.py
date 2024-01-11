@@ -10,7 +10,7 @@ from ase.io import read
 
 from cxdb.filter import Index, parse
 from cxdb.paging import get_pages
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.session import Session
 
 

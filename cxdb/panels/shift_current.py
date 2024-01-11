@@ -5,15 +5,15 @@ import numpy as np
 from pathlib import Path
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
-from cxdb.asr_panel import read_result_file
+from cxdb.panels.panel import Panel
+from cxdb.panels.asr_panel import read_result_file
 
 HTML = """
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
 """
 
 
-class ShiftPanel(Panel):
+class ShiftCurrentPanel(Panel):
     title = 'Shift current spectrum (RPA)'
 
     def get_html(self,

@@ -1,9 +1,9 @@
 from ase import Atoms
 from ase.calculators.emt import EMT
 
-from cxdb.atoms import AtomsPanel
-from cxdb.bader import BaderPanel
-from cxdb.dos import DOSPanel
+from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.bader import BaderPanel
+from cxdb.panels.dos import DOSPanel
 from cxdb.material import Material, Materials
 from cxdb.web import CXDBApp
 
@@ -19,7 +19,7 @@ def test_app(tmp_path):
     (f / 'dos.png').write_text('DOS')
     (f / 'bader.json').write_text('{"charges": [1.23, 0.0]}')
     c2db = CXDBApp(Materials([Material.from_file(f / 'structure.xyz', 'h2')],
-                             [AtomsPanel(3), DOSPanel(), BaderPanel()]),
+                             [AtomsPanel(), DOSPanel(), BaderPanel()]),
                    {'uid', 'volume', 'formula'},
                    tmp_path)
     out = c2db.index({'filter': 'H=2'})

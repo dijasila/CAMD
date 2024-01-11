@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
 from ase.db import connect
 from bottle import Bottle, static_file, template
 
-from cxdb.atoms import AtomsPanel
+from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
+from cxdb.panels.atoms import AtomsPanel
 from cxdb.utils import table
 from cxdb.web import CXDBApp
-from cxdb.cmr.projects import create_project_description, ProjectDescription
 
 
 class CMRProjectsApp:
@@ -79,8 +80,8 @@ class CMRProjectApp(CXDBApp):
 
 
 class CMRAtomsPanel(AtomsPanel):
-    def __init__(self, ndims: int, column_names: dict[str, str]):
-        super().__init__(ndims)
+    def __init__(self, column_names: dict[str, str]):
+        super().__init__()
         self.column_names.update(column_names)
         self.columns = list(self.column_names)
 
@@ -101,8 +102,7 @@ def app_from_db(dbpath: Path,
                 material.add_column(name, value)
         rows.append(material)
 
-    ndims = sum(atoms.pbc) if pd.ndims is None else pd.ndims
-    panels = [CMRAtomsPanel(ndims, pd.column_names)]
+    panels = [CMRAtomsPanel(pd.column_names)]
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]

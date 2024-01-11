@@ -25,7 +25,7 @@ from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.utils import table
 
 HTML = """
@@ -60,25 +60,25 @@ DIMS = ['', 'length', 'area', 'volume']
 class AtomsPanel(Panel):
     title = 'Atoms'
 
-    def __init__(self, ndims: int) -> None:
+    def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
-        self.ndims = ndims
         self.column_names = {}
         self.columns = ['stoichiometry', 'uid']
-        if ndims:
-            if ndims == 1:
-                unit = 'Å'
-            else:
-                unit = f'Å<sup>{ndims}</sup>'
-            name = DIMS[ndims]
-            self.column_names[name] = f'{name.title()} [{unit}]'
-            self.columns.append(name)
 
     def update_data(self, material):
-        if self.ndims > 0:
-            pbc = material.atoms.pbc
+        pbc = material.atoms.pbc
+        dims = pbc.sum()
+        if dims > 0:
             vol = abs(np.linalg.det(material.atoms.cell[pbc][:, pbc]))
-            material.add_column(DIMS[self.ndims], vol)
+            name = DIMS[dims]
+            if name not in self.column_names:
+                if dims == 1:
+                    unit = 'Å'
+                else:
+                    unit = f'Å<sup>{dims}</sup>'
+                self.column_names[name] = f'{name.title()} [{unit}]'
+                self.columns.append(name)
+            material.add_column(name, vol)
 
     def get_html(self,
                  material: Material,
