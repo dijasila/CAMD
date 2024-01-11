@@ -92,11 +92,11 @@ def adsorption():
         ndims=2,
         pbc=[True, True, False],  # overwrite pbc=(1,1,1) in db-file
         search=[Select('Surface material', 'surf_mat',
-                       ('Sc Ti V Cr Mn Fe Co Ni Cu '
-                        'Y Zr Nb Mo Ru Rh Pd Ag '
-                        'Hf Ta W Re Os Ir Pt Au').split()),
+                       [''] + ('Sc Ti V Cr Mn Fe Co Ni Cu '
+                               'Y Zr Nb Mo Ru Rh Pd Ag '
+                               'Hf Ta W Re Os Ir Pt Au').split()),
                 Select('Adsorbate', 'adsorbate',
-                       'H O N N2 CO NO CH OH'.split())])
+                       [''] + 'H O N N2 CO NO CH OH'.split())])
 
 
 if __name__ == '__main__':

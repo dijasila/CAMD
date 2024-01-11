@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cxdb"
-description = "C2DB web-app prototype"
-version = "23.11.0"
+description = "CAMd web-apps"
+version = "24.1.0"
 readme = "README.rst"
 authors = [
   { name="Jens Jørgen Mortensen", email="jjmo@dtu.dk" },

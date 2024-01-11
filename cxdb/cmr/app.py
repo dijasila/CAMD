@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from ase.db import connect
-from bottle import Bottle, static_file
+from bottle import Bottle, static_file, template
 
 from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
@@ -25,7 +25,7 @@ class CMRProjectsApp:
 
     def overview(self) -> str:
         CMR = 'https://cmr.fysik.dtu.dk'
-        return table(
+        tbl = table(
             ['Project',
              'Number of materials',
              'Download data',
@@ -35,13 +35,17 @@ class CMRProjectsApp:
               f'<a download="" href="/{name}/download">{name}.db</a>',
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, app in self.project_apps.items()])
+        return template('cmr/overview', table=tbl, title='CMR projects')
 
     def index1(self, project_name: str) -> str:
         html = self.project_apps[project_name].index()
         return html.replace('/material/', f'/{project_name}/row/')
 
     def material(self, project_name: str, uid: str) -> str:
-        return self.project_apps[project_name].material(uid)
+        html = self.project_apps[project_name].material(uid)
+        html = html.replace('/callback', f'/{project_name}/callback')
+        return html.replace('href="/">Search<',
+                            f'href="/{project_name}">Search<', 1)
 
     def callback(self, project_name: str, query: dict | None = None):
         return self.project_apps[project_name].callback(query)

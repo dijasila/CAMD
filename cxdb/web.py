@@ -66,6 +66,7 @@ class CXDBApp:
         rows, header, pages, new_columns = self.materials.get_rows(session)
 
         return template('index.html',
+                        title=self.title,
                         query=query,
                         search=search,
                         session=session,
