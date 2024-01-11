@@ -25,7 +25,7 @@ from cxdb.web import CXDBApp
 
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
-        super().__init__(ndims=2)
+        super().__init__()
         self.column_names.update(
             magstate='Magnetic state',
             ehull='Energy above convex hull [eV/atom]',

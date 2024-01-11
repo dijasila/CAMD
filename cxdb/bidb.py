@@ -39,7 +39,7 @@ def expand(db_file: str) -> None:
 
 class BilayerAtomsPanel(AtomsPanel):
     def __init__(self):
-        super().__init__(2)
+        super().__init__()
         self.column_names.update(
             {'binding_energy_zscan': 'Binding energy (zscan)',
              'number_of_layers': 'Number of layers',
@@ -110,6 +110,7 @@ def main(root: Path) -> CXDBApp:
         if len(mlist) % 20 == 0:
             print(end='.', flush=True)
         mlist.append(Material.from_file(f / 'structure.xyz', uid))
+        print(mlist[-1].atoms.pbc)
     print()
 
     panels = [BilayerAtomsPanel(),

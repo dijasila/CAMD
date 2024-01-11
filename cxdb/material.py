@@ -102,16 +102,18 @@ class Materials:
             'nspecies': 'Number of species',
             'uid': 'Unique ID'}
 
-        for panel in panels:
-            assert panel.column_names.keys().isdisjoint(self.column_names)
-            self.column_names.update(panel.column_names)
-
         self._materials: dict[str, Material] = {}
         for material in materials:
             for panel in panels:
                 panel.update_data(material)
-            material.check_columns(self.column_names)
             self._materials[material.uid] = material
+
+        for panel in panels:
+            assert panel.column_names.keys().isdisjoint(self.column_names)
+            self.column_names.update(panel.column_names)
+
+        for material in materials:
+            material.check_columns(self.column_names)
 
         self.index = Index([(mat._count, mat._values)
                             for mat in self._materials.values()])

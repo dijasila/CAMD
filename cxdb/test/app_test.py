@@ -11,7 +11,7 @@ from cxdb.web import CXDBApp
 def test_app(tmp_path):
     f = tmp_path / 'H2'
     f.mkdir()
-    atoms = Atoms('H2', [(0, 0, 0), (0.7, 0, 0)])
+    atoms = Atoms('H2', [(0, 0, 0), (0.7, 0, 0)], pbc=True)
     atoms.center(vacuum=2)
     atoms.calc = EMT()
     atoms.get_potential_energy()
