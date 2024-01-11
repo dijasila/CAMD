@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 from pathlib import Path
 
@@ -8,16 +9,16 @@ from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
 from cxdb.utils import table
 from cxdb.web import CXDBApp
-from cxdb.cmr.projects import create_project_description
+from cxdb.cmr.projects import create_project_description, ProjectDescription
 
 
 class CMRProjectsApp:
-    def __init__(self, project_apps):
+    def __init__(self, project_apps: dict[str, CMRProjectApp]):
         self.project_apps = project_apps
         self.app = Bottle()
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
-        self.app.route('/<project_name>')(self.index)
+        self.app.route('/<project_name>')(self.index1)
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
         self.app.route('/<project_name>/download')(self.download_db_file)
@@ -35,14 +36,14 @@ class CMRProjectsApp:
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, app in self.project_apps.items()])
 
-    def index(self, project_name) -> str:
+    def index1(self, project_name: str) -> str:
         html = self.project_apps[project_name].index()
         return html.replace('/material/', f'/{project_name}/row/')
 
-    def material(self, project_name, uid) -> str:
+    def material(self, project_name: str, uid: str) -> str:
         return self.project_apps[project_name].material(uid)
 
-    def callback(self, project_name, query: dict | None = None):
+    def callback(self, project_name: str, query: dict | None = None):
         return self.project_apps[project_name].callback(query)
 
     def download_db_file(self, project_name: str) -> bytes:
@@ -55,12 +56,21 @@ class CMRProjectsApp:
 
 
 class CMRProjectApp(CXDBApp):
-    def __init__(self, materials, dbpath, title, initial_columns):
+    def __init__(self,
+                 materials: Materials,
+                 initial_columns: list[str],
+                 dbpath: Path,
+                 title: str,
+                 search: list):
         super().__init__(materials, initial_columns)
         self.dbpath = dbpath
         self.title = title
+        self.search += search
 
-    def route(self):
+    def index(self, query: dict | None = None) -> str:
+        return super().index()
+
+    def route(self) -> None:
         pass
 
 
@@ -71,8 +81,8 @@ class CMRAtomsPanel(AtomsPanel):
         self.columns = list(self.column_names)
 
 
-def app_from_db(dbpath,
-                project_description):
+def app_from_db(dbpath: Path,
+                project_description: ProjectDescription) -> CMRProjectApp:
     pd = project_description
     root = dbpath.parent  # not used
     rows = []
@@ -90,7 +100,8 @@ def app_from_db(dbpath,
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
-    return CMRProjectApp(materials, dbpath, pd.title, initial_columns)
+    return CMRProjectApp(materials, initial_columns,
+                         dbpath, pd.title, pd.search)
 
 
 def main(filenames: list[str]) -> CMRProjectsApp:

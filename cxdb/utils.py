@@ -46,3 +46,37 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
             '\n   '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
         '\n  </tr>\n </tbody>\n</table>')
+
+
+class Select:
+    def __init__(self, text, name, options):
+        self.text = text
+        self.name = name
+        self.options = options
+
+    def render(self, query: dict) -> str:
+        """Render select block.
+
+        >>> s = Select('Bla-bla', 'xyz', ['A', 'B', 'C'])
+        >>> print(s.render({'xyz': 'B'}))
+        <label class="form-label">Bla-bla</label>
+        <select name="xyz" class="form-select">
+          <option value="A">A</option>
+          <option value="B" selected>B</option>
+          <option value="C">C</option>
+        </select>
+       """
+        selection = query.get(self.name)
+        parts = [f'<label class="form-label">{self.text}</label>\n'
+                 f'<select name="{self.name}" class="form-select">']
+        for val in self.options:
+            selected = ' selected' if selection == val else ''
+            parts.append(f'  <option value="{val}"{selected}>{val}</option>')
+        parts.append('</select>')
+        return '\n'.join(parts)
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        val = query.get(self.name, '')
+        if val:
+            return [f'{self.name}={val}']
+        return []
