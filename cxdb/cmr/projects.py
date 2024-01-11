@@ -30,6 +30,7 @@ class ProjectDescription:
                  initial_columns: list[str],
                  uid: str = 'id',
                  ndims: int | None = None,
+                 pbc: list[bool] | None = None,
                  extra: list[str] | None = None,
                  search: list | None = None):
         self.title = title
@@ -37,6 +38,7 @@ class ProjectDescription:
         self.initial_columns = initial_columns
         self.uid = uid
         self.ndims = ndims
+        self.pbc = pbc
         self.extra = extra or []
         self.search = search or []
 
@@ -88,12 +90,13 @@ def adsorption():
          'BEEFvdW_adsorp', 'vdWDF2_adsorp', 'mBEEF_adsorp',
          'mBEEFvdW_adsorp', 'RPA_EXX_adsorp'],
         ndims=2,
+        pbc=[True, True, False],  # overwrite pbc=(1,1,1) in db-file
         search=[Select('Surface material', 'surf_mat',
-                       ('Sc Ti V Cr Mn Fe Co Ni Cu '
-                        'Y Zr Nb Mo Ru Rh Pd Ag '
-                        'Hf Ta W Re Os Ir Pt Au').split()),
+                       [''] + ('Sc Ti V Cr Mn Fe Co Ni Cu '
+                               'Y Zr Nb Mo Ru Rh Pd Ag '
+                               'Hf Ta W Re Os Ir Pt Au').split()),
                 Select('Adsorbate', 'adsorbate',
-                       'H O N N2 CO NO CH OH'.split())])
+                       [''] + 'H O N N2 CO NO CH OH'.split())])
 
 
 if __name__ == '__main__':

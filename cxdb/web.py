@@ -17,6 +17,8 @@ TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
 class CXDBApp:
+    title = 'CXDB'
+
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
@@ -66,6 +68,7 @@ class CXDBApp:
         rows, header, pages, new_columns = self.materials.get_rows(session)
 
         return template('index.html',
+                        title=self.title,
                         query=query,
                         search=search,
                         session=session,
