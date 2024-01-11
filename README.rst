@@ -26,6 +26,8 @@ Installation
 
 CxDB-web needs Python_ version 3.9 or later.
 
+.. highlight:: bash
+
 ::
 
     $ python -m venv venv
