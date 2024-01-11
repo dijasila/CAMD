@@ -17,6 +17,8 @@ TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
 class CXDBApp:
+    title = 'CXDB'
+
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
