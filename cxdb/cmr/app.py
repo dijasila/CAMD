@@ -88,6 +88,8 @@ def app_from_db(dbpath: Path,
     rows = []
     for row in connect(dbpath).select():
         atoms = row.toatoms()
+        if pd.pbc is not None:
+            atoms.pbc = pd.pbc
         material = Material(root, str(row[pd.uid]), atoms)
         for name in pd.column_names:
             value = row.get(name)
