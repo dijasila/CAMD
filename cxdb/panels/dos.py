@@ -1,4 +1,4 @@
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.material import Material, Materials
 
 HTML = """

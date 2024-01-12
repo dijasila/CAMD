@@ -29,7 +29,6 @@ class ProjectDescription:
                  column_names: dict[str, str],
                  initial_columns: list[str],
                  uid: str = 'id',
-                 ndims: int | None = None,
                  pbc: list[bool] | None = None,
                  extra: list[str] | None = None,
                  search: list | None = None):
@@ -37,7 +36,6 @@ class ProjectDescription:
         self.column_names = column_names
         self.initial_columns = initial_columns
         self.uid = uid
-        self.ndims = ndims
         self.pbc = pbc
         self.extra = extra or []
         self.search = search or []
@@ -64,8 +62,7 @@ def solar():
          'V_oc': 'V_oc for PCBM acceptor [V]'},
         ['uid', 'formula', 'Unit', 'KS_gap', 'E_homo', 'E_lumo',
          'E_gap', 'E_opt', 'rho'],
-        extra=['CAN_SMILES', 'InChI', 'SMILES', 'Name', 'fold'],
-        ndims=0)
+        extra=['CAN_SMILES', 'InChI', 'SMILES', 'Name', 'fold'])
 
 
 @project
@@ -89,7 +86,6 @@ def adsorption():
          'RPBE_adsorp',
          'BEEFvdW_adsorp', 'vdWDF2_adsorp', 'mBEEF_adsorp',
          'mBEEFvdW_adsorp', 'RPA_EXX_adsorp'],
-        ndims=2,
         pbc=[True, True, False],  # overwrite pbc=(1,1,1) in db-file
         search=[Select('Surface material', 'surf_mat',
                        [''] + ('Sc Ti V Cr Mn Fe Co Ni Cu '
@@ -100,6 +96,7 @@ def adsorption():
 
 
 if __name__ == '__main__':
+    # Convert cmr.<proj>.custum.Template.raw_key_value_descriptions:
     for k, v in _projects.items():
         for n, x in v().column_names.items():
             if isinstance(x, str):

@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import json
 from collections import defaultdict
 from pathlib import Path
 
 from ase.db import connect
 from ase.formula import Formula
-from cxdb.atoms import AtomsPanel
+
 from cxdb.material import Material, Materials
-from cxdb.web import CXDBApp
-from cxdb.panel import Panel
+from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.panel import Panel
 from cxdb.utils import table
+from cxdb.web import CXDBApp
 
 
 def expand(db_file: str) -> None:
@@ -37,7 +39,7 @@ def expand(db_file: str) -> None:
 
 class BilayerAtomsPanel(AtomsPanel):
     def __init__(self):
-        super().__init__(2)
+        super().__init__()
         self.column_names.update(
             {'binding_energy_zscan': 'Binding energy (zscan)',
              'number_of_layers': 'Number of layers',
@@ -59,6 +61,7 @@ class BilayerAtomsPanel(AtomsPanel):
         self.columns = list(self.column_names)
 
     def update_data(self, material):
+        super().update_data(material)
         dct = json.loads((material.folder / 'data.json').read_text())
         for key, value in dct.items():
             if key not in self.column_names:

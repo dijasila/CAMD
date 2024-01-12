@@ -10,7 +10,7 @@ from ase.io import read
 
 from cxdb.filter import Index, parse
 from cxdb.paging import get_pages
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.session import Session
 
 
@@ -102,16 +102,18 @@ class Materials:
             'nspecies': 'Number of species',
             'uid': 'Unique ID'}
 
-        for panel in panels:
-            assert panel.column_names.keys().isdisjoint(self.column_names)
-            self.column_names.update(panel.column_names)
-
         self._materials: dict[str, Material] = {}
         for material in materials:
             for panel in panels:
                 panel.update_data(material)
-            material.check_columns(self.column_names)
             self._materials[material.uid] = material
+
+        for panel in panels:
+            assert panel.column_names.keys().isdisjoint(self.column_names)
+            self.column_names.update(panel.column_names)
+
+        for material in materials:
+            material.check_columns(self.column_names)
 
         self.index = Index([(mat._count, mat._values)
                             for mat in self._materials.values()])

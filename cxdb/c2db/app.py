@@ -15,17 +15,17 @@ from pathlib import Path
 
 import rich.progress as progress
 
-from cxdb.asr_panel import ASRPanel
-from cxdb.atoms import AtomsPanel
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
-from cxdb.shift import ShiftPanel
+from cxdb.panels.asr_panel import ASRPanel
+from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.panel import Panel
+from cxdb.panels.shift_current import ShiftCurrentPanel
 from cxdb.web import CXDBApp
 
 
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
-        super().__init__(ndims=2)
+        super().__init__()
         self.column_names.update(
             magstate='Magnetic state',
             ehull='Energy above convex hull [eV/atom]',
@@ -60,7 +60,7 @@ def main(root: Path) -> CXDBApp:
                  'phonons',
                  'bader']:
         panels.append(ASRPanel(name))
-    panels.append(ShiftPanel())
+    panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
 
