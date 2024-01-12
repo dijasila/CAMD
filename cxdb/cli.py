@@ -9,7 +9,8 @@ from cxdb.panels.atoms import AtomsPanel
 from cxdb.web import CXDBApp
 
 
-def main(argv: list[str] | None = None) -> CXDBApp:
+def main(argv: list[str] | None = None,
+         run=True) -> CXDBApp:
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', nargs='+',
                         help='Filename of atomic structure file.')
@@ -35,8 +36,11 @@ def main(argv: list[str] | None = None) -> CXDBApp:
 
     root = Path.cwd()
 
-    return CXDBApp(materials, initial_columns, root)
+    app = CXDBApp(materials, initial_columns, root)
+    if run:
+        app.app.run(host='0.0.0.0', port=8081, debug=True)
+    return app
 
 
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8081, debug=True)
+    main()

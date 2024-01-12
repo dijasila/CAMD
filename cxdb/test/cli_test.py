@@ -10,5 +10,5 @@ def test_cli(tmp_path):
     atoms.center(vacuum=2)
     h2 = f / 'h2.xyz'
     atoms.write(h2)
-    app = main([str(h2)])
+    app = main([str(h2)], run=False)
     assert 'Volume' in app.index()
