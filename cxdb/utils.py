@@ -49,6 +49,10 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
 
 
 class FormPart:
+    def __init__(self, text: str, name: str):
+        self.text = text
+        self.name = name
+
     def render(self, query: dict) -> str:
         raise NotImplementedError
 
@@ -61,8 +65,7 @@ class FormPart:
 
 class Select(FormPart):
     def __init__(self, text, name, options):
-        self.text = text
-        self.name = name
+        super().__init__(text, name)
         self.options = options
 
     def render(self, query: dict) -> str:
@@ -89,8 +92,7 @@ class Select(FormPart):
 
 class Input(FormPart):
     def __init__(self, text, name, placeholder='...'):
-        self.text = text
-        self.name = name
+        super().__init__(text, name)
         self.placeholder = placeholder
 
     def render(self, query: dict) -> str:
@@ -98,6 +100,13 @@ class Input(FormPart):
 
         >>> s = Input('Bla-bla', 'xyz')
         >>> print(s.render({'xyz': 'abc'}))
+        <label class="form-label">Bla-bla</label>
+        <input
+          class="form-control"
+          type="text"
+          name="xyz"
+          value="abc"
+          placeholder="..." />
         """
         value = query.get(self.name, '')
         parts = [
