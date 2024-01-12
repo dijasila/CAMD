@@ -48,7 +48,18 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
         '\n  </tr>\n </tbody>\n</table>')
 
 
-class Select:
+class FormPart:
+    def render(self, query: dict) -> str:
+        raise NotImplementedError
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        val = query.get(self.name, '')
+        if val:
+            return [f'{self.name}={val}']
+        return []
+
+
+class Select(FormPart):
     def __init__(self, text, name, options):
         self.text = text
         self.name = name
@@ -65,7 +76,7 @@ class Select:
           <option value="B" selected>B</option>
           <option value="C">C</option>
         </select>
-       """
+        """
         selection = query.get(self.name)
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
@@ -75,8 +86,26 @@ class Select:
         parts.append('</select>')
         return '\n'.join(parts)
 
-    def get_filter_strings(self, query: dict) -> list[str]:
-        val = query.get(self.name, '')
-        if val:
-            return [f'{self.name}={val}']
-        return []
+
+class Input(FormPart):
+    def __init__(self, text, name, placeholder='...'):
+        self.text = text
+        self.name = name
+        self.placeholder = placeholder
+
+    def render(self, query: dict) -> str:
+        """Render input block.
+
+        >>> s = Input('Bla-bla', 'xyz')
+        >>> print(s.render({'xyz': 'abc'}))
+        """
+        value = query.get(self.name, '')
+        parts = [
+            f'<label class="form-label">{self.text}</label>',
+            '<input',
+            '  class="form-control"',
+            '  type="text"',
+            f'  name="{self.name}"',
+            f'  value="{value}"',
+            f'  placeholder="{self.placeholder}" />']
+        return '\n'.join(parts)

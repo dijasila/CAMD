@@ -9,7 +9,7 @@ from bottle import Bottle, static_file, template
 from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
-from cxdb.utils import table
+from cxdb.utils import table, FormPart
 from cxdb.web import CXDBApp
 
 
@@ -66,11 +66,11 @@ class CMRProjectApp(CXDBApp):
                  initial_columns: list[str],
                  dbpath: Path,
                  title: str,
-                 search: list):
+                 form_parts: list[FormPart]):
         super().__init__(materials, initial_columns)
         self.dbpath = dbpath
         self.title = title
-        self.search += search
+        self.form_parts += form_parts
 
     def index(self, query: dict | None = None) -> str:
         return super().index()
@@ -99,7 +99,12 @@ def app_from_db(dbpath: Path,
         for name in pd.column_names:
             value = row.get(name)
             if value is not None:
+                if isinstance(value, int) and pd.column_names[name][-1] == ']':
+                    # An integer with a unit!  (column desctiption is
+                    # something like "Description ... [unit]")
+                    value = float(value)
                 material.add_column(name, value)
+        pd.postprocess(material)
         rows.append(material)
 
     panels = [CMRAtomsPanel(pd.column_names)]
@@ -114,6 +119,7 @@ def main(filenames: list[str]) -> CMRProjectsApp:
     project_apps = {}
     for filename in filenames:
         path = Path(filename)
+        print(path)
         name = path.stem
         project_description = create_project_description(name)
         app = app_from_db(path, project_description)
