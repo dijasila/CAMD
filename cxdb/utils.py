@@ -1,3 +1,4 @@
+import abc
 from __future__ import annotations
 from typing import Iterable, Sequence
 
@@ -48,11 +49,12 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
         '\n  </tr>\n </tbody>\n</table>')
 
 
-class FormPart:
+class FormPart(abc.ABC):
     def __init__(self, text: str, name: str):
         self.text = text
         self.name = name
 
+    @abc.abstractmethod
     def render(self, query: dict) -> str:
         raise NotImplementedError
 

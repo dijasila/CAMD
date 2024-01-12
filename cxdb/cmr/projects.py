@@ -385,7 +385,8 @@ def pp_oqmd123(material: Material):
         material.add_column(
             'oqmd_id',
             id,
-            f'<a href="http://oqmd.org/materials/entry/{id}">{id}</a>')
+            f'<a href="http://oqmd.org/materials/entry/{id}">{id}</a>',
+            update=True)
 
 
 @project
