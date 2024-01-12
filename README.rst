@@ -44,6 +44,17 @@ CxDB-web needs Python_ version 3.9 or later.
 
 .. _Python: https://python.org/
 
+Command-line interface
+----------------------
+
+usage: cxdb [-h] filename [filename ...]
+
+positional arguments:
+  filename    Filename of atomic structure file.
+
+options:
+  -h, --help  show this help message and exit
+
 
 CMR-app for old projects
 ------------------------
