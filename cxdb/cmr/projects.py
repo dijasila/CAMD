@@ -96,6 +96,7 @@ def adsorption():
 
 
 if __name__ == '__main__':
+    # Convert cmr.<proj>.custum.Template.raw_key_value_descriptions:
     for k, v in _projects.items():
         for n, x in v().column_names.items():
             if isinstance(x, str):

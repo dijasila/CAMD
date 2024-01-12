@@ -61,6 +61,7 @@ class BilayerAtomsPanel(AtomsPanel):
         self.columns = list(self.column_names)
 
     def update_data(self, material):
+        super().update_data(material)
         dct = json.loads((material.folder / 'data.json').read_text())
         for key, value in dct.items():
             if key not in self.column_names:
@@ -110,7 +111,6 @@ def main(root: Path) -> CXDBApp:
         if len(mlist) % 20 == 0:
             print(end='.', flush=True)
         mlist.append(Material.from_file(f / 'structure.xyz', uid))
-        print(mlist[-1].atoms.pbc)
     print()
 
     panels = [BilayerAtomsPanel(),
