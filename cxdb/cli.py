@@ -37,7 +37,7 @@ def main(argv: list[str] | None = None,
     root = Path.cwd()
 
     app = CXDBApp(materials, initial_columns, root)
-    if run:
+    if run:  # pragma: no cover
         app.app.run(host='0.0.0.0', port=8081, debug=True)
     return app
 
