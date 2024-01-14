@@ -8,7 +8,7 @@ from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
 
 from cxdb.material import Materials
 from cxdb.session import Sessions
-from cxdb.utils import Select
+from cxdb.utils import Select, FormPart
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -31,16 +31,16 @@ class CXDBApp:
         # User sessions (selected columns, sorting, filter string, ...)
         self.sessions = Sessions(initial_columns)
 
-        self.search = []
+        self.form_parts: list[FormPart] = []
 
         # For selecting materials (A, AB, AB2, ...):
-        self.search.append(
+        self.form_parts.append(
             Select('Stoichiometry', 'stoichiometry',
                    [''] + self.materials.stoichiometries()))
 
         # For nspecies selection:
         maxnspecies = max(material.nspecies for material in self.materials)
-        self.search.append(
+        self.form_parts.append(
             Select('Number of chemical species', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies)]))
 
@@ -61,7 +61,7 @@ class CXDBApp:
         filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(filter_string, query)
-        search = '\n'.join(s.render(query) for s in self.search)
+        search = '\n'.join(fp.render(query) for fp in self.form_parts)
         rows, header, pages, new_columns = self.materials.get_rows(session)
 
         return template('index.html',
@@ -89,7 +89,7 @@ class CXDBApp:
         filter = query.get('filter', '')
         if filter:
             filters.append(filter)
-        for s in self.search:
+        for s in self.form_parts:
             filters += s.get_filter_strings(query)
         return ','.join(filters)
 

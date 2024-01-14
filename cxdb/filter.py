@@ -185,7 +185,7 @@ class Index:
             indices = [0]
             nmin = idata[0][0]
             nmax = idata[-1][0]
-            assert nmax - nmin < 250, (symbol, nmax, nmin)  # too wide range!
+            assert nmax - nmin < 350, (symbol, nmax, nmin)  # too wide range!
             m = nmin
             for j, (n, i) in enumerate(idata):
                 ids.append(i)
@@ -198,7 +198,7 @@ class Index:
 
         self.floats = {}
         for name, fdata in floats.items():
-            assert name not in self.integers
+            assert name not in self.integers, name
             fdata.sort()
             ids = [i for value, i in fdata]
             values = [value for value, i in fdata]
@@ -231,8 +231,7 @@ class Index:
             if op == '=':
                 if value in self.strings[name]:
                     return self.strings[name][value]
-                else:
-                    return set()
+                return set()
             if op == '!=':
                 result = set()
                 for val, ids in self.strings[name].items():
@@ -246,7 +245,7 @@ class Index:
             return self.float_key(name, op, value)
 
         if name in self.integers:
-            assert isinstance(value, (int, bool))
+            assert isinstance(value, (int, bool)), (name, value)
             return self.integer_key(name, op, value)
 
         return set()
@@ -294,8 +293,7 @@ class Index:
         if op == '<=':
             if n < nmin:
                 return set()
-            if n > nmax:
-                n = nmax
+            n = min(n, nmax)
             d = n - nmin
             j = indices[d + 1]
             return set(ids[:j])

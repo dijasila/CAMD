@@ -35,7 +35,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
         '{"kwargs": {"data": {"uid": "MoS2-b3b4685fb6e1"}}}')
 
-    # Bandstructure:
+    # Band-structure:
     kpts = atoms.cell.bandpath('GK', npoints=5)
     bs = BandStructure(kpts, np.zeros((1, 5, 2)), reference=-0.5)
     nosoc = copy.deepcopy(bs.todict())

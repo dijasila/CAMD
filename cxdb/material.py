@@ -56,9 +56,10 @@ class Material:
     def add_column(self,
                    name: str,
                    value: bool | int | float | str,
-                   html: str | None = None) -> None:
+                   html: str | None = None,
+                   update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
-        self.add(name, value)
+        self.add(name, value, update=update)
         self._values[name] = value
         if html is None:
             if isinstance(value, float):
@@ -69,9 +70,11 @@ class Material:
 
     def add(self,
             name: str,
-            value) -> None:
+            value,
+            update: bool = False) -> None:
         """Add any kind of data."""
-        assert name not in self._data, (name, self._data)
+        if not update:
+            assert name not in self._data, (name, self._data)
         self._data[name] = value
 
     def __getattr__(self, name: str) -> Any:
@@ -158,16 +161,16 @@ class Materials:
 
         rows:
             list of rows, where each row is a tuple of uid and list of
-            html-strings.
+            HTML-strings.
 
         header:
-            list of (column name, column html-string) tuples.
+            list of (column name, column HTML-string) tuples.
 
         pages:
             stuff for pagination buttons (see get_pages() function).
 
         new_columns:
-            list of (column name, columns html-string) tuples for columns not
+            list of (column name, columns HTML-string) tuples for columns not
             shown.
         """
         filter = session.filter

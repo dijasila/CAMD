@@ -1,7 +1,9 @@
-from cxdb.bidb.app import main, expand
-from ase.db import connect
-from ase import Atoms
 import os
+
+from ase import Atoms
+from ase.db import connect
+
+from cxdb.bidb.app import expand, main
 
 
 def test_bidb(tmp_path):
@@ -25,7 +27,6 @@ def test_bidb(tmp_path):
     expand(dbfile)
     app = main(tmp_path)
     app.index()
-    print(app.materials._materials)
     app.material('1H-0-stacking')
     html = app.material('1H-0')
     assert '15.000' in html

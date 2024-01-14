@@ -1,36 +1,34 @@
-from cxdb.cmr.app import main
-from ase.db import connect
-from ase import Atoms
 import os
+
+from cxdb.cmr.app import main
+from cxdb.test.cmr import create_db_files
+from cxdb.cmr.projects import create_project_description
 
 
 def test_cmr(tmp_path):
     os.chdir(tmp_path)
-    dbfile1 = tmp_path / 'abc.db'
-    with connect(dbfile1) as db:
-        atoms = Atoms('H2', [(0, 0, 0), (0.7, 0, 0)])
-        atoms.center(vacuum=1)
-        db.write(atoms, abc=27.3)
-        atoms = Atoms('H')
-        atoms.center(vacuum=1)
-        db.write(atoms, abc=1.2)
-    dbfile2 = tmp_path / 'solar.db'
-    with connect(dbfile2) as db:
-        atoms = Atoms('N2', [(0, 0, 0), (1.1, 0, 0)])
-        atoms.center(vacuum=1)
-        db.write(atoms, KS_gap=27.3, DeltaU=1.3)
-    dbfile3 = tmp_path / 'adsorption.db'
-    with connect(dbfile3) as db:
-        atoms = Atoms('N2', [(0, 0, 0), (1.1, 0, 0)])
-        atoms.center(vacuum=1)
-        db.write(atoms, surf_mat='Sc', adsorbate='H')
-    app = main([dbfile1, dbfile2, dbfile3])
+    project_descriptions = create_db_files(tmp_path)
+
+    app = main([f'{name}.db' for name in project_descriptions])
+
     app.overview()
-    app.index1('abc')
-    app.material('abc', '1')
+
     app.index1('solar')
     app.material('solar', '1')
-    app.download_db_file('abc')
+
+    html = app.material('oqmd123', 'id-1')
+    assert 'http://oqmd.org' in html
+
+    app.download_db_file('abs3')
+
     app.favicon()
-    dct = app.callback('abc', dict(name='atoms', uid='1', data='1'))
+
+    dct = app.callback('ads1d', dict(name='atoms', uid='id-1', data='1'))
     assert 'data' in dct
+
+    gap = app.project_apps['abx2'].materials['1'].KS_gap
+    assert isinstance(gap, float)
+
+
+def test_pd():
+    create_project_description('hello')
