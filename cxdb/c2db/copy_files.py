@@ -2,7 +2,7 @@
 
 Tree structure::
 
-   <stoichiometry>/<formula-units><fomula>/<id>/
+   <stoichiometry>/<formula-units><formula>/<id>/
 
 Example::
 

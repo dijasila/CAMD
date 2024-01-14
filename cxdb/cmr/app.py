@@ -100,7 +100,7 @@ def app_from_db(dbpath: Path,
             value = row.get(name)
             if value is not None:
                 if isinstance(value, int) and pd.column_names[name][-1] == ']':
-                    # An integer with a unit!  (column desctiption is
+                    # An integer with a unit!  (column description is
                     # something like "Description ... [unit]")
                     value = float(value)
                 material.add_column(name, value)

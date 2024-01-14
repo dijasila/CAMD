@@ -161,16 +161,16 @@ class Materials:
 
         rows:
             list of rows, where each row is a tuple of uid and list of
-            html-strings.
+            HTML-strings.
 
         header:
-            list of (column name, column html-string) tuples.
+            list of (column name, column HTML-string) tuples.
 
         pages:
             stuff for pagination buttons (see get_pages() function).
 
         new_columns:
-            list of (column name, columns html-string) tuples for columns not
+            list of (column name, columns HTML-string) tuples for columns not
             shown.
         """
         filter = session.filter

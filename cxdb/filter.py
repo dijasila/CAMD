@@ -231,8 +231,7 @@ class Index:
             if op == '=':
                 if value in self.strings[name]:
                     return self.strings[name][value]
-                else:
-                    return set()
+                return set()
             if op == '!=':
                 result = set()
                 for val, ids in self.strings[name].items():
@@ -294,8 +293,7 @@ class Index:
         if op == '<=':
             if n < nmin:
                 return set()
-            if n > nmax:
-                n = nmax
+            n = min(n, nmax)
             d = n - nmin
             j = indices[d + 1]
             return set(ids[:j])

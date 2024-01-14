@@ -16,9 +16,10 @@ def create_db_files(path: Path) -> dict[str, ProjectDescription]:
             atoms.center(vacuum=1)
             if pd.pbc is not None:
                 atoms.pbc = pd.pbc
-            kwargs = {}
+            kwargs: dict[str, int | str | float | bool] = {}
             if pd.uid != 'id':
                 kwargs[pd.uid] = 'id-1'
+            # int id's should be converted to strings
             if name == 'mp_gllbsc':
                 kwargs['mpid'] = 50000
                 kwargs['icsd_id'] = 70000

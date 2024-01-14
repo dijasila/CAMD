@@ -9,6 +9,7 @@ TODO:
 * also add energy, fmax, smax, magmom
 * imp2d tables
 * bidb
+* abs3: Electronic band structure
 
 """
 from __future__ import annotations
@@ -163,9 +164,6 @@ def abs3() -> ProjectDescription:
                    ',NH4CdCl3/Sn2S3,GdFeO3,YScS3,PbPS3,'
                    'BaNiO3,FePS3,cubic,distorted,Pyroxene-CaIrO3,BiInS3,'
                    'CuTaS3,CeTmS3'.split(','))])
-    # XXX:
-    # GLLB-SC energy relative to VBM [eV]
-    # Electronic band structure
 
 
 @project
@@ -516,55 +514,3 @@ if __name__ == '__main__':
             print(f'        {n!r}: {j!r},')
 
     print(' '.join(f'{x}.db' for x in _projects))
-
-    downloads = [
-        # ('adsorption', ['adsorption.db', 'surfaces.db']),
-        ('absorption_perovskites', ['absorption_perovskites.db',
-                                    'perfect_abs.txt']),
-        ('abse3', ['abse3.db']),
-        ('abs3', ['abs3.db']),
-        ('abx2', ['abx2.db']),
-        ('agau309', ['agau309.db']),
-        ('a2bcx4', ['a2bcx4.db']),
-        # ('beef', ['molecules.db', 'solids.db']),
-        # ('bondmin', ['bondmin.db']),
-        ('catapp', ['catapp.db', 'catappdata.csv']),
-        # ('compression', ['compression.db']),
-        ('cubic_perovskites', ['cubic_perovskites.db']),
-        # ('c1db', ['c1db.db']),
-        # ('c2db', ['c2db.db', 'workflow.png', 'c2db-db.png']),
-        # ('c2dm', ['c2dm.db']),
-        # ('dcdft', ['dcdft.db', 'dcdft_gpaw_pw_paw09.db']),
-        ('dssc', ['dssc.db']),
-        # ('fcc111', ['fcc111.db']),
-        ('funct_perovskites', ['funct_perovskites.db']),
-        # ('gbrv', ['gbrv.db']),
-        # ('g2', ['g2.db']),
-        # ('htgw', ['htgw.db']),
-        ('lowdim', ['lowdim.db']),
-        ('low_symmetry_perovskites', ['low_symmetry_perovskites.db']),
-        ('mp_gllbsc', ['mp_gllbsc.db']),
-        # ('oqmd12', ['oqmd12.db']),
-        ('oqmd123', ['oqmd123.db']),
-        ('organometal', ['organometal.db']),
-        ('pv_pec_oqmd', ['pv_pec_oqmd.db']),
-        # ('qpod', ['qpod.db', 'workflow_qpod.png']),
-        # ('solar', ['solar.db']),
-        # ('tmfp06d', ['tmfp06d.db']),
-        ('imp2d', ['imp2d.db']),
-        ('bidb', ['bidb.db', 'bidb-workflow.png']),
-        # ('vdwh', ['chi-data.tar.gz', 'graphene-data.tar.gz',
-        #           'chi-data-v2.tar.gz'])
-        ('ads1d', ['ads1d.db'])]
-
-    # skip = {
-    #     'dcdft', 'beef', 'vdwh', 'c2dm', 'gbrv', 'htgw', 'bondmin', 'qpod'}
-
-    from pathlib import Path
-    for name, _ in downloads:
-        continue
-        p = Path(f'/home/jensj/cmr/cmr/{name}/custom.py')
-        print(f"""
-@project
-def {name}() -> ProjectDescription:
-    return ProjectDescription(""", p.read_text())

@@ -1,0 +1,21 @@
+[MAIN]
+extension-pkg-allow-list=_gpaw
+
+[BASIC]
+argument-rgx=[_a-z]+[_0-9a-z]*(_[a-zA-Z]+)?|[A-Z](_[a-zA-Z]+)?
+variable-rgx=[_a-z]+[_0-9a-z]*(_([a-z][A-Z])+)?|[A-Z](_[a-zA-Z]+)?
+attr-rgx=[_a-z]+[_0-9a-z]*(_([a-z][A-Z])+)?|[A-Z](_[a-zA-Z]+)?
+bad-names=
+
+[DESIGN]
+max-args=6
+
+[SPELLING]
+# spelling-dict=en_US
+# spelling-private-dict-file=doc/words.txt
+
+[FORMAT]
+max-line-length=80
+
+[MESSAGES CONTROL]
+disable=consider-using-from-import,C0114,C0115,C0116,W0622

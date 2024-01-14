@@ -66,8 +66,7 @@ class BilayerAtomsPanel(AtomsPanel):
         for key, value in dct.items():
             if key not in self.column_names:
                 continue
-            if key in {'space_group_number', 'space_group_number',
-                       'cod_id', 'icsd_id'}:
+            if key in {'space_group_number', 'cod_id', 'icsd_id'}:
                 value = str(value)
             material.add_column(key, value)
 
@@ -124,7 +123,4 @@ def main(root: Path) -> CXDBApp:
 
 
 if __name__ == '__main__':
-    if 0:
-        expand('bidb.db')
-    else:
-        main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
