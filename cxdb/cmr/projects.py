@@ -130,12 +130,11 @@ def absorption_perovskites() -> ProjectDescription:
 def abse3() -> ProjectDescription:
     return ProjectDescription(
         'Ternary Selenides ABSe3',
-        dict(
-            prototype='name of the prototype',
-            name='name of the system',
-            space_group='Space group',
-            pbe_tot_en='PBE total energy [eV]',
-            pbe_hof='PBE heat of formation [eV/atom]'),
+        {'prototype': 'name of the prototype',
+         'name': 'name of the system',
+         'space_group': 'Space group',
+         'pbe_tot_en': 'PBE total energy [eV]',
+         'pbe_hof': 'PBE heat of formation [eV/atom]'},
         ['prototype', 'name', 'space_group', 'pbe_tot_en', 'pbe_hof'])
 
 

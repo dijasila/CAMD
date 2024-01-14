@@ -5,13 +5,13 @@ import ase.io.ulm as ulm
 import numpy as np
 from ase import Atoms
 from ase.build import mx2
+from ase.io.jsonio import encode
 from ase.io.trajectory import write_atoms
 from ase.spectrum.band_structure import BandStructure
-from ase.io.jsonio import encode
+from asr.bandstructure import Result
 
 
 def create_data(dir: Path, atoms: Atoms) -> None:
-    from asr.bandstructure import Result
 
     # Create fake gpw-file:
     writer = ulm.Writer(dir / 'gs.gpw', tag='gpaw')

@@ -12,6 +12,8 @@ from cxdb.panels.atoms import AtomsPanel
 from cxdb.utils import table, FormPart
 from cxdb.web import CXDBApp
 
+CMR = 'https://cmr.fysik.dtu.dk'
+
 
 class CMRProjectsApp:
     def __init__(self, project_apps: dict[str, CMRProjectApp]):
@@ -25,7 +27,6 @@ class CMRProjectsApp:
         self.app.route('/<project_name>/download')(self.download_db_file)
 
     def overview(self) -> str:
-        CMR = 'https://cmr.fysik.dtu.dk'
         tbl = table(
             ['Project',
              'Number of materials',

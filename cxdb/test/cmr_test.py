@@ -23,7 +23,7 @@ def test_cmr(tmp_path):
 
     app.favicon()
 
-    dct = app.callback('ads1d', dict(name='atoms', uid='id-1', data='1'))
+    dct = app.callback('ads1d', {'name': 'atoms', 'uid': 'id-1', 'data': '1'})
     assert 'data' in dct
 
     gap = app.project_apps['abx2'].materials['1'].KS_gap
