@@ -1,10 +1,10 @@
 [MAIN]
-extension-pkg-allow-list=_gpaw
+#extension-pkg-allow-list=_gpaw
 
 [BASIC]
-argument-rgx=[_a-z]+[_0-9a-z]*(_[a-zA-Z]+)?|[A-Z](_[a-zA-Z]+)?
-variable-rgx=[_a-z]+[_0-9a-z]*(_([a-z][A-Z])+)?|[A-Z](_[a-zA-Z]+)?
-attr-rgx=[_a-z]+[_0-9a-z]*(_([a-z][A-Z])+)?|[A-Z](_[a-zA-Z]+)?
+argument-rgx=[a-z]+[_0-9a-z]*
+variable-rgx=[a-z]+[_0-9a-z]*
+attr-rgx=[_a-z]+[_0-9a-z]*
 bad-names=
 
 [DESIGN]

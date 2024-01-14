@@ -243,7 +243,6 @@ class Index:
         if name in self.floats:
             assert isinstance(value, (int, float))
             return self.float_key(name, op, value)
-
         if name in self.integers:
             assert isinstance(value, (int, bool)), (name, value)
             return self.integer_key(name, op, value)
@@ -261,10 +260,10 @@ class Index:
             value = np.nextafter(value, value + 1)
             op = '>='
         j1 = bisect(values, value)
-        N = len(values)
+        n = len(values)
         if op == '=':
             result = set()
-            while j1 < N and values[j1] == value:
+            while j1 < n and values[j1] == value:
                 result.add(ids[j1])
                 j1 += 1
             return result
@@ -281,8 +280,7 @@ class Index:
                 d = n - nmin
                 j1, j2 = indices[d:d + 2]
                 return set(ids[j1:j2])
-            else:
-                return set()
+            return set()
         if op == '!=':
             return (self.integer_key(name, '<=', n - 1) |
                     self.integer_key(name, '>', n))
@@ -330,11 +328,11 @@ def bisect(values: list[float], value: float) -> int:
     """
     if values[0] >= value:
         return 0
-    N = len(values)
+    n = len(values)
     if values[-1] < value:
-        return N
+        return n
     j1 = 0
-    j2 = N - 1
+    j2 = n - 1
     while True:
         j = (j1 + j2 + 1) // 2
         if values[j] < value:

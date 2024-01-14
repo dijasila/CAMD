@@ -38,9 +38,8 @@ class Material:
 
         self._count: dict[str, int] = formula.count()
 
-        self._data: dict[str, Any] = {}
-        self._html_reprs: dict[str, str] = {}
         self._values: dict[str, bool | int | float | str] = {}
+        self._html_reprs: dict[str, str] = {}
 
         self.add_column('formula', formula.format(), formula.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
@@ -59,7 +58,8 @@ class Material:
                    html: str | None = None,
                    update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
-        self.add(name, value, update=update)
+        if not update:
+            assert name not in self._values, (name, self._values)
         self._values[name] = value
         if html is None:
             if isinstance(value, float):
@@ -68,18 +68,9 @@ class Material:
                 html = str(value)
         self._html_reprs[name] = html
 
-    def add(self,
-            name: str,
-            value,
-            update: bool = False) -> None:
-        """Add any kind of data."""
-        if not update:
-            assert name not in self._data, (name, self._data)
-        self._data[name] = value
-
     def __getattr__(self, name: str) -> Any:
         """Get data by attribute."""
-        return self._data[name]
+        return self._values[name]
 
     def __getitem__(self, name: str) -> str:
         """Get HTML string for data."""
@@ -181,7 +172,7 @@ class Materials:
             missing = '' if session.sort in self.index.strings else nan
 
             def key(material):
-                return material._values.get(session.sort, missing)
+                return getattr(material, session.sort, missing)
 
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
