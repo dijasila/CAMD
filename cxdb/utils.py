@@ -174,7 +174,7 @@ class RangeX(Range):
     def __init__(self, text, name, options, names=None):
         super().__init__(text, name)
         self.options = options
-        self.names  = names
+        self.names = names
 
     def render(self, query: dict) -> str:
         fro = query.get(f'from_{self.name}', '')

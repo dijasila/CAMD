@@ -6,7 +6,7 @@ from typing import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 
-from cxdb.utils import FormPart, table
+from cxdb.utils import table
 from cxdb.panels.panel import Panel
 from cxdb.material import Material, Materials
 
