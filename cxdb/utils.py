@@ -127,15 +127,19 @@ class Range(FormPart):
     def render(self, query: dict) -> str:
         """Render range block.
 
-        >>> s = Range('Thingyness', 'tness')
-        >>> print(s.render({'from_tness': '27'}))
-        <label class="form-label">Thingyness</label>
+        >>> s = Range('Band gap', 'gap')
+        >>> print(s.render({'from_gap': '1.2'}))
+        <label class="form-label">Band gap</label>
         <input
           class="form-control"
           type="text"
-          name="xyz"
-          value="abc"
-          placeholder="..." />
+          name="from_gap"
+          value="1.2" />
+        <input
+          class="form-control"
+          type="text"
+          name="to_gap"
+          value="" />
         """
         fro = query.get(f'from_{self.name}', '')
         to = query.get(f'to_{self.name}', '')

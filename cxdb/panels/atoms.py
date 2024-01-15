@@ -90,7 +90,7 @@ class AtomsPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        html = self.create_column_one(material)
+        html = self.create_column_one(material, materials)
         return (HTML.format(column1=html,
                             axes=self.axes(material),
                             uid=material.uid,

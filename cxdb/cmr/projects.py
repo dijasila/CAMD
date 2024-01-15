@@ -573,14 +573,10 @@ class BiDBProjectDescription(ProjectDescription):
             ('Layer group', '', ''),
         'layer_group_number':
             ('Layer group number', '', ''),
-        'nspecies':
-            ('nspecies', '', ''),
         'space_group':
             ('Space group', '', ''),
         'space_group_number':
-            ('Space group number', '', ''),
-        'uid':
-            ('Unique identifier', 'UID', '')}
+            ('Space group number', '', '')}
     uid = 'uid'
     initial_columns = [
         'formula',

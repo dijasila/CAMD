@@ -144,7 +144,7 @@ def app_from_db(dbpath: Path,
         pd.postprocess(material)
         rows.append(material)
 
-    panels = [CMRAtomsPanel(pd.column_names)]
+    panels = [CMRAtomsPanel(pd.column_names, pd.create_tables)]
     panels += [cls(root) for cls in pd.panel_classes]
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
