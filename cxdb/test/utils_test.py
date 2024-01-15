@@ -1,4 +1,4 @@
-from cxdb.utils import Range, RangeX
+from cxdb.utils import Range, RangeX, RangeS
 
 
 def test_range():
@@ -15,3 +15,9 @@ def test_rangeX():
         {'x': 'y', 'from_x': '0.5'}) == ['y>=0.5']
     assert r.get_filter_strings(
         {'x': 'y', 'to_x': '0.5'}) == ['y<=0.5']
+
+
+def test_rangeS():
+    r = RangeS('ABC', 'x', ['A', 'B'])
+    assert r.get_filter_strings({'from_x': '0.5'}) == ['x>=0.5']
+    assert r.get_filter_strings({'to_x': '0.5'}) == ['x<=0.5']
