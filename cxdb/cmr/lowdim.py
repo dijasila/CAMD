@@ -35,13 +35,10 @@ def sab_key_descriptions() -> dict[str, Desc]:
     for k in keys:
         x, numbers = k.split('_')
         beg, end = labels.get(x, (None, None))
-        if beg is None and end is None:
-            continue
-        else:
-            assert beg is not None
-            assert end is not None
-            beg = beg + ' '
-            end = ' ' + end
+        assert beg is not None
+        assert end is not None
+        beg = beg + ' '
+        end = ' ' + end
         desc = beg + '+'.join([n + 'D' for n in numbers]) + end
         key_descriptions[k] = Desc(short=desc, long='', unit='')
 
@@ -171,10 +168,11 @@ class LowDimRange(FormPart):
 
     def get_filter_strings(self, query: dict) -> list[str]:
         filters = []
+        s = query.get('s')
         fro = query.get('from_s', '')
         if fro:
-            filters.append(f's>={fro}')
+            filters.append(f'{s}>={fro}')
         to = query.get('to_s', '')
         if to:
-            filters.append(f's<={to}')
+            filters.append(f'{s}<={to}')
         return filters

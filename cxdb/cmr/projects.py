@@ -16,10 +16,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from ase.db import connect
+from cxdb.cmr.lowdim import LowDimPanel, LowDimRange, keysfortable0
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, Input, Select, Range, table
-from cxdb.cmr.lowdim import LowDimRange, keysfortable0
+from cxdb.utils import FormPart, Input, Range, Select, table
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -695,6 +695,7 @@ class LowDimProjectDescription(ProjectDescription):
     form_parts = [
         LowDimRange(),
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
+    panels = [LowDimPanel()]
 
     def create_column_one(self,
                           material: Material,
@@ -709,10 +710,9 @@ class LowDimProjectDescription(ProjectDescription):
             href = ('<a href="http://www.crystallography.net/cod/' +
                     f'{id}.html">{id}</a>')
             rows.insert(0, ('COD Number', href))
-        elif material.source == 'ICSD':
-            rows.insert(0, ('ICSD Number', material.dbid))
         else:
-            rows.insert(0, ('ID #', material.dbid))
+            assert material.source == 'ICSD'
+            rows.insert(0, ('ICSD Number', material.dbid))
         return table(['Basic properties', ''], rows), ''
 
     def create_column_two(self,
