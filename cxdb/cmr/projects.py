@@ -502,7 +502,7 @@ class Imp2DProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> str:
+                          materials: Materials) -> tuple[str, str]:
         return '\n'.join(
             table([header, ''],
                   materials.table(material, names))
@@ -584,7 +584,7 @@ class BiDBProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> str:
+                          materials: Materials) -> tuple[str, str]:
         def tab(names):
             return materials.table(material, names)
 
@@ -698,26 +698,26 @@ class LowDimProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> str:
+                          materials: Materials) -> tuple[str, str]:
         rows = materials.table(material, keysfortable0)
         doi = material.get('doi')
         if doi:
             href = f'<a href="https://doi.org/{doi}">{doi}</a>'
-            rows.append(['doi', href])
+            rows.append(('doi', href))
         if material.source == 'COD':
             id = material.dbid
             href = ('<a href="http://www.crystallography.net/cod/' +
                     f'{id}.html">{id}</a>')
-            rows.insert(0, ['COD Number', href])
+            rows.insert(0, ('COD Number', href))
         elif material.source == 'ICSD':
-            rows.insert(0, ['ICSD Number', material.dbid])
+            rows.insert(0, ('ICSD Number', material.dbid))
         else:
-            rows.insert(0, ['ID #', material.dbid])
-        return table('Basic properties', rows), ''
+            rows.insert(0, ('ID #', material.dbid))
+        return table(['Basic properties', ''], rows), ''
 
     def create_column_two(self,
                           material: Material,
-                          materials: Materials) -> str:
+                          materials: Materials) -> tuple[str, str]:
         if material.source == 'ICSD':
             return ('not allowed to show atoms', '')
         return ('', '')  # use default AtomsPanel behavior
