@@ -1,24 +1,28 @@
 """Descriptions of CMR projects.
 
 See https://cmr.fysik.dtu.dk/
+
 TODO:
 
 * c1db
 * lowdim
 * imp2d tables
 * bidb
-* abs3: Electronic band structure
 * extra???
 
 """
 from __future__ import annotations
-from typing import Callable
-from cxdb.utils import Select, Input
-from cxdb.material import Material
-from cxdb.utils import FormPart
+
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+from ase.db import connect
+from cxdb.material import Material, Materials
+from cxdb.panels.panel import Panel
+from cxdb.utils import FormPart, Input, Select
 
 # Mapping from project name to ProjectDescription class:
-projects: dict[str, Callable[[], ProjectDescription]] = {}
+projects = {}
 
 
 def project(name: str):
@@ -45,6 +49,7 @@ class ProjectDescription:
     pbc: list[bool] | None = None
     extra: list[str] = []
     form_parts: list[FormPart] = []
+    panel_classes: list[Panel] = []
 
     def postprocess(self, material: Material) -> None:
         pass
@@ -134,6 +139,46 @@ class ABSe3ProjectDescription(ProjectDescription):
                        'pbe_hof']
 
 
+class ABS3BandStructurePanel(Panel):
+    title = 'Electronic band-structure'
+
+    def __init__(self, root: Path):
+        (root / 'abs3').mkdir(exist_ok=True)  # folder for png-files
+
+    def get_html(self,
+                 material: Material,
+                 materials: Materials) -> tuple[str, str]:
+        uid = material.uid
+        path = material.folder / f'abs3/{uid}.png'
+        if not path.is_file():
+            dbpath = material.folder / 'abs3.db'
+            dct = connect(dbpath).get(id=uid).data
+            ok = abs3_bs(dct, path)
+            if not ok:
+                return ('', '')
+        return (
+            f'<img alt="BS for {uid}" src="/abs3/png/{uid}" />', '')
+
+
+def abs3_bs(d: dict, path: Path) -> bool:
+    if 'x' not in d:
+        return False
+    fig, ax = plt.subplots()
+    ax.plot(d.x, d.y)
+    n1 = len(d.X)
+    n2 = len(d.names)
+    if n1 != n2:
+        print('bad data:', d.X, d.names, path)
+    n = min(n1, n2)
+    ax.set_xticks(d.X[:n], d.names[:n])
+    ax.set_xlim(0, d.X[-1])
+    ax.set_ylim(-6, 5)
+    ax.set_ylabel('GLLB-SC energy relative to VBM [eV]')
+    plt.savefig(path)
+    plt.close()
+    return True
+
+
 @project('abs3')
 class ABS3ProjectDescription(ProjectDescription):
     title = 'Database of ABS3 materials'
@@ -159,6 +204,7 @@ class ABS3ProjectDescription(ProjectDescription):
                ',NH4CdCl3/Sn2S3,GdFeO3,YScS3,PbPS3,'
                'BaNiO3,FePS3,cubic,distorted,Pyroxene-CaIrO3,BiInS3,'
                'CuTaS3,CeTmS3'.split(','))]
+    panel_classes = [ABS3BandStructurePanel]
 
 
 @project('abx2')

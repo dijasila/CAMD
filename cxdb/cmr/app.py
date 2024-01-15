@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import sys
+from math import isfinite
 from pathlib import Path
 
 from ase.db import connect
 from bottle import Bottle, static_file, template
-
 from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
-from cxdb.utils import table, FormPart
+from cxdb.utils import FormPart, table
 from cxdb.web import CXDBApp
 
 CMR = 'https://cmr.fysik.dtu.dk'
@@ -25,6 +25,7 @@ class CMRProjectsApp:
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
         self.app.route('/<project_name>/download')(self.download_db_file)
+        self.app.route('/<project_name>/png/<uid>')(self.png)
 
     def overview(self) -> str:
         tbl = table(
@@ -59,6 +60,10 @@ class CMRProjectsApp:
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
+
+    def png(self, project_name: str, uid: str) -> bytes:
+        app = self.project_apps[project_name]
+        return app.png(uid, f'{project_name}/{uid}.png')
 
 
 class CMRProjectApp(CXDBApp):
@@ -95,7 +100,7 @@ class CMRAtomsPanel(AtomsPanel):
 def app_from_db(dbpath: Path,
                 project_description: ProjectDescription) -> CMRProjectApp:
     pd = project_description
-    root = dbpath.parent  # not used
+    root = dbpath.parent
     rows = []
     for row in connect(dbpath).select():
         atoms = row.toatoms()
@@ -123,11 +128,14 @@ def app_from_db(dbpath: Path,
                     # An integer with a unit!  (column description is
                     # something like "Description ... [unit]")
                     value = float(value)
+                elif isinstance(value, float) and not isfinite(value):
+                    continue
                 material.add_column(name, value)
         pd.postprocess(material)
         rows.append(material)
 
     panels = [CMRAtomsPanel(pd.column_names)]
+    panels += [cls(root) for cls in pd.panel_classes]
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
