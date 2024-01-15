@@ -49,7 +49,7 @@ class ProjectDescription:
     pbc: list[bool] | None = None
     extra: list[str] = []
     form_parts: list[FormPart] = []
-    panel_classes: list[Panel] = []
+    panels: list[Panel] = []
 
     def postprocess(self, material: Material) -> None:
         pass
@@ -145,14 +145,12 @@ class ABSe3ProjectDescription(ProjectDescription):
 class ABS3BandStructurePanel(Panel):
     title = 'Electronic band-structure'
 
-    def __init__(self, root: Path):
-        (root / 'abs3').mkdir(exist_ok=True)  # folder for png-files
-
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         uid = material.uid
         path = material.folder / f'abs3/{uid}.png'
+        path.parent.mkdir(exist_ok=True)
         if not path.is_file():
             dbpath = material.folder / 'abs3.db'
             dct = connect(dbpath).get(id=uid).data
@@ -207,7 +205,7 @@ class ABS3ProjectDescription(ProjectDescription):
                ',NH4CdCl3/Sn2S3,GdFeO3,YScS3,PbPS3,'
                'BaNiO3,FePS3,cubic,distorted,Pyroxene-CaIrO3,BiInS3,'
                'CuTaS3,CeTmS3'.split(','))]
-    panel_classes = [ABS3BandStructurePanel]
+    panels = [ABS3BandStructurePanel()]
 
 
 @project('abx2')

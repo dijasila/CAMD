@@ -10,6 +10,7 @@ from bottle import Bottle, static_file, template
 from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.panel import Panel
 from cxdb.utils import FormPart, table
 from cxdb.web import CXDBApp
 
@@ -144,8 +145,8 @@ def app_from_db(dbpath: Path,
         pd.postprocess(material)
         rows.append(material)
 
-    panels = [CMRAtomsPanel(pd.column_names, pd.create_tables)]
-    panels += [cls(root) for cls in pd.panel_classes]
+    panels: list[Panel] = [CMRAtomsPanel(pd.column_names, pd.create_tables)]
+    panels += pd.panels
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
