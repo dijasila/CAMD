@@ -26,7 +26,10 @@ def test_cmr(tmp_path):
 
     app.download_db_file('abs3')
     app.png('abs3', '1')
+
+    # Test also when png-files have already been generated:
     app.material('abs3', '1')
+    app.material('lowdim', 'a1')
 
     app.favicon()
 
@@ -55,4 +58,3 @@ def test_lowdim():
         {'s': 's_0', 'from_s': '0.5'}) == ['s_0>=0.5']
     assert r.get_filter_strings(
         {'s': 's_0', 'to_s': '0.5'}) == ['s_0<=0.5']
-    
