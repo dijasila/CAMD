@@ -16,15 +16,11 @@ def main(argv: list[str] | None = None,
                         help='Filename of atomic structure file.')
     args = parser.parse_args(argv)
     rows: list[Material] = []
-    i = 1
-    for filename in args.filename:
+    for i, filename in enumerate(args.filename):
         path = Path(filename)
-        configs = read(path)
-        if isinstance(configs, Atoms):
-            configs = [configs]
-            for atoms in configs:
-                rows.append(Material(path.parent, str(i), atoms))
-                i += 1
+        atoms = read(path)
+        assert isinstance(atoms, Atoms)
+        rows.append(Material(path.parent, str(i), atoms))
 
     panels = [AtomsPanel()]
     materials = Materials(rows, panels)

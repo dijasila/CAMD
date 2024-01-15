@@ -378,12 +378,11 @@ def oqmd123() -> ProjectDescription:
 
 def pp_oqmd123(material: Material):
     id = material.get('oqmd_id')
-    if id:
-        material.add_column(
-            'oqmd_id',
-            id,
-            f'<a href="http://oqmd.org/materials/entry/{id}">{id}</a>',
-            update=True)
+    material.add_column(
+        'oqmd_id',
+        id,
+        f'<a href="http://oqmd.org/materials/entry/{id}">{id}</a>',
+        update=True)
 
 
 @project

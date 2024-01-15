@@ -8,7 +8,7 @@ tests:
     - pip install --no-deps git+https://gitlab.com/ase/ase.git
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .
-    - coverage run --source=cxdb -m pytest -v --color=yes
+    - coverage run --branch --source=cxdb -m pytest -v --color=yes
     - coverage report -i --precision=2 --fail-under=99
     - coverage html
     - mypy

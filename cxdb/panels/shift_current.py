@@ -74,8 +74,7 @@ def plot_shift(data, gap, filenames, nd=2):
         ax.axhline(y=0, color='k')
 
         # Add the bandgap
-        if gap is not None:
-            ax.axvline(x=gap, color='k', ls='--')
+        ax.axvline(x=gap, color='k', ls='--')
 
         # Plot the data
         ax.plot(w_l, np.real(shift_l), '-', c='C0',)
@@ -83,9 +82,8 @@ def plot_shift(data, gap, filenames, nd=2):
         # Set the axis limit
         ax.set_xlim(0, np.max(w_l))
         relation = sym_chi.get(pol)
-        if not (relation is None):
-            figtitle = '$' + '$\n$'.join(wrap(relation, 40)) + '$'
-            ax.set_title(figtitle)
+        figtitle = '$' + '$\n$'.join(wrap(relation, 40)) + '$'
+        ax.set_title(figtitle)
         ax.set_xlabel(r'Energy [eV]')
         polstr = f'{pol}'
         if nd == 2:
