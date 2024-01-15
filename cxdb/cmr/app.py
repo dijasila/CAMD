@@ -52,8 +52,8 @@ class CMRProjectsApp:
         return html.replace('href="/">Search<',
                             f'href="/{project_name}">Search<', 1)
 
-    def callback(self, project_name: str, query: dict | None = None):
-        return self.project_apps[project_name].callback(query)
+    def callback(self, project_name: str):
+        return self.project_apps[project_name].callback()
 
     def download_db_file(self, project_name: str) -> bytes:
         path = self.project_apps[project_name].dbpath

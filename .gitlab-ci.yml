@@ -4,7 +4,7 @@ tests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install flake8 mypy coverage pytest scipy click
+    - pip install flake8 mypy coverage pytest scipy click boddle
     - pip install --no-deps git+https://gitlab.com/ase/ase.git
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .

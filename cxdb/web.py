@@ -52,12 +52,9 @@ class CXDBApp:
         self.app.route('/png/<uid>/<filename>')(self.png)
         self.app.route('/help')(self.help)
 
-    def index(self,
-              query: dict | None = None) -> str:
+    def index(self) -> str:
         """Page showing table of selected materials."""
-        if query is None:
-            query = request.query
-
+        query = request.query
         filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(filter_string, query)
@@ -110,9 +107,8 @@ class CXDBApp:
                         panels=panels,
                         footer=footer)
 
-    def callback(self, query: dict | None = None) -> str:
-        if query is None:
-            query = request.query  # pragma: no cover
+    def callback(self) -> str:
+        query = request.query
         name = query['name']
         uid = query['uid']
         material = self.materials[uid]
