@@ -102,20 +102,20 @@ class CMRAtomsPanel(AtomsPanel):
             smax='Maximum stress component [eV/Å<sup>3</sup>]',
             magmom='Total magnetic moment [μ<sub>B</sub>]')
         self.columns = list(self.column_names)
-        self.create_column_one = create_column_one
-        self.create_column_two = create_column_two
+        self._create_column_one = create_column_one
+        self._create_column_two = create_column_two
 
     def create_column_one(self, material, materials):
-        html = self.create_column_one(material, materials)
-        if not html:
+        col1, foot = self._create_column_one(material, materials)
+        if not col1:
             return super().create_column_one(material, materials)
-        return html
+        return col1, foot
 
     def create_column_two(self, material, materials):
-        html = self.create_column_two(material, materials)
-        if not html:
+        col2, foot = self._create_column_two(material, materials)
+        if not col2:
             return super().create_column_two(material, materials)
-        return html
+        return col2, foot
 
 
 def app_from_db(dbpath: Path,

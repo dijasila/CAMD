@@ -713,7 +713,7 @@ class LowDimProjectDescription(ProjectDescription):
             rows.insert(0, ['ICSD Number', material.dbid])
         else:
             rows.insert(0, ['ID #', material.dbid])
-        table('Basic properties', rows), ''
+        return table('Basic properties', rows), ''
 
     def create_column_two(self,
                           material: Material,
