@@ -16,10 +16,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from ase.db import connect
-from cxdb.cmr.lowdim import LowDimPanel, LowDimRange, keysfortable0
+from cxdb.cmr.lowdim import LowDimPanel, keysfortable0
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, Input, Range, Select, table
+from cxdb.utils import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -693,7 +693,16 @@ class LowDimProjectDescription(ProjectDescription):
     initial_columns = ['formula', 'source', 'dbid',
                        's_0', 's_1', 's_2', 's_3']
     form_parts = [
-        LowDimRange(),
+        RangeX(
+            'Score range', 's',
+            ['0D', '1D', '2D', '3D',
+             '0D+1D', '0D+2D', '0D+3D', '1D+2D', '1D+3D', '2D+3D',
+             '0D+1D+2D', '0D+1D+3D', '1D+2D+3D',
+             '0D+1D+2D+3D'],
+            ['s_0', 's_1', 's_2', 's_3',
+             's_01', 's_02', 's_03', 's_12', 's_13', 's_23',
+             's_012', 's_013', 's_123',
+             's_0123']),
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
 
@@ -721,6 +730,74 @@ class LowDimProjectDescription(ProjectDescription):
         if material.source == 'ICSD':
             return ('not allowed to show atoms', '')
         return ('', '')  # use default AtomsPanel behavior
+
+
+COD = 'https://www.crystallography.net/cod/'
+ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
+
+
+@project('c1db')
+class C1DBProjectDescription(ProjectDescription):
+    title = 'Computational 1D materials database'
+    column_names = {
+        'PBE_1D': 'uid for 1D material calculated using PBE',
+        'PBED3_1D': 'uid for 1D material calculated using PBE-D3',
+        'PBED3_3D': 'uid for 3D material calculated using PBE-D3',
+        'Source': 'Source',
+        'derived_from': 'derived from',
+        'xc': 'XC-functional',
+        'ndim': 'Dimensionality'}
+    initial_columns = [
+        'formula', 'hform', 'gap', 'is_magnetic', 'xc', 'ndim']
+    uid = 'uid'
+    form_parts = [
+        Select('Dimensionality', 'pbc', ['', 'FFT', 'TTT'], ['', '1D', '3D']),
+        Select('XC-functional', 'calculator', ['', 'dftd3', 'gpaw'],
+               ['', 'PBE+D3', 'PBE']),
+        Select('Source', 'source',
+               ['',
+                'COD',
+                'ICSD',
+                'Derived by element substitution',
+                'Machine learning generated']),
+        Select('Dynamically stable (phonons)', 'dyn_phonons',
+               ['', 'low', 'high'], ['', 'No', 'Yes']),
+        RangeS('Thermodynamic stability', 'thermodynamic_stability_level',
+               ['1', '2', '3'], ['Low', 'Medium', 'High']),
+        Select('Magnetic', 'is_magnetic',
+               ['', 'True', 'False'], ['All', 'Yes', 'No']),
+        RangeX('Band gap range [eV]', 'xc',
+               ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
+
+    def create_column_one(self, material, materials):
+        rows = materials.table(material, self.column_names)
+        source = material.Source
+        df = material.get('derived_from')
+        if source == 'COD':
+            rows.append(
+                ['Source',
+                 f'<a href={COD}/{df}.html>COD {df}</a>'])
+        elif source == 'ICSD':
+            rows.append(
+                ['Source',
+                 f'<a href={ICSD}>ICSD {df}</a>'])
+        elif source == 'Machine learning generated':
+            rows.append(
+                ['Source', source])
+        else:
+            rows += [
+                ['Source', source],
+                ['Derived form',
+                 f'<a href={df}>{df}</a>']]
+
+        for key, text in [('PBED3_1D', '1D (PBE-D3)'),
+                          ('PBE_1D', '1D (PBE)'),
+                          ('PBED3_3D', '3D (PBE-D3)')]:
+            uid = getattr(material, key, '')
+            if uid:
+                rows.append(
+                    [text, f'<a href={uid}>{uid}</a>'])
+        return table(['XXX', ''], rows), ''
 
 
 if __name__ == '__main__':

@@ -3,44 +3,49 @@ from pathlib import Path
 
 import pytest
 from cxdb.cmr.app import main
-from cxdb.cmr.projects import abs3_bs, create_project_description
-from cxdb.test.cmr import create_db_files
-from cxdb.cmr.lowdim import LowDimRange
+from cxdb.cmr.projects import abs3_bs, create_project_description, projects
+from cxdb.test.cmr import create_db_file
 
 
-def test_cmr(tmp_path):
+@pytest.mark.parametrize('project_name', projects)
+def test_cmr(tmp_path, project_name):
+    name = project_name
     os.chdir(tmp_path)
-    project_descriptions = create_db_files(tmp_path)
+    create_db_file(project_name, tmp_path)
 
-    app = main([f'{name}.db' for name in project_descriptions])
+    app = main([f'{name}.db'])
+
+    app.index1(name)
+    for material in app.project_apps[name].materials:
+        app.material(name, material.uid)
 
     app.overview()
-
-    for name in project_descriptions:
-        app.index1(name)
-        for material in app.project_apps[name].materials:
-            app.material(name, material.uid)
-
-    html = app.material('oqmd123', 'id-1')
-    assert 'http://oqmd.org' in html
-
-    app.download_db_file('abs3')
-    app.png('abs3', '1')
-
-    # Test also when png-files have already been generated:
-    app.material('abs3', '1')
-    app.material('lowdim', 'a1')
-
     app.favicon()
 
-    dct = app.callback('ads1d', {'name': 'atoms', 'uid': 'id-1', 'data': '1'})
-    assert 'data' in dct
+    if name == 'oqmd123':
+        html = app.material('oqmd123', 'id-1')
+        assert 'http://oqmd.org' in html
 
-    mat = app.project_apps['abx2'].materials['1']
-    gap = mat.KS_gap
-    assert isinstance(gap, float)
-    with pytest.raises(AttributeError):
-        mat.E_hull
+    if name == 'abs3':
+        app.download_db_file('abs3')
+        app.png('abs3', '1')
+        # Test also when png-files have already been generated:
+        app.material('abs3', '1')
+
+    if name == 'lowdim':
+        app.material('lowdim', 'a1')
+
+    if name == 'ads1d':
+        dct = app.callback('ads1d',
+                           {'name': 'atoms', 'uid': 'id-1', 'data': '1'})
+        assert 'data' in dct
+
+    if name == 'abx2':
+        mat = app.project_apps['abx2'].materials['1']
+        gap = mat.KS_gap
+        assert isinstance(gap, float)
+        with pytest.raises(AttributeError):
+            mat.E_hull
 
 
 def test_pd():
@@ -50,11 +55,3 @@ def test_pd():
 def test_abs3():
     assert not abs3_bs({}, Path())
     assert not abs3_bs({'X': [1, 2], 'names': 'ABC'}, Path())
-
-
-def test_lowdim():
-    r = LowDimRange()
-    assert r.get_filter_strings(
-        {'s': 's_0', 'from_s': '0.5'}) == ['s_0>=0.5']
-    assert r.get_filter_strings(
-        {'s': 's_0', 'to_s': '0.5'}) == ['s_0<=0.5']
