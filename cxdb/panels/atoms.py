@@ -1,12 +1,19 @@
 """Panel for showing the atomic structure and additional tables.
 
-Content:
+Content::
 
-* ball and stick plotly plot
-* repeat-unit-cell button
-* download button TODO
-* unit cell vectors
-* tables
+  +-----------+-------------------------------+
+  | column 1  | repeat-unit-cell button       |
+  | ...       | download button (TODO)        |
+  |           +-------------------------------+
+  |           | ball and stick plotly plot    |
+  |           | ...                           |
+  |           |                               |
+  |           +-------------------------------+
+  |           | unit cell: vectors            |
+  |           +-------------------------------+
+  |           | unit cell: lengths and angles |
+  +-----------+-------------------------------+
 """
 from __future__ import annotations
 import json
@@ -32,7 +39,7 @@ HTML = """
 <h4>Basic properties: {formula}</h4>
 <div class="row">
   <div class="col-6">
-   {table}
+   {column1}
   </div>
   <div class="col-6">
     <label>Repeat:</label>
@@ -83,15 +90,17 @@ class AtomsPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        tbl = table(None,
-                    [(materials.column_names[name], material[name])
-                     for name in self.columns
-                     if name in material._values])
-        return (HTML.format(table=tbl,
+        html = self.create_column_one(material, materials)
+        return (HTML.format(column1=html,
                             axes=self.axes(material),
                             uid=material.uid,
                             formula=material['formula']),
                 FOOTER.format(atoms_json=self.plot(material, 3)))
+
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> str:
+        return table(None, materials.table(material, self.columns))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms

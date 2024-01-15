@@ -1,30 +1,32 @@
 """Descriptions of CMR projects.
 
 See https://cmr.fysik.dtu.dk/
+
 TODO:
 
 * c1db
 * lowdim
-* fix me units
-* also add energy, fmax, smax, magmom
 * imp2d tables
-* bidb
-* abs3: Electronic band structure
+* bidb: magnetic: yes or 1. slide_stability: Stable?
 * extra???
 
 """
 from __future__ import annotations
-from typing import Callable
-from cxdb.utils import Select, Input
-from cxdb.material import Material
-from cxdb.utils import FormPart
+
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+from ase.db import connect
+from cxdb.material import Material, Materials
+from cxdb.panels.panel import Panel
+from cxdb.utils import FormPart, Input, Select, Range, table
 
 # Mapping from project name to ProjectDescription class:
-projects: dict[str, Callable[[], ProjectDescription]] = {}
+projects = {}
 
 
 def project(name: str):
-    """Decorator for filling in the _projects dict."""
+    """Decorator for filling in the projects dict."""
     def decorator(cls):
         projects[name] = cls
         return cls
@@ -47,9 +49,13 @@ class ProjectDescription:
     pbc: list[bool] | None = None
     extra: list[str] = []
     form_parts: list[FormPart] = []
+    panels: list[Panel] = []
 
     def postprocess(self, material: Material) -> None:
         pass
+
+    def create_tables(self, material: Material, materials: Materials):
+        return ''
 
 
 @project('solar')
@@ -136,13 +142,51 @@ class ABSe3ProjectDescription(ProjectDescription):
                        'pbe_hof']
 
 
+class ABS3BandStructurePanel(Panel):
+    title = 'Electronic band-structure'
+
+    def get_html(self,
+                 material: Material,
+                 materials: Materials) -> tuple[str, str]:
+        uid = material.uid
+        path = material.folder / f'abs3/{uid}.png'
+        path.parent.mkdir(exist_ok=True)
+        if not path.is_file():
+            dbpath = material.folder / 'abs3.db'
+            dct = connect(dbpath).get(id=uid).data
+            ok = abs3_bs(dct, path)
+            if not ok:
+                return ('', '')
+        return (
+            f'<img alt="BS for {uid}" src="/abs3/png/{uid}" />', '')
+
+
+def abs3_bs(d: dict, path: Path) -> bool:
+    if 'X' not in d:
+        return False
+    n1 = len(d['X'])
+    n2 = len(d['names'])
+    if n1 != n2:
+        print('bad data:', d, path)
+        return False
+    fig, ax = plt.subplots()
+    ax.plot(d['x'], d['y'])
+    ax.set_xticks(d['X'], d['names'])
+    ax.set_xlim(0, d['X'][-1])
+    ax.set_ylim(-6, 5)
+    ax.set_ylabel('GLLB-SC energy relative to VBM [eV]')
+    plt.savefig(path)
+    plt.close()
+    return True
+
+
 @project('abs3')
 class ABS3ProjectDescription(ProjectDescription):
     title = 'Database of ABS3 materials'
     column_names = {
         'E_hull': 'E-hull [eV]',
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'E_relative_per_atom': 'Energy per atom [eV]',
         'E_uncertainty_hull': 'E-hull Uncertainty [eV]',
         'E_uncertainty_per_atom': 'Energy uncertainty [eV]',
@@ -161,6 +205,7 @@ class ABS3ProjectDescription(ProjectDescription):
                ',NH4CdCl3/Sn2S3,GdFeO3,YScS3,PbPS3,'
                'BaNiO3,FePS3,cubic,distorted,Pyroxene-CaIrO3,BiInS3,'
                'CuTaS3,CeTmS3'.split(','))]
+    panels = [ABS3BandStructurePanel()]
 
 
 @project('abx2')
@@ -169,8 +214,8 @@ class ABX2ProjectDescription(ProjectDescription):
     column_names = {
         'E_hull': 'E-hull [eV]',
         'KS_gap': 'Kohn Sham band gap [eV]',
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'Dxc': 'Derivative discontinuity (GLLB-SC) [eV]',
         'E_relative_perAtom': 'Energy per atom [eV]',
         'E_uncertanty_hull': 'Uncertanty of the convex hull energy [eV]',
@@ -341,12 +386,12 @@ class MPGLLBSCProjectDescription(ProjectDescription):
         'gllbsc_disc': 'Derivative discontinuity GLLB-SC. [eV]',
         'mpid': 'ID of materials in Materials project',
         'icsd_id': 'ID of materials in ICSD',
-        'g0w0_gap': '`G_0W_0` gap at `\\Gamma` [eV]',
-        'gw0_gap': '`GW_0` gap at `\\Gamma` [eV]',
-        'gw_gap': '`GW` gap at `\\Gamma` [eV]',
-        'hse06_gap': 'HSE06 gap at `\\Gamma` [eV]',
-        'lda_gap': 'LDA gap at `\\Gamma` [eV]',
-        'gllbsc_gap': 'GLLBSC gap at `\\Gamma` [eV]'}
+        'g0w0_gap': 'G0W0 gap at Gamma [eV]',
+        'gw0_gap': 'GW0 gap at Gamma [eV]',
+        'gw_gap': 'GW gap at Gamma [eV]',
+        'hse06_gap': 'HSE06 gap at Gamma [eV]',
+        'lda_gap': 'LDA gap at Gamma [eV]',
+        'gllbsc_gap': 'GLLBSC gap at Gamma [eV]'}
     initial_columns = [
         'uid', 'age', 'formula', 'energy', 'pbc',
         'volume', 'charge', 'magmom',
@@ -396,8 +441,8 @@ class OrganometalProjectDescription(ProjectDescription):
 class PVPECOQMDProjectDescription(ProjectDescription):
     title = 'Screening for PV and PEC materials using the OQMD database'
     column_names = {
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'GLLB_dir': 'Direct band gap (GLLB-SC) [eV]',
         'GLLB_ind': 'Indirect band gap (GLLB-SC) [eV]',
         'PBE_gap': 'Band gap (PBE) [eV]',
@@ -488,6 +533,90 @@ class Ads1DProjectDescription(ProjectDescription):
                        'x', 'y', 'n', 'adsorbate', 'workfunction',
                        'coverage', 'eads']
     uid = 'uid'
+
+
+@project('bidb')
+class BiDBProjectDescription(ProjectDescription):
+    title = 'Bilayer database'
+    column_names = {
+        'binding_energy_zscan': 'Binding energy (zscan) [meV/Å<sup>2</sup>]',
+        'number_of_layers': 'nlayers',
+        'monolayer_uid': 'Monolayer ID',
+        'bilayer_uid': 'Bilayer ID',
+        'dynamically_stable': 'Dynamically stable',
+        'magnetic': 'Magnetic',
+        'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+        'slide_stability': 'Slide Stability',
+        'thermodynamic_stability': '',
+        'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
+        'ehull': 'Energy above convex hull [eV/atom]',
+        'gap_pbe': 'Band gap (PBE)',
+        'icsd_id': 'ICSD id of parent bulk structure',
+        'cod_id': 'COD id of parent bulk structure',
+        'layer_group': 'Layer group',
+        'layer_group_number': 'Layer group number',
+        'space_group': 'Space group',
+        'space_group_number': 'Space group number'}
+    uid = 'uid'
+    initial_columns = [
+        'formula',
+        'number_of_layers',
+        'binding_energy_gs',
+        'slide_stability',
+        'uid',
+        'magnetic']
+    form_parts = [
+        Select('Number of layers', 'number_of_layers', ['', '1', '2']),
+        Range('Binding energy [meV/Å<sup>2</sup>] (bilayers)',
+              'binding_energy_gs'),
+        Select('Slide stability (bilayers)', 'slide_stability',
+               ['', 'Stable']),
+        Range('Band gap range [eV]', 'gap_pbe'),
+        Select('Magnetic', 'magnetic', ['', '0', '1'])]
+
+    def create_tables(self,
+                      material: Material,
+                      materials: Materials) -> str:
+        def tab(names):
+            return materials.table(material, names)
+
+        if material.number_of_layers == 1:
+            tables = [
+                (['Monolayer structure info', 'Value'],
+                 tab(['layer_group',
+                      'layer_group_number',
+                      'space_group',
+                      'space_group_number',
+                      'icsd_id',
+                      'cod_id'])),
+                (['Stability', ''],
+                 tab(['dynamically_stable', 'ehull'])),
+                (['Basic properties', ''],
+                 tab(['magnetic', 'gap_PBE']))]
+        else:
+            tables = [
+                (['Bilayer structure info', 'Value'],
+                 tab(['layer_group',
+                      'layer_group_number',
+                      'space_group',
+                      'space_group_number',
+                      'icsd_id',
+                      'cod_id',
+                      'monolayer_uid'])),
+                (['Stability', ''],
+                 tab(['binding_energy_zscan', 'slide_stability'])),
+                (['Basic properties', ''],
+                 tab(['magnetic', 'interlayer_magnetic_exchange', 'gap_PBE']))]
+            # Add link to monolayer:
+            _, mid = tables[0][1][-1]
+            tables[0][1][-1] = (
+                'Monolayer in BiDB',
+                f'<a href={mid}>{mid}</a>')
+            tables[0][1].append(
+                ('Monolayer in C2DB',
+                 f'<a href=https://cmrdb.fysik.dtu.dk/c2db/row/{mid}>'
+                 f'{mid}</a>'))
+        return '\n'.join(table(header, rows) for header, rows in tables)
 
 
 if __name__ == '__main__':

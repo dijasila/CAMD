@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 import sys
+from math import isfinite
 from pathlib import Path
+from typing import Callable
 
 from ase.db import connect
 from bottle import Bottle, static_file, template
-
 from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
-from cxdb.utils import table, FormPart
+from cxdb.panels.panel import Panel
+from cxdb.utils import FormPart, table
 from cxdb.web import CXDBApp
 
 CMR = 'https://cmr.fysik.dtu.dk'
@@ -25,6 +27,7 @@ class CMRProjectsApp:
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
         self.app.route('/<project_name>/download')(self.download_db_file)
+        self.app.route('/<project_name>/png/<uid>')(self.png)
 
     def overview(self) -> str:
         tbl = table(
@@ -60,6 +63,10 @@ class CMRProjectsApp:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
 
+    def png(self, project_name: str, uid: str) -> bytes:
+        app = self.project_apps[project_name]
+        return app.png(uid, f'{project_name}/{uid}.png')
+
 
 class CMRProjectApp(CXDBApp):
     def __init__(self,
@@ -81,22 +88,50 @@ class CMRProjectApp(CXDBApp):
 
 
 class CMRAtomsPanel(AtomsPanel):
-    def __init__(self, column_names: dict[str, str]):
+    def __init__(self,
+                 column_names: dict[str, str],
+                 create_tables: Callable[[Material, Materials], str]):
         super().__init__()
         self.column_names.update(column_names)
+        self.column_names.update(
+            energy='Energy [eV]',
+            fmax='Maximum force [eV/Å]',
+            smax='Maximum stress component [eV/Å<sup>3</sup>]',
+            magmom='Total magnetic moment [μ<sub>B</sub>]')
         self.columns = list(self.column_names)
+        self.create_tables = create_tables
+
+    def create_column_one(self, material, materials):
+        html = self.create_tables(material, materials)
+        if not html:
+            return super().create_column_one(material, materials)
+        return html
 
 
 def app_from_db(dbpath: Path,
                 project_description: ProjectDescription) -> CMRProjectApp:
     pd = project_description
-    root = dbpath.parent  # not used
+    root = dbpath.parent
     rows = []
     for row in connect(dbpath).select():
         atoms = row.toatoms()
         if pd.pbc is not None:
             atoms.pbc = pd.pbc
         material = Material(root, str(row[pd.uid]), atoms)
+
+        energy = row.get('energy')
+        if energy is not None:
+            material.add_column('energy', energy)
+        forces = row.get('forces')
+        if forces is not None:
+            material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
+        stress = row.get('stress')
+        if stress is not None:
+            material.add_column('smax', abs(stress).max())
+        magmom = row.get('magmom')
+        if magmom is not None:
+            material.add_column('magmom', magmom)
+
         for name in pd.column_names:
             value = row.get(name)
             if value is not None:
@@ -104,11 +139,14 @@ def app_from_db(dbpath: Path,
                     # An integer with a unit!  (column description is
                     # something like "Description ... [unit]")
                     value = float(value)
+                elif isinstance(value, float) and not isfinite(value):
+                    continue
                 material.add_column(name, value)
         pd.postprocess(material)
         rows.append(material)
 
-    panels = [CMRAtomsPanel(pd.column_names)]
+    panels: list[Panel] = [CMRAtomsPanel(pd.column_names, pd.create_tables)]
+    panels += pd.panels
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
