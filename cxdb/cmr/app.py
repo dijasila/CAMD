@@ -39,7 +39,7 @@ class CMRProjectsApp:
               len(app.materials),
               f'<a download="" href="/{name}/download">{name}.db</a>',
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
-             for name, app in self.project_apps.items()])
+             for name, app in sorted(self.project_apps.items())])
         return template('cmr/overview', table=tbl, title='CMR projects')
 
     def index1(self, project_name: str) -> str:
@@ -90,7 +90,10 @@ class CMRProjectApp(CXDBApp):
 class CMRAtomsPanel(AtomsPanel):
     def __init__(self,
                  column_names: dict[str, str],
-                 create_tables: Callable[[Material, Materials], str]):
+                 create_column_one: Callable[[Material, Materials],
+                                             tuple[str, str]],
+                 create_column_two: Callable[[Material, Materials],
+                                             tuple[str, str]]):
         super().__init__()
         self.column_names.update(column_names)
         self.column_names.update(
@@ -99,12 +102,19 @@ class CMRAtomsPanel(AtomsPanel):
             smax='Maximum stress component [eV/Å<sup>3</sup>]',
             magmom='Total magnetic moment [μ<sub>B</sub>]')
         self.columns = list(self.column_names)
-        self.create_tables = create_tables
+        self.create_column_one = create_column_one
+        self.create_column_two = create_column_two
 
     def create_column_one(self, material, materials):
-        html = self.create_tables(material, materials)
+        html = self.create_column_one(material, materials)
         if not html:
             return super().create_column_one(material, materials)
+        return html
+
+    def create_column_two(self, material, materials):
+        html = self.create_column_two(material, materials)
+        if not html:
+            return super().create_column_two(material, materials)
         return html
 
 
@@ -145,7 +155,9 @@ def app_from_db(dbpath: Path,
         pd.postprocess(material)
         rows.append(material)
 
-    panels: list[Panel] = [CMRAtomsPanel(pd.column_names, pd.create_tables)]
+    panels: list[Panel] = [CMRAtomsPanel(pd.column_names,
+                                         pd.create_column_one,
+                                         pd.create_column_two)]
     panels += pd.panels
     materials = Materials(rows, panels)
     initial_columns = [name for name in pd.initial_columns

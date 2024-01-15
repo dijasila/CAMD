@@ -36,12 +36,18 @@ from cxdb.panels.panel import Panel
 from cxdb.utils import table
 
 HTML = """
-<h4>Basic properties: {formula}</h4>
+<h4>{formula}</h4>
 <div class="row">
   <div class="col-6">
-   {column1}
+    {column1}
   </div>
   <div class="col-6">
+    {column2}
+  </div>
+</div>
+"""
+
+COLUMN2 = """
     <label>Repeat:</label>
     <select onchange="cb(this.value, 'atoms', '{uid}')">
       <option value="1">1</option>
@@ -50,8 +56,6 @@ HTML = """
     </select>
     <div id='atoms' class='atoms'></div>
     {axes}
-  </div>
-</div>
 """
 
 FOOTER = """
@@ -90,17 +94,26 @@ class AtomsPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        html = self.create_column_one(material, materials)
-        return (HTML.format(column1=html,
-                            axes=self.axes(material),
-                            uid=material.uid,
+        col1, foot1 = self.create_column_one(material, materials)
+        col2, foot2 = self.create_column_two(material, materials)
+        return (HTML.format(column1=col1,
+                            column2=col2,
                             formula=material['formula']),
-                FOOTER.format(atoms_json=self.plot(material, 3)))
+                foot1 + foot2)
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> str:
-        return table(None, materials.table(material, self.columns))
+                          materials: Materials) -> tuple[str, str]:
+        return (table(None, materials.table(material, self.columns)), '')
+
+    def create_column_two(self,
+                          material: Material,
+                          materials: Materials) -> tuple[str, str]:
+        return (
+            COLUMN2.format(
+                axes=self.axes(material),
+                uid=material.uid),
+            FOOTER.format(atoms_json=self.plot(material, 3)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms

@@ -6,7 +6,6 @@ TODO:
 
 * c1db
 * lowdim
-* imp2d tables
 * bidb: magnetic: yes or 1. slide_stability: Stable?
 * extra???
 
@@ -20,6 +19,7 @@ from ase.db import connect
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
 from cxdb.utils import FormPart, Input, Select, Range, table
+from cxdb.cmr.lowdim import LowDimRange, keysfortable0
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -54,8 +54,11 @@ class ProjectDescription:
     def postprocess(self, material: Material) -> None:
         pass
 
-    def create_tables(self, material: Material, materials: Materials):
-        return ''
+    def create_column_one(self, material: Material, materials: Materials):
+        return '', ''
+
+    def create_column_two(self, material: Material, materials: Materials):
+        return '', ''
 
 
 @project('solar')
@@ -497,25 +500,30 @@ class Imp2DProjectDescription(ProjectDescription):
                ['', 'True', 'False']),
         Input('Host spacegroup number', 'host_spacegroup', 'e.g. 187')]
 
-
-tables = [
-    (['Host properties', ''],
-     ['host',
-      'supercell',
-      'host_spacegroup',
-      'hostenergy']),
-    (['Structural properties', ''],
-     ['dopant',
-      'defecttype',
-      'depth',
-      'extension_factor',
-      'site']),
-    (['Electronic properties', ''],
-     ['spin',
-      'en2',
-      'eform',
-      'dopant_chemical_potential',
-      'conv2'])]
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> str:
+        return '\n'.join(
+            table([header, ''],
+                  materials.table(material, names))
+            for header, names in [
+                ('Host properties',
+                 ['host',
+                  'supercell',
+                  'host_spacegroup',
+                  'hostenergy']),
+                ('Structural properties',
+                 ['dopant',
+                  'defecttype',
+                  'depth',
+                  'extension_factor',
+                  'site']),
+                ('Electronic properties',
+                 ['spin',
+                  'en2',
+                  'eform',
+                  'dopant_chemical_potential',
+                  'conv2'])]), ''
 
 
 @project('ads1d')
@@ -574,9 +582,9 @@ class BiDBProjectDescription(ProjectDescription):
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
-    def create_tables(self,
-                      material: Material,
-                      materials: Materials) -> str:
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> str:
         def tab(names):
             return materials.table(material, names)
 
@@ -616,7 +624,103 @@ class BiDBProjectDescription(ProjectDescription):
                 ('Monolayer in C2DB',
                  f'<a href=https://cmrdb.fysik.dtu.dk/c2db/row/{mid}>'
                  f'{mid}</a>'))
-        return '\n'.join(table(header, rows) for header, rows in tables)
+        return '\n'.join(table(header, rows) for header, rows in tables), ''
+
+
+@project('lowdim')
+class LowDimProjectDescription(ProjectDescription):
+    title = ('Definition of a scoring parameter to'
+             ' identify low-dimensional materials components')
+    uid = 'dbid'
+    column_names = {
+        's_0': '0D score',
+        's_1': '1D score',
+        's_2': '2D score',
+        's_3': '3D score',
+        's_01': '0D+1D score',
+        's_02': '0D+2D score',
+        's_03': '0D+3D score',
+        's_12': '1D+2D score',
+        's_13': '1D+3D score',
+        's_23': '2D+3D score',
+        's_012': '0D+1D+2D score',
+        's_013': '0D+1D+3D score',
+        's_023': '0D+2D+3D score',
+        's_123': '1D+2D+3D score',
+        's_0123': '0D+1D+2D+3D score',
+        'a_0': 'Start of 0D k-interval',
+        'a_1': 'Start of 1D k-interval',
+        'a_2': 'Start of 2D k-interval',
+        'a_3': 'Start of 3D k-interval',
+        'a_01': 'Start of 0D+1D k-interval',
+        'a_02': 'Start of 0D+2D k-interval',
+        'a_03': 'Start of 0D+3D k-interval',
+        'a_12': 'Start of 1D+2D k-interval',
+        'a_13': 'Start of 1D+3D k-interval',
+        'a_23': 'Start of 2D+3D k-interval',
+        'a_012': 'Start of 0D+1D+2D k-interval',
+        'a_013': 'Start of 0D+1D+3D k-interval',
+        'a_023': 'Start of 0D+2D+3D k-interval',
+        'a_123': 'Start of 1D+2D+3D k-interval',
+        'a_0123': 'Start of 0D+1D+2D+3D k-interval',
+        'b_0': 'End of 0D k-interval',
+        'b_1': 'End of 1D k-interval',
+        'b_2': 'End of 2D k-interval',
+        'b_3': 'End of 3D k-interval',
+        'b_01': 'End of 0D+1D k-interval',
+        'b_02': 'End of 0D+2D k-interval',
+        'b_03': 'End of 0D+3D k-interval',
+        'b_12': 'End of 1D+2D k-interval',
+        'b_13': 'End of 1D+3D k-interval',
+        'b_23': 'End of 2D+3D k-interval',
+        'b_012': 'End of 0D+1D+2D k-interval',
+        'b_013': 'End of 0D+1D+3D k-interval',
+        'b_023': 'End of 0D+2D+3D k-interval',
+        'b_123': 'End of 1D+2D+3D k-interval',
+        'b_0123': 'End of 0D+1D+2D+3D k-interval',
+        'numc_0': 'Number of 0D components',
+        'numc_1': 'Number of 1D components',
+        'numc_2': 'Number of 2D components',
+        'numc_3': 'Number of 3D components',
+        'source': 'Source',
+        'dbid': 'ID #',
+        'doi': 'DOI',
+        'publication': 'Publication',
+        'spacegroup_number': 'Space group #',
+        'dimtype': 'Dimensionality',
+        'h': 'Component count',
+        'warning': 'Warning'}
+    initial_columns = ['formula', 'source', 'dbid',
+                       's_0', 's_1', 's_2', 's_3']
+    form_parts = [
+        LowDimRange(),
+        Select('Database source', 'source', ['', 'COD', 'ICSD'])]
+
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> str:
+        rows = materials.table(material, keysfortable0)
+        doi = material.get('doi')
+        if doi:
+            href = f'<a href="https://doi.org/{doi}">{doi}</a>'
+            rows.append(['doi', href])
+        if material.source == 'COD':
+            id = material.dbid
+            href = ('<a href="http://www.crystallography.net/cod/' +
+                    f'{id}.html">{id}</a>')
+            rows.insert(0, ['COD Number', href])
+        elif material.source == 'ICSD':
+            rows.insert(0, ['ICSD Number', material.dbid])
+        else:
+            rows.insert(0, ['ID #', material.dbid])
+        table('Basic properties', rows), ''
+
+    def create_column_two(self,
+                          material: Material,
+                          materials: Materials) -> str:
+        if material.source == 'ICSD':
+            return ('not allowed to show atoms', '')
+        return ('', '')  # use default AtomsPanel behavior
 
 
 if __name__ == '__main__':
