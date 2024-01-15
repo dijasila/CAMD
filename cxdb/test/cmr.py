@@ -47,6 +47,10 @@ def create_db_files(path: Path) -> dict[str, ProjectDescription]:
             elif name == 'bidb':
                 kwargs['number_of_layers'] = 2
                 kwargs['monolayer_uid'] = 'abc-123'
+            elif name == 'lowdim':
+                kwargs['source'] = 'COD'
+                kwargs['doi'] = 'asdf'
+                kwargs['dbid'] = 'a1'
 
             db.write(atoms, abc=27.3, gap=0, **kwargs, data=data)
 
@@ -54,6 +58,8 @@ def create_db_files(path: Path) -> dict[str, ProjectDescription]:
                 db.write(atoms)
             elif name == 'bidb':
                 db.write(atoms, uid='id-2', number_of_layers=1)
+            elif name == 'lowdim':
+                db.write(atoms, source='ICSD', dbid='a2')
 
     return pds
 

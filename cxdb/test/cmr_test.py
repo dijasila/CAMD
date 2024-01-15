@@ -5,6 +5,7 @@ import pytest
 from cxdb.cmr.app import main
 from cxdb.cmr.projects import abs3_bs, create_project_description
 from cxdb.test.cmr import create_db_files
+from cxdb.cmr.lowdim import LowDimRange
 
 
 def test_cmr(tmp_path):
@@ -25,7 +26,10 @@ def test_cmr(tmp_path):
 
     app.download_db_file('abs3')
     app.png('abs3', '1')
+
+    # Test also when png-files have already been generated:
     app.material('abs3', '1')
+    app.material('lowdim', 'a1')
 
     app.favicon()
 
@@ -46,3 +50,11 @@ def test_pd():
 def test_abs3():
     assert not abs3_bs({}, Path())
     assert not abs3_bs({'X': [1, 2], 'names': 'ABC'}, Path())
+
+
+def test_lowdim():
+    r = LowDimRange()
+    assert r.get_filter_strings(
+        {'s': 's_0', 'from_s': '0.5'}) == ['s_0>=0.5']
+    assert r.get_filter_strings(
+        {'s': 's_0', 'to_s': '0.5'}) == ['s_0<=0.5']
