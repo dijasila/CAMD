@@ -723,6 +723,133 @@ class LowDimProjectDescription(ProjectDescription):
         return ('', '')  # use default AtomsPanel behavior
 
 
+COD = 'https://www.crystallography.net/cod/'
+ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
+
+@project('c1db')
+class C1DBProjectDescription(ProjectDescription):
+    title = 'Computational 1D materials database'
+    column_names = {
+        'PBE_1D':
+            ('PBE 1D-uid', 'uid for 1D material calculated using PBE', ''),
+        'PBED3_1D':
+            ('PBE-D3 1D-uid', 'uid for 1D material calculated using PBE-D3', ''),
+        'PBED3_3D':
+            ('PBE-D3 3D-uid', 'uid for 3D material calculated using PBE-D3', ''),
+        'Source':
+            ('Source', 'Source', ''),
+        'derived_from':
+            ('derived from', 'derived from', ''),
+        'xc':
+            ('XC', 'XC-functional', ''),
+        'ndim':
+            ('Dimensionality', 'Dimensionality', '')}
+    initial_columns = [
+        'formula', 'hform', 'gap', 'is_magnetic', 'xc', 'ndim']
+    uid = 'uid'
+    form_parts = [
+        Select('Dimensionality', 'pbc', ['', 'FFT', 'TTT'], ['', '1D', '3D']),
+        Select('XC-functional', 'calculator', ['', 'dftd3', 'gpaw'],
+               ['', 'PBE+D3', 'PBE']),
+        Select('Source', 'source',
+               ['',
+                'COD',
+                'ICSD',
+                'Derived by element substitution',
+                'Machine learning generated']),
+        Select('Dynamically stable (phonons)', 'dyn_phonons',
+               ['', 'low', 'high'], ['', 'No', 'Yes']),
+        Range(if args['from_tdyn'] > '1':
+            parts.append('thermodynamic_stability_level>=' + args['from_tdyn'])
+        if args['to_tdyn'] < '3':
+            parts.append('thermodynamic_stability_level<=' + args['to_tdyn'])
+        if args['from_gap']:
+            parts.append(args['xc'] + '>=' + args['from_gap'])
+        if args['to_gap']:
+            parts.append(args['xc'] + '<=' + args['to_gap'])
+        if args['is_magnetic']:
+            parts.append('is_magnetic=' + args['is_magnetic'])
+        return ','.join(parts)
+
+
+    def layout(self, row, kd, prefix):
+        panels = _layout(row, kd, prefix)
+        for name, panel in panels:
+            if name == 'Summary':
+                for column in panel:
+                    for thing in column:
+                        if thing['type'] != 'table':
+                            continue
+                        if thing['header'][0] == 'Structure info':
+                            source = row.Source
+                            df = row.get('derived_from')
+                            if source == 'COD':
+                                thing['rows'].append(
+                                    ['Source',
+                                     f'<a href={COD}/{df}.html>COD {df}</a>'])
+                            elif source == 'ICSD':
+                                thing['rows'].append(
+                                    ['Source',
+                                     f'<a href={ICSD}>ICSD {df}</a>'])
+                            elif source == 'Machine learning generated':
+                                thing['rows'].append(
+                                    ['Source', source])
+                            else:
+                                thing['rows'] += [
+                                    ['Source', source],
+                                    ['Derived form',
+                                     f'<a href={df}>{df}</a>']]
+
+                            for key, text in [('PBED3_1D', '1D (PBE-D3)'),
+                                              ('PBE_1D', '1D (PBE)'),
+                                              ('PBED3_3D', '3D (PBE-D3)')]:
+                                uid = row.get(key)
+                                if uid:
+                                    thing['rows'].append(
+                                        [text, f'<a href={uid}>{uid}</a>'])
+                            return panels
+
+          <td>Thermodynamic stability</td><td>:</td>
+          <td>
+            <select name="from_tdyn" class="ase-input">
+              <option value="1" {% if not q %}selected{% endif %}>Low</option>
+              <option value="2">Medium</option>
+              <option value="3">High</option>
+            </select>
+          </td>
+          <td>-</td>
+          <td>
+            <select name="to_tdyn" class="ase-input">
+              <option value="1">Low</option>
+              <option value="2">Medium</option>
+              <option value="3" selected>High</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Magnetic</td><td>:</td>
+          <td>
+            <select name="is_magnetic" class="ase-input">
+              <option value="">All</option>
+              <option value="True">Yes</option>
+              <option value="False">No</option>
+            </select>
+          </td>
+        </tr>
+        <tr>
+          <td>Band gap range [eV]</td><td>:</td>
+          <td>
+            <input type="text" name="from_gap" value="" size="6" class="ase-input">
+          </td>
+          <td>-</td>
+          <td>
+            <input type="text" name="to_gap" value="" size="6" class="ase-input">
+          </td>
+          <td>
+            <select name="xc" class="ase-input">
+              <option value="gap">PBE</option>
+              <option value="gap_hse">HSE06@PBE</option>
+
 if __name__ == '__main__':
     # Convert cmr.<proj>.custum.Template.raw_key_value_descriptions:
     for k, v in projects.items():
