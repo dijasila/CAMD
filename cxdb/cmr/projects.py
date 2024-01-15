@@ -164,17 +164,17 @@ class ABS3BandStructurePanel(Panel):
 
 
 def abs3_bs(d: dict, path: Path) -> bool:
-    if 'x' not in d:
+    if 'X' not in d:
+        return False
+    n1 = len(d['X'])
+    n2 = len(d['names'])
+    if n1 != n2:
+        print('bad data:', d, path)
         return False
     fig, ax = plt.subplots()
-    ax.plot(d.x, d.y)
-    n1 = len(d.X)
-    n2 = len(d.names)
-    if n1 != n2:
-        print('bad data:', d.X, d.names, path)
-    n = min(n1, n2)
-    ax.set_xticks(d.X[:n], d.names[:n])
-    ax.set_xlim(0, d.X[-1])
+    ax.plot(d['x'], d['y'])
+    ax.set_xticks(d['X'], d['names'])
+    ax.set_xlim(0, d['X'][-1])
     ax.set_ylim(-6, 5)
     ax.set_ylabel('GLLB-SC energy relative to VBM [eV]')
     plt.savefig(path)
@@ -541,42 +541,24 @@ class Ads1DProjectDescription(ProjectDescription):
 class BiDBProjectDescription(ProjectDescription):
     title = 'Bilayer database'
     column_names = {
-        'binding_energy_zscan':
-            ('Binding energy (zscan)', '', 'meV/Å<sup>2</sup>'),
-        'number_of_layers':
-            ('Number of layers', 'nlayers', ''),
-        'monolayer_uid':
-            ('Monolayer ID', '', ''),
-        'bilayer_uid':
-            ('Bilayer ID', '', ''),
-        'dynamically_stable':
-            ('Dynamically stable', '', ''),
-        'magnetic':
-            ('Magnetic', '', ''),
-        'interlayer_magnetic_exchange':
-            ('Interlayer Magnetic State', '', ''),
-        'slide_stability':
-            ('Slide Stability', '', ''),
-        'thermodynamic_stability':
-            ('', '', ''),
-        'binding_energy_gs':
-            ('Binding Energy (gs)', '', 'meV/Å<sup>2</sup>'),
-        'ehull':
-            ('Energy above convex hull', '', 'eV/atom'),
-        'gap_pbe':
-            ('Band gap (PBE)', '', ''),
-        'icsd_id':
-            ('ICSD id of parent bulk structure', '', ''),
-        'cod_id':
-            ('COD id of parent bulk structure', '', ''),
-        'layer_group':
-            ('Layer group', '', ''),
-        'layer_group_number':
-            ('Layer group number', '', ''),
-        'space_group':
-            ('Space group', '', ''),
-        'space_group_number':
-            ('Space group number', '', '')}
+        'binding_energy_zscan': 'Binding energy (zscan) [meV/Å<sup>2</sup>]',
+        'number_of_layers': 'nlayers',
+        'monolayer_uid': 'Monolayer ID',
+        'bilayer_uid': 'Bilayer ID',
+        'dynamically_stable': 'Dynamically stable',
+        'magnetic': 'Magnetic',
+        'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+        'slide_stability': 'Slide Stability',
+        'thermodynamic_stability': '',
+        'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
+        'ehull': 'Energy above convex hull [eV/atom]',
+        'gap_pbe': 'Band gap (PBE)',
+        'icsd_id': 'ICSD id of parent bulk structure',
+        'cod_id': 'COD id of parent bulk structure',
+        'layer_group': 'Layer group',
+        'layer_group_number': 'Layer group number',
+        'space_group': 'Space group',
+        'space_group_number': 'Space group number'}
     uid = 'uid'
     initial_columns = [
         'formula',

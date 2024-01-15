@@ -1,8 +1,10 @@
 import os
+from pathlib import Path
 
+import pytest
 from cxdb.cmr.app import main
+from cxdb.cmr.projects import abs3_bs, create_project_description
 from cxdb.test.cmr import create_db_files
-from cxdb.cmr.projects import create_project_description
 
 
 def test_cmr(tmp_path):
@@ -13,22 +15,34 @@ def test_cmr(tmp_path):
 
     app.overview()
 
-    app.index1('solar')
-    app.material('solar', '1')
+    for name in project_descriptions:
+        app.index1(name)
+        for material in app.project_apps[name].materials:
+            app.material(name, material.uid)
 
     html = app.material('oqmd123', 'id-1')
     assert 'http://oqmd.org' in html
 
     app.download_db_file('abs3')
+    app.png('abs3', '1')
+    app.material('abs3', '1')
 
     app.favicon()
 
     dct = app.callback('ads1d', {'name': 'atoms', 'uid': 'id-1', 'data': '1'})
     assert 'data' in dct
 
-    gap = app.project_apps['abx2'].materials['1'].KS_gap
+    mat = app.project_apps['abx2'].materials['1']
+    gap = mat.KS_gap
     assert isinstance(gap, float)
+    with pytest.raises(AttributeError):
+        mat.E_hull
 
 
 def test_pd():
     create_project_description('hello')
+
+
+def test_abs3():
+    assert not abs3_bs({}, Path())
+    assert not abs3_bs({'X': [1, 2], 'names': 'ABC'}, Path())
