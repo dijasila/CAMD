@@ -5,8 +5,6 @@ TODO:
 
 * c1db
 * lowdim
-* fix me units
-* also add energy, fmax, smax, magmom
 * imp2d tables
 * bidb
 * abs3: Electronic band structure
@@ -24,7 +22,7 @@ projects: dict[str, Callable[[], ProjectDescription]] = {}
 
 
 def project(name: str):
-    """Decorator for filling in the _projects dict."""
+    """Decorator for filling in the projects dict."""
     def decorator(cls):
         projects[name] = cls
         return cls
@@ -141,8 +139,8 @@ class ABS3ProjectDescription(ProjectDescription):
     title = 'Database of ABS3 materials'
     column_names = {
         'E_hull': 'E-hull [eV]',
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'E_relative_per_atom': 'Energy per atom [eV]',
         'E_uncertainty_hull': 'E-hull Uncertainty [eV]',
         'E_uncertainty_per_atom': 'Energy uncertainty [eV]',
@@ -169,8 +167,8 @@ class ABX2ProjectDescription(ProjectDescription):
     column_names = {
         'E_hull': 'E-hull [eV]',
         'KS_gap': 'Kohn Sham band gap [eV]',
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'Dxc': 'Derivative discontinuity (GLLB-SC) [eV]',
         'E_relative_perAtom': 'Energy per atom [eV]',
         'E_uncertanty_hull': 'Uncertanty of the convex hull energy [eV]',
@@ -341,12 +339,12 @@ class MPGLLBSCProjectDescription(ProjectDescription):
         'gllbsc_disc': 'Derivative discontinuity GLLB-SC. [eV]',
         'mpid': 'ID of materials in Materials project',
         'icsd_id': 'ID of materials in ICSD',
-        'g0w0_gap': '`G_0W_0` gap at `\\Gamma` [eV]',
-        'gw0_gap': '`GW_0` gap at `\\Gamma` [eV]',
-        'gw_gap': '`GW` gap at `\\Gamma` [eV]',
-        'hse06_gap': 'HSE06 gap at `\\Gamma` [eV]',
-        'lda_gap': 'LDA gap at `\\Gamma` [eV]',
-        'gllbsc_gap': 'GLLBSC gap at `\\Gamma` [eV]'}
+        'g0w0_gap': 'G0W0 gap at Gamma [eV]',
+        'gw0_gap': 'GW0 gap at Gamma [eV]',
+        'gw_gap': 'GW gap at Gamma [eV]',
+        'hse06_gap': 'HSE06 gap at Gamma [eV]',
+        'lda_gap': 'LDA gap at Gamma [eV]',
+        'gllbsc_gap': 'GLLBSC gap at Gamma [eV]'}
     initial_columns = [
         'uid', 'age', 'formula', 'energy', 'pbc',
         'volume', 'charge', 'magmom',
@@ -396,8 +394,8 @@ class OrganometalProjectDescription(ProjectDescription):
 class PVPECOQMDProjectDescription(ProjectDescription):
     title = 'Screening for PV and PEC materials using the OQMD database'
     column_names = {
-        'm_e': 'Effective electron mass [`m_e`]',
-        'm_h': 'Effective hole mass [`m_e`]',
+        'm_e': 'Effective electron mass [m<sub>e</sub>]',
+        'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'GLLB_dir': 'Direct band gap (GLLB-SC) [eV]',
         'GLLB_ind': 'Indirect band gap (GLLB-SC) [eV]',
         'PBE_gap': 'Band gap (PBE) [eV]',

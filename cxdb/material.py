@@ -70,6 +70,9 @@ class Material:
 
     def __getattr__(self, name: str) -> Any:
         """Get data by attribute."""
+        if name not in self._values:
+            raise AttributeError(f'Material object has no attribute {name!r}')
+
         return self._values[name]
 
     def __getitem__(self, name: str) -> str:

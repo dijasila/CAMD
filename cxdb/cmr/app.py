@@ -84,6 +84,11 @@ class CMRAtomsPanel(AtomsPanel):
     def __init__(self, column_names: dict[str, str]):
         super().__init__()
         self.column_names.update(column_names)
+        self.column_names.update(
+            energy='Energy [eV]',
+            fmax='Maximum force [eV/Å]',
+            smax='Maximum stress component [eV/Å<sup>3</sup>]',
+            magmom='Total magnetic moment [μ<sub>B</sub>]')
         self.columns = list(self.column_names)
 
 
@@ -97,6 +102,20 @@ def app_from_db(dbpath: Path,
         if pd.pbc is not None:
             atoms.pbc = pd.pbc
         material = Material(root, str(row[pd.uid]), atoms)
+
+        energy = row.get('energy')
+        if energy is not None:
+            material.add_column('energy', energy)
+        forces = row.get('forces')
+        if forces is not None:
+            material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
+        stress = row.get('stress')
+        if stress is not None:
+            material.add_column('smax', abs(stress).max())
+        magmom = row.get('magmom')
+        if magmom is not None:
+            material.add_column('magmom', magmom)
+
         for name in pd.column_names:
             value = row.get(name)
             if value is not None:
