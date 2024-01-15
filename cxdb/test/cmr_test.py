@@ -52,7 +52,7 @@ def test_abs3():
 def test_lowdim():
     r = LowDimRange()
     assert r.get_filter_strings(
-        {'s': 's_0', 'form_s': '0.5'}) == 's_01>=0.5'
+        {'s': 's_0', 'from_s': '0.5'}) == ['s_0>=0.5']
     assert r.get_filter_strings(
-        {'s': 's_0', 'to_s': '0.5'}) == 's_01<=0.5'
+        {'s': 's_0', 'to_s': '0.5'}) == ['s_0<=0.5']
     
