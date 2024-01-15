@@ -306,8 +306,11 @@ class Index:
         assert False, op
 
     def formula(self, f: str) -> set[int]:
-        ids = None
-        for symbol, n in Formula(f).count().items():
+        formula = Formula(f)
+        stoichiometry = formula.stoichiometry()[0].format()
+        ids = self.key('stoichiometry', '=', stoichiometry)
+
+        for symbol, n in .count().items():
             if ids is None:
                 ids = self.key(symbol, '>=', n)
             else:
