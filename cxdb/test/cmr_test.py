@@ -5,6 +5,7 @@ import pytest
 from cxdb.cmr.app import main
 from cxdb.cmr.projects import abs3_bs, create_project_description, projects
 from cxdb.test.cmr import create_db_file
+from boddle import boddle
 
 
 @pytest.mark.parametrize('project_name', projects)
@@ -36,8 +37,8 @@ def test_cmr(tmp_path, project_name):
         app.material('lowdim', 'a1')
 
     if name == 'ads1d':
-        dct = app.callback('ads1d',
-                           {'name': 'atoms', 'uid': 'id-1', 'data': '1'})
+        with boddle(query={'name': 'atoms', 'uid': 'id-1', 'data': '1'}):
+            dct = app.callback('ads1d')
         assert 'data' in dct
 
     if name == 'abx2':

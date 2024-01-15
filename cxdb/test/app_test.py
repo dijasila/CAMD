@@ -6,6 +6,7 @@ from cxdb.panels.bader import BaderPanel
 from cxdb.panels.dos import DOSPanel
 from cxdb.material import Material, Materials
 from cxdb.web import CXDBApp
+from boddle import boddle
 
 
 def test_app(tmp_path):
@@ -22,22 +23,35 @@ def test_app(tmp_path):
                              [AtomsPanel(), DOSPanel(), BaderPanel()]),
                    {'uid', 'volume', 'formula'},
                    tmp_path)
-    out = c2db.index({'filter': 'H=2'})
+    with boddle(query={'filter': 'H=2'}):
+        out = c2db.index()
     assert 'H<sub>2' in out
-    out = c2db.index({'sid': '0', 'filter': 'H=3,energy=42.0'})
+
+    with boddle(query={'sid': '0', 'filter': 'H=3,energy=42.0'}):
+        out = c2db.index()
     assert 'H<sub>2' not in out
-    out = c2db.index({'stoichiometry': 'A', 'nspecies': '1'})
+
+    with boddle(query={'stoichiometry': 'A', 'nspecies': '1'}):
+        out = c2db.index()
     assert 'H<sub>2' in out
-    c2db.index({'toggle': 'volume'})
-    c2db.index({'toggle': 'volume'})
-    c2db.index({'sort': 'volume'})
-    c2db.index({'sort': 'volume'})
-    c2db.index({'page': '0'})
+
+    for query in [{'toggle': 'volume'},
+                  {'toggle': 'volume'},
+                  {'sort': 'volume'},
+                  {'sort': 'volume'},
+                  {'page': '0'}]:
+        with boddle(query=query):
+            c2db.index()
+
     out = c2db.material('h2')
     assert 'Atoms' in out
     assert 'Density of states' in out
     assert '1.23' in out
-    dct = c2db.callback({'name': 'atoms', 'uid': 'h2', 'data': '2'})
+
+    with boddle(query={'name': 'atoms', 'uid': 'h2', 'data': '2'}):
+        dct = c2db.callback()
     assert 'data' in dct
+
     c2db.png('h2', 'dos.png')
+
     c2db.help()

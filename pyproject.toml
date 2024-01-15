@@ -12,6 +12,7 @@ authors = [
 ]
 dependencies = [
     "bottle",
+    "boddle",
     "textual",
     "plotly",
     "ase",
