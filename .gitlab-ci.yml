@@ -13,7 +13,7 @@ tests:
     - coverage html
     - mypy
     - flake8 cxdb
-  coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
+  coverage: '/TOTAL +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
       - htmlcov

@@ -2,13 +2,13 @@ from pathlib import Path
 
 from ase import Atoms
 from ase.db import connect
-from cxdb.cmr.projects import _projects, ProjectDescription
+from cxdb.cmr.projects import projects, ProjectDescription
 
 
 def create_db_files(path: Path) -> dict[str, ProjectDescription]:
     pds = {}
-    for name, factory in _projects.items():
-        pd = factory()
+    for name, cls in projects.items():
+        pd = cls()
         pds[name] = pd
         dbfile = path / f'{name}.db'
         with connect(dbfile) as db:
