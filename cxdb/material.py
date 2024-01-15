@@ -137,6 +137,13 @@ class Materials:
             s.add(material.stoichiometry)
         return list(s)
 
+    def table(self,
+              material: Material,
+              columns: list[str]) -> list[tuple[str, str]]:
+        return [(self.column_names[name], material[name])
+                for name in columns
+                if name in material._values])
+
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]
 

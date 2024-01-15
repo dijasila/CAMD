@@ -121,3 +121,44 @@ class Input(FormPart):
             f'  value="{value}"',
             f'  placeholder="{self.placeholder}" />']
         return '\n'.join(parts)
+
+
+class Range(FormPart):
+    def render(self, query: dict) -> str:
+        """Render range block.
+
+        >>> s = Range('Thingyness', 'tness')
+        >>> print(s.render({'from_tness': '27'}))
+        <label class="form-label">Thingyness</label>
+        <input
+          class="form-control"
+          type="text"
+          name="xyz"
+          value="abc"
+          placeholder="..." />
+        """
+        fro = query.get(f'from_{self.name}', '')
+        to = query.get(f'to_{self.name}', '')
+        parts = [
+            f'<label class="form-label">{self.text}</label>',
+            '<input',
+            '  class="form-control"',
+            '  type="text"',
+            f'  name="from_{self.name}"',
+            f'  value="{fro}" />',
+            '<input',
+            '  class="form-control"',
+            '  type="text"',
+            f'  name="to_{self.name}"',
+            f'  value="{to}" />']
+        return '\n'.join(parts)
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        filters = []
+        fro = query.get(f'from_{self.name}', '')
+        if fro:
+            filters.append(f'{self.name}>={fro}')
+        to = query.get(f'to_{self.name}', '')
+        if to:
+            filters.append(f'{self.name}<={to}')
+        return filters

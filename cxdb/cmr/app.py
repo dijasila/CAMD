@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from math import isfinite
 from pathlib import Path
+from typing import Callable
 
 from ase.db import connect
 from bottle import Bottle, static_file, template
@@ -86,7 +87,9 @@ class CMRProjectApp(CXDBApp):
 
 
 class CMRAtomsPanel(AtomsPanel):
-    def __init__(self, column_names: dict[str, str]):
+    def __init__(self,
+                 column_names: dict[str, str],
+                 create_tables: Callable[[Material, Materials], str]):
         super().__init__()
         self.column_names.update(column_names)
         self.column_names.update(
@@ -95,6 +98,13 @@ class CMRAtomsPanel(AtomsPanel):
             smax='Maximum stress component [eV/Å<sup>3</sup>]',
             magmom='Total magnetic moment [μ<sub>B</sub>]')
         self.columns = list(self.column_names)
+        self.create_tables = create_tables
+
+    def create_column_one(self, material, materials):
+        html = self.create_tables(material, materials)
+        if not html:
+            return super().create_column_one(material, materials)
+        return html
 
 
 def app_from_db(dbpath: Path,
