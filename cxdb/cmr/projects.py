@@ -16,10 +16,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from ase.db import connect
-from cxdb.cmr.lowdim import LowDimPanel, LowDimRange, keysfortable0
+from cxdb.cmr.lowdim import LowDimPanel, keysfortable0
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, Input, Range, Select, table
+from cxdb.utils import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -693,7 +693,16 @@ class LowDimProjectDescription(ProjectDescription):
     initial_columns = ['formula', 'source', 'dbid',
                        's_0', 's_1', 's_2', 's_3']
     form_parts = [
-        LowDimRange(),
+        RangeX(
+            'Score range', 's',
+            ['0D', '1D', '2D', '3D',
+             '0D+1D', '0D+2D', '0D+3D', '1D+2D', '1D+3D', '2D+3D',
+             '0D+1D+2D', '0D+1D+3D', '1D+2D+3D',
+             '0D+1D+2D+3D'],
+            ['s_0', 's_1', 's_2', 's_3',
+             's_01', 's_02', 's_03', 's_12', 's_13', 's_23',
+             's_012', 's_013', 's_123',
+             's_0123']),
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
 
@@ -726,24 +735,18 @@ class LowDimProjectDescription(ProjectDescription):
 COD = 'https://www.crystallography.net/cod/'
 ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
 
+
 @project('c1db')
 class C1DBProjectDescription(ProjectDescription):
     title = 'Computational 1D materials database'
     column_names = {
-        'PBE_1D':
-            ('PBE 1D-uid', 'uid for 1D material calculated using PBE', ''),
-        'PBED3_1D':
-            ('PBE-D3 1D-uid', 'uid for 1D material calculated using PBE-D3', ''),
-        'PBED3_3D':
-            ('PBE-D3 3D-uid', 'uid for 3D material calculated using PBE-D3', ''),
-        'Source':
-            ('Source', 'Source', ''),
-        'derived_from':
-            ('derived from', 'derived from', ''),
-        'xc':
-            ('XC', 'XC-functional', ''),
-        'ndim':
-            ('Dimensionality', 'Dimensionality', '')}
+        'PBE_1D': 'uid for 1D material calculated using PBE',
+        'PBED3_1D': 'uid for 1D material calculated using PBE-D3',
+        'PBED3_3D': 'uid for 3D material calculated using PBE-D3',
+        'Source': 'Source',
+        'derived_from': 'derived from',
+        'xc': 'XC-functional',
+        'ndim': 'Dimensionality'}
     initial_columns = [
         'formula', 'hform', 'gap', 'is_magnetic', 'xc', 'ndim']
     uid = 'uid'
@@ -759,96 +762,43 @@ class C1DBProjectDescription(ProjectDescription):
                 'Machine learning generated']),
         Select('Dynamically stable (phonons)', 'dyn_phonons',
                ['', 'low', 'high'], ['', 'No', 'Yes']),
-        Range(if args['from_tdyn'] > '1':
-            parts.append('thermodynamic_stability_level>=' + args['from_tdyn'])
-        if args['to_tdyn'] < '3':
-            parts.append('thermodynamic_stability_level<=' + args['to_tdyn'])
-        if args['from_gap']:
-            parts.append(args['xc'] + '>=' + args['from_gap'])
-        if args['to_gap']:
-            parts.append(args['xc'] + '<=' + args['to_gap'])
-        if args['is_magnetic']:
-            parts.append('is_magnetic=' + args['is_magnetic'])
-        return ','.join(parts)
+        RangeS('Thermodynamic stability', 'thermodynamic_stability_level',
+               ['1', '2', '3'], ['Low', 'Medium', 'High']),
+        Select('Magnetic', 'is_magnetic',
+               ['', 'True', 'False'], ['All', 'Yes', 'No']),
+        RangeX('Band gap range [eV]', 'xc',
+               ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
 
+    def create_column_one(self, material, materials):
+        rows = materials.table(material, self.column_names)
+        source = material.Source
+        df = material.get('derived_from')
+        if source == 'COD':
+            rows.append(
+                ['Source',
+                 f'<a href={COD}/{df}.html>COD {df}</a>'])
+        elif source == 'ICSD':
+            rows.append(
+                ['Source',
+                 f'<a href={ICSD}>ICSD {df}</a>'])
+        elif source == 'Machine learning generated':
+            rows.append(
+                ['Source', source])
+        else:
+            rows += [
+                ['Source', source],
+                ['Derived form',
+                 f'<a href={df}>{df}</a>']]
 
-    def layout(self, row, kd, prefix):
-        panels = _layout(row, kd, prefix)
-        for name, panel in panels:
-            if name == 'Summary':
-                for column in panel:
-                    for thing in column:
-                        if thing['type'] != 'table':
-                            continue
-                        if thing['header'][0] == 'Structure info':
-                            source = row.Source
-                            df = row.get('derived_from')
-                            if source == 'COD':
-                                thing['rows'].append(
-                                    ['Source',
-                                     f'<a href={COD}/{df}.html>COD {df}</a>'])
-                            elif source == 'ICSD':
-                                thing['rows'].append(
-                                    ['Source',
-                                     f'<a href={ICSD}>ICSD {df}</a>'])
-                            elif source == 'Machine learning generated':
-                                thing['rows'].append(
-                                    ['Source', source])
-                            else:
-                                thing['rows'] += [
-                                    ['Source', source],
-                                    ['Derived form',
-                                     f'<a href={df}>{df}</a>']]
+        for key, text in [('PBED3_1D', '1D (PBE-D3)'),
+                          ('PBE_1D', '1D (PBE)'),
+                          ('PBED3_3D', '3D (PBE-D3)')]:
+            uid = getattr(material, key, '')
+            if uid:
+                rows.append(
+                    [text, f'<a href={uid}>{uid}</a>'])
+        return table(['XXX', ''], rows), ''
 
-                            for key, text in [('PBED3_1D', '1D (PBE-D3)'),
-                                              ('PBE_1D', '1D (PBE)'),
-                                              ('PBED3_3D', '3D (PBE-D3)')]:
-                                uid = row.get(key)
-                                if uid:
-                                    thing['rows'].append(
-                                        [text, f'<a href={uid}>{uid}</a>'])
-                            return panels
-
-          <td>Thermodynamic stability</td><td>:</td>
-          <td>
-            <select name="from_tdyn" class="ase-input">
-              <option value="1" {% if not q %}selected{% endif %}>Low</option>
-              <option value="2">Medium</option>
-              <option value="3">High</option>
-            </select>
-          </td>
-          <td>-</td>
-          <td>
-            <select name="to_tdyn" class="ase-input">
-              <option value="1">Low</option>
-              <option value="2">Medium</option>
-              <option value="3" selected>High</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Magnetic</td><td>:</td>
-          <td>
-            <select name="is_magnetic" class="ase-input">
-              <option value="">All</option>
-              <option value="True">Yes</option>
-              <option value="False">No</option>
-            </select>
-          </td>
-        </tr>
-        <tr>
-          <td>Band gap range [eV]</td><td>:</td>
-          <td>
-            <input type="text" name="from_gap" value="" size="6" class="ase-input">
-          </td>
-          <td>-</td>
-          <td>
-            <input type="text" name="to_gap" value="" size="6" class="ase-input">
-          </td>
-          <td>
-            <select name="xc" class="ase-input">
-              <option value="gap">PBE</option>
-              <option value="gap_hse">HSE06@PBE</option>
 
 if __name__ == '__main__':
     # Convert cmr.<proj>.custum.Template.raw_key_value_descriptions:

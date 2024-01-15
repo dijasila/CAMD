@@ -67,9 +67,10 @@ class FormPart(abc.ABC):
 
 
 class Select(FormPart):
-    def __init__(self, text, name, options):
+    def __init__(self, text, name, options, names=None):
         super().__init__(text, name)
         self.options = options
+        self.names = names
 
     def render(self, query: dict) -> str:
         """Render select block.
@@ -86,9 +87,10 @@ class Select(FormPart):
         selection = query.get(self.name)
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
-        for val in self.options:
+        names = self.names or self.options
+        for val, txt in zip(self.options, names):
             selected = ' selected' if selection == val else ''
-            parts.append(f'  <option value="{val}"{selected}>{val}</option>')
+            parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
         parts.append('</select>')
         return '\n'.join(parts)
 
@@ -155,6 +157,85 @@ class Range(FormPart):
             '  type="text"',
             f'  name="to_{self.name}"',
             f'  value="{to}" />']
+        return '\n'.join(parts)
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        filters = []
+        fro = query.get(f'from_{self.name}', '')
+        if fro:
+            filters.append(f'{self.name}>={fro}')
+        to = query.get(f'to_{self.name}', '')
+        if to:
+            filters.append(f'{self.name}<={to}')
+        return filters
+
+
+class RangeX(Range):
+    def __init__(self, text, name, options, names=None):
+        super().__init__(text, name)
+        self.options = options
+        self.names  = names
+
+    def render(self, query: dict) -> str:
+        fro = query.get(f'from_{self.name}', '')
+        to = query.get(f'to_{self.name}', '')
+        parts = [
+            f'<label class="form-label">{self.text}</label>',
+            '<input',
+            '  class="form-control"',
+            '  type="text"',
+            f'  name="from_{self.name}"',
+            f'  value="{fro}" />',
+            '<input',
+            '  class="form-control"',
+            '  type="text"',
+            f'  name="to_{self.name}"',
+            f'  value="{to}" />']
+        selection = query.get(self.name)
+        parts += [f'<select name="{self.name}" class="form-select">']
+        names = self.names or self.options
+        for val, txt in zip(self.options, names):
+            selected = ' selected' if selection == val else ''
+            parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
+        parts.append('</select>')
+        return '\n'.join(parts)
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        filters = []
+        x = query.get(self.name)
+        fro = query.get(f'from_{self.name}', '')
+        if fro:
+            filters.append(f'{x}>={fro}')
+        to = query.get(f'to_{self.name}', '')
+        if to:
+            filters.append(f'{x}<={to}')
+        return filters
+
+
+class RangeS(Range):
+    def __init__(self, text, name, options, names=None):
+        super().__init__(text, name)
+        self.options = options
+        self.names = names
+
+    def render(self, query: dict) -> str:
+        fro = query.get(f'from_{self.name}', '')
+        to = query.get(f'to_{self.name}', '')
+
+        names = self.names or self.options
+
+        parts = [f'<select name="from_{self.name}" class="form-select">']
+        for val, txt in zip(self.options, names):
+            selected = ' selected' if fro == val else ''
+            parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
+        parts.append('</select>')
+
+        parts = [f'<select name="to_{self.name}" class="form-select">']
+        for val, txt in zip(self.options, names):
+            selected = ' selected' if to == val else ''
+            parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
+        parts.append('</select>')
+
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
