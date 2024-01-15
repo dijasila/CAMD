@@ -113,7 +113,7 @@ def app_from_db(dbpath: Path,
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
     return CMRProjectApp(materials, initial_columns,
-                         dbpath, pd.title, pd.search)
+                         dbpath, pd.title, pd.form_parts)
 
 
 def main(filenames: list[str]) -> CMRProjectsApp:
