@@ -4,8 +4,6 @@ See https://cmr.fysik.dtu.dk/
 
 TODO:
 
-* c1db
-* lowdim
 * bidb: magnetic: yes or 1. slide_stability: Stable?
 * extra???
 
@@ -46,7 +44,7 @@ class ProjectDescription:
     column_names: dict[str, str] = {}
     initial_columns: list[str] = ['formula', 'uid']
     uid: str = 'id'
-    pbc: list[bool] | None = None
+    pbc: list[bool] | None = None  # periodic boundary conditions
     extra: list[str] = []
     form_parts: list[FormPart] = []
     panels: list[Panel] = []
@@ -62,7 +60,7 @@ class ProjectDescription:
 
 
 def convert_int_to_str(material: Material, name: str) -> None:
-    """Avoid large integer index in Index object."""
+    """Avoid large integer-index in Index object."""
     val = getattr(material, name, None)
     if val is not None:
         material.add_column(name, str(val), update=True)
@@ -783,6 +781,9 @@ class C1DBProjectDescription(ProjectDescription):
         RangeX('Band gap range [eV]', 'xc',
                ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
 
+    def postprocess(self, material: Material):
+        convert_int_to_str(material, 'derived_from')
+
     def create_column_one(self, material, materials):
         rows = materials.table(material, self.column_names)
         source = material.Source
@@ -815,16 +816,4 @@ class C1DBProjectDescription(ProjectDescription):
 
 
 if __name__ == '__main__':
-    # Convert cmr.<proj>.custum.Template.raw_key_value_descriptions:
-    for k, v in projects.items():
-        print(k)
-        for n, x in v().column_names.items():
-            if isinstance(x, str):
-                break
-            i, j, u = x
-            j = j or i
-            if u:
-                j += f' [{u}]'
-            print(f'        {n!r}: {j!r},')
-
     print(' '.join(f'{x}.db' for x in projects))
