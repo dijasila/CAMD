@@ -157,14 +157,14 @@ class Index:
         floats = defaultdict(list)
         self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
             defaultdict(lambda: defaultdict(set))
+        self.natoms: dict[int, int] = {}
+        self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         self.ids = set()
 
         print('Rows:', len(rows), flush=True)
         ni = 0
         ns = 0
         nf = 0
-        self.natoms: dict[int, int] = {}
-        self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         for i, (reduced, count, keys) in enumerate(rows):
             self.natoms[i] = sum(count.values())
             self.reduced[reduced].add(i)

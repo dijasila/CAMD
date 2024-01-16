@@ -30,6 +30,8 @@ def index():
      ('i1<42', set()),
      ('i1<=42', {0}),
      ('i1<=43', {0}),
+     ('i1>=43', set()),
+     ('i1>=42', {0}),
      ('b1=False', {0}),
      ('b1=0', {0})] +
     [(f, set()) for f in ['N', 'N=1', 'N!=0', 'N>0', 'N>=1', 'N<0']] +
@@ -37,6 +39,26 @@ def index():
 def test_index(index: Index, filter: str, result: set[int]):
     func = parse(filter)
     assert func(index) == result
+
+
+@pytest.fixture(scope='module')
+def mos_index():
+    return Index(
+        [('MoS2', {'Mo': 1, 'S': 2}, {}),
+         ('MoS2', {'Mo': 2, 'S': 4}, {}),
+         ('MoS2', {'Mo': 4, 'S': 8}, {}),
+         ('MoS', {'Mo': 1, 'S': 1}, {})])
+
+
+@pytest.mark.parametrize(
+    'filter, result',
+    [('MoS2', {0, 1, 2}),
+     ('MoS', {3}),
+     ('MoS3', set()),
+     ('Mo2S4', {1, 2})])
+def test_mos_index(mos_index: Index, filter: str, result: set[int]):
+    func = parse(filter)
+    assert func(mos_index) == result
 
 
 def test_parse_errors():
