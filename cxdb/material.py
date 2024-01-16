@@ -97,6 +97,7 @@ class Materials:
                  panels: Sequence[Panel]):
         self.column_names = {
             'formula': 'Formula',
+            'reduced_formula': 'Reduced formula',
             'stoichiometry': 'Stoichiometry',
             'nspecies': 'Number of species',
             'uid': 'Unique ID'}
@@ -114,7 +115,7 @@ class Materials:
         for material in materials:
             material.check_columns(self.column_names)
 
-        self.index = Index([(mat._count, mat._values)
+        self.index = Index([(mat.reduced_formula, mat._count, mat._values)
                             for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 

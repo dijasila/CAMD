@@ -19,6 +19,7 @@ def test_mat():
         [('uid', 'Unique ID')],
         [(0, 'previous'), (0, 'next'), (0, '1-1')],
         [('formula', 'Formula'),
+         ('reduced_formula', 'Reduced formula'),
          ('stoichiometry', 'Stoichiometry'),
          ('nspecies', 'Number of species'),
          ('volume', 'Volume [Å<sup>3</sup>]')])

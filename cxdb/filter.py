@@ -29,7 +29,7 @@ def parse(q: str) -> Callable[[Index], set[int]]:
     """Convert filter string to Python function.
 
     >>> f = parse('H2,xc=PBE')
-    >>> i = Index([({'H': 2}, {'xc': 'PBE'})])
+    >>> i = Index([('H', {'H': 2}, {'xc': 'PBE'})])
     Rows: 1
     Strings: 1
     Integers: 1
@@ -37,8 +37,8 @@ def parse(q: str) -> Callable[[Index], set[int]]:
     >>> f(i)
     {0}
     >>> f = parse('gap > 5.0')
-    >>> i = Index([({'H': 2}, {'gap': 10.0}),
-    ...            ({'Si': 2}, {'gap': 1.1})])
+    >>> i = Index([('H', {'H': 2}, {'gap': 10.0}),
+    ...            ('Si', {'Si': 2}, {'gap': 1.1})])
     Rows: 2
     Strings: 0
     Integers: 2
@@ -144,11 +144,15 @@ def str2obj(s: str) -> bool | int | float | str:
     return s
 
 
+ColVal = bool | int | float | str
+
+
 class Index:
     """Indices for speeding up row filtering."""
     def __init__(self,
-                 rows: list[tuple[dict[str, int],
-                                  dict[str, bool | int | float | str]]]):
+                 rows: list[tuple[str,
+                                  dict[str, int],
+                                  dict[str, ColVal]]]):
         integers = defaultdict(list)
         floats = defaultdict(list)
         self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
@@ -159,9 +163,11 @@ class Index:
         ni = 0
         ns = 0
         nf = 0
-        self.natoms = {}
-        for i, (count, keys) in enumerate(rows):
+        self.natoms: dict[int, int] = {}
+        self.reduced: defaultdict[str, set[int]] = defaultdict(set)
+        for i, (reduced, count, keys) in enumerate(rows):
             self.natoms[i] = sum(count.values())
+            self.reduced[reduced].add(i)
             self.ids.add(i)
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
@@ -310,7 +316,7 @@ class Index:
     def formula(self, f: str) -> set[int]:
         formula = Formula(f)
         stoichiometry, reduced, n = formula.stoichiometry()
-        ids = self.key('reduced_formula', '=', str(reduced))
+        ids = self.reduced[str(reduced)]
         if n == 1:
             return ids
         m = len(formula)
