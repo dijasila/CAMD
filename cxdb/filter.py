@@ -17,11 +17,13 @@ import functools
 import re
 import sys
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, Union
 
 import numpy as np
 from ase.data import chemical_symbols
 from ase.formula import Formula
+
+ColVal = Union[bool, int, float, str]
 
 
 @functools.lru_cache
@@ -142,9 +144,6 @@ def str2obj(s: str) -> bool | int | float | str:
         except ValueError:
             pass
     return s
-
-
-ColVal = bool | int | float | str
 
 
 class Index:

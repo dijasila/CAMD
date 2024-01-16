@@ -9,6 +9,37 @@ from cxdb.panels.atoms import AtomsPanel
 from cxdb.web import CXDBApp
 
 
+class MyAtomsPanel(AtomsPanel):
+    def __init__(self):
+        super().__init__()
+        self.column_names.update(
+            energy='Energy [eV]',
+            fmax='Maximum force [eV/Å]',
+            smax='Maximum stress component [eV/Å<sup>3</sup>]',
+            magmom='Total magnetic moment [μ<sub>B</sub>]')
+        self.columns += ['energy', 'fmax', 'smax', 'magmom']
+
+    def update_data(self, material):
+        super().update_data(material)
+        atoms = material.atoms
+        try:
+            results = atoms.calc.results
+        except AttributeError:
+            return
+        energy = results.get('energy')
+        if energy is not None:
+            material.add_column('energy', energy)
+        forces = results.get('forces')
+        if forces is not None:
+            material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
+        stress = results.get('stress')
+        if stress is not None:
+            material.add_column('smax', abs(stress).max())
+        magmom = results.get('magmom')
+        if magmom is not None:
+            material.add_column('magmom', magmom)
+
+
 def main(argv: list[str] | None = None,
          run=True) -> CXDBApp:
     parser = argparse.ArgumentParser()
@@ -22,10 +53,10 @@ def main(argv: list[str] | None = None,
         assert isinstance(atoms, Atoms)
         rows.append(Material(path.parent, str(i), atoms))
 
-    panels = [AtomsPanel()]
+    panels = [MyAtomsPanel()]
     materials = Materials(rows, panels)
 
-    initial_columns = ['uid', 'formula']
+    initial_columns = ['uid', 'formula', 'energy', 'fmax', 'smax', 'magmom']
     for key in ['length', 'area', 'volume']:
         if key in materials.column_names:
             initial_columns.append(key)
