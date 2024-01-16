@@ -159,7 +159,9 @@ class Index:
         ni = 0
         ns = 0
         nf = 0
+        self.natoms = {}
         for i, (count, keys) in enumerate(rows):
+            self.natoms[i] = sum(count.values())
             self.ids.add(i)
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
@@ -307,16 +309,12 @@ class Index:
 
     def formula(self, f: str) -> set[int]:
         formula = Formula(f)
-        stoichiometry = formula.stoichiometry()[0].format()
-        ids = self.key('stoichiometry', '=', stoichiometry)
-
-        for symbol, n in .count().items():
-            if ids is None:
-                ids = self.key(symbol, '>=', n)
-            else:
-                ids &= self.key(symbol, '>=', n)
-        assert ids is not None
-        return ids
+        stoichiometry, reduced, n = formula.stoichiometry()
+        ids = self.key('reduced_formula', '=', str(reduced))
+        if n == 1:
+            return ids
+        m = len(formula)
+        return {id for id in ids if self.natoms[id] % m == 0}
 
 
 def bisect(values: list[float], value: float) -> int:
