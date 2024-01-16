@@ -48,7 +48,7 @@ def sab_key_descriptions() -> dict[str, Desc]:
 def score(material, path: Path) -> None:
     vs = []
     for k in keysforfigure:
-        v = material.get(k, 0)
+        v = getattr(material, k, 0)
         vs.append(v)
     x = np.arange(len(keysforfigure))
     fig, ax = plt.subplots()
@@ -121,5 +121,5 @@ class LowDimPanel(Panel):
 
         col1 = table(['Item', ''],
                      materials.table(material, keysfortable2))
-        col2 = f'<img alt="Dim. analysis for {uid}" src="/abs3/png/{uid}" />'
+        col2 = f'<img alt="Dim. analysis for {uid}" src="/lowdim/png/{uid}" />'
         return HTML.format(col1, col2), ''

@@ -34,7 +34,7 @@ class Material:
         self.atoms = atoms
 
         formula = self.atoms.symbols.formula.convert('periodic')
-        s11y, _, _ = formula.stoichiometry()
+        s11y, reduced, _ = formula.stoichiometry()
 
         self._count: dict[str, int] = formula.count()
 
@@ -42,6 +42,8 @@ class Material:
         self._html_reprs: dict[str, str] = {}
 
         self.add_column('formula', formula.format(), formula.format('html'))
+        self.add_column('reduced_formula',
+                        reduced.format(), reduced.format('html'))
         self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
         self.add_column('nspecies', len(self._count))
         self.add_column('uid', uid)
@@ -95,6 +97,7 @@ class Materials:
                  panels: Sequence[Panel]):
         self.column_names = {
             'formula': 'Formula',
+            'reduced_formula': 'Reduced formula',
             'stoichiometry': 'Stoichiometry',
             'nspecies': 'Number of species',
             'uid': 'Unique ID'}
@@ -112,7 +115,7 @@ class Materials:
         for material in materials:
             material.check_columns(self.column_names)
 
-        self.index = Index([(mat._count, mat._values)
+        self.index = Index([(mat.reduced_formula, mat._count, mat._values)
                             for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
