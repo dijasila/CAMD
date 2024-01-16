@@ -33,7 +33,7 @@ def project(name: str):
     return decorator
 
 
-def create_project_description(name):
+def create_project_description(name: str) -> ProjectDescription:
     """Create ProjectDescription for CMR projects."""
     if name in projects:
         return projects[name]()
@@ -59,6 +59,13 @@ class ProjectDescription:
 
     def create_column_two(self, material: Material, materials: Materials):
         return '', ''
+
+
+def convert_int_to_str(material: Material, name: str) -> None:
+    """Avoid large integer index in Index object."""
+    val = getattr(material, name, None)
+    if val is not None:
+        material.add_column(name, str(val), update=True)
 
 
 @project('solar')
@@ -401,8 +408,8 @@ class MPGLLBSCProjectDescription(ProjectDescription):
         'gllbsc_dir_gap', 'gllbsc_ind_gap', 'mpid']
 
     def postprocess(self, material: Material):
-        material.add_column('mpid', str(material.mpid), update=True)
-        material.add_column('icsd_id', str(material.icsd_id), update=True)
+        convert_int_to_str(material, 'mpid')
+        convert_int_to_str(material, 'icsd_id')
 
 
 @project('oqmd123')
@@ -462,7 +469,7 @@ class PVPECOQMDProjectDescription(ProjectDescription):
         'defect_tolerant', 'magnetic', 'icsd', 'm_e', 'm_h']
 
     def postprocess(self, material: Material):
-        material.add_column('icsd', str(material.icsd), update=True)
+        convert_int_to_str(material, 'icsd')
 
 
 @project('imp2d')
@@ -583,12 +590,8 @@ class BiDBProjectDescription(ProjectDescription):
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
     def postprocess(self, material: Material):
-        icsd_id = getattr(material, 'icsd_id', 0)
-        if icsd_id:
-            material.add_column('icsd_id', str(icsd_id), update=True)
-        cod_id = getattr(material, 'cod_id', 0)
-        if cod_id:
-            material.add_column('cod_id', str(cod_id), update=True)
+        convert_int_to_str(material, 'icsd_id')
+        convert_int_to_str(material, 'cod_id')
 
     def create_column_one(self,
                           material: Material,
@@ -715,7 +718,7 @@ class LowDimProjectDescription(ProjectDescription):
     panels = [LowDimPanel()]
 
     def postprocess(self, material: Material):
-        material.add_column('dbid', str(material.dbid), update=True)
+        convert_int_to_str(material, 'dbid')
 
     def create_column_one(self,
                           material: Material,
