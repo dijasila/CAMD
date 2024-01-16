@@ -15,6 +15,8 @@ Important links
 
 * `Bottle <https://bottlepy.org/docs/dev/index.html>`__
 * `Plotly <https://plotly.com/python/>`__
+* `Bootstrap
+  <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
 * `ASE <https://wiki.fysik.dtu.dk/ase/index.html>`__
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__

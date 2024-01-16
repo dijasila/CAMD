@@ -582,6 +582,14 @@ class BiDBProjectDescription(ProjectDescription):
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
+    def postprocess(self, material: Material):
+        icsd_id = getattr(material, 'icsd_id', 0)
+        if icsd_id:
+            material.add_column('icsd_id', str(icsd_id), update=True)
+        cod_id = getattr(material, 'cod_id', 0)
+        if cod_id:
+            material.add_column('cod_id', str(cod_id), update=True)
+
     def create_column_one(self,
                           material: Material,
                           materials: Materials) -> tuple[str, str]:
@@ -705,6 +713,9 @@ class LowDimProjectDescription(ProjectDescription):
              's_0123']),
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
+
+    def postprocess(self, material: Material):
+        material.add_column('dbid', str(material.dbid), update=True)
 
     def create_column_one(self,
                           material: Material,
