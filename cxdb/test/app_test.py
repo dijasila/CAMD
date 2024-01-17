@@ -78,3 +78,16 @@ def test_png(c2db):
 
 def test_help(c2db):
     c2db.help()
+
+
+@pytest.mark.parametrize('fmt, ref_substring', [
+    ('cif', b'data_image0'),
+    ('json', '"energy": 1.4'),
+    ('xyz', 'energy=1.4'),
+])
+def test_download(c2db, fmt, ref_substring):
+    # In principle we should test that the downloaded file is the same
+    # atoms object as the one we downloaded.
+    from ase.io.formats import ioformats
+    data = c2db.download('h2', fmt)
+    assert ref_substring in data
