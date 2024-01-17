@@ -52,6 +52,31 @@ class CXDBApp:
         self.app.route('/png/<uid>/<filename>')(self.png)
         self.app.route('/help')(self.help)
 
+        for fmt in ['xyz', 'cif', 'json']:
+            from functools import partial
+            self.app.route(f'/material/<uid>/download/{fmt}')(
+                partial(self.download, fmt=fmt))
+
+    def download(self, uid: str, fmt: str) -> bytes | str:
+        from io import StringIO, BytesIO
+        from ase.io import write
+
+        ase_fmt = fmt
+        ioclass = StringIO
+
+        if fmt == 'xyz':
+            # Only the extxyz writer includes cell, pbc etc.
+            ase_fmt = 'extxyz'
+        elif fmt == 'cif':
+            # (Can also query ASE's IOFormat for whether bytes or str,
+            # in fact, ASE should make this easier.)
+            ioclass = BytesIO
+
+        atoms = self.materials[uid].atoms
+        buf = ioclass()
+        write(buf, atoms, format=ase_fmt)
+        return buf.getvalue()
+
     def index(self) -> str:
         """Page showing table of selected materials."""
         query = request.query
