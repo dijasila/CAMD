@@ -118,7 +118,7 @@ class AtomsPanel(Panel):
     def axes(self, material: Material) -> str:
         atoms = material.atoms
         tbl1 = table(
-            ['Axis', 'x [Å]', 'y [Å]', 'y [Å]', 'Periodic'],
+            ['Axis', 'x [Å]', 'y [Å]', 'z [Å]', 'Periodic'],
             [[i + 1, *[f'{x:.3f}' for x in axis], 'Yes' if p else 'No']
              for i, (axis, p) in enumerate(zip(atoms.cell, atoms.pbc))])
         C = atoms.cell.cellpar()
