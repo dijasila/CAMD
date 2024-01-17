@@ -145,6 +145,20 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
             [nan, nan, nan], [1, 1, 0], [1, 1, 1]]
 
 
+def get_bonds(atoms):
+    i, j, D, S = neighbor_list('ijDS', atoms,
+                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+
+    # For bonds inside the cell (i.e., cell displacement S==(0, 0, 0)),
+    # bonds are double-counted.  This mask un-doublecounts them:
+    doublecount_mask = (i < j) | S.any(1)
+    i = i[doublecount_mask]
+    j = j[doublecount_mask]
+    D = D[doublecount_mask]
+    S = S[doublecount_mask]
+    return i, j, D, S
+
+
 def plot_atoms(atoms: Atoms,
                unitcell: np.ndarray | None = None) -> go.Figure:
     """Ball and stick plotly figure."""
@@ -162,14 +176,15 @@ def plot_atoms(atoms: Atoms,
         data.append(mesh)
 
     # Bonds:
+    i, j, D, S = get_bonds(atoms)
     p = atoms.positions
-    i, j, D, S = neighbor_list('ijDS', atoms,
-                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+
     xyz = np.empty((3, len(i) * 3))
     xyz[:, 0::3] = p[i].T
     D[S.any(1)] *= 0.5
     xyz[:, 1::3] = (p[i] + D).T
     xyz[:, 2::3] = np.nan
+
     x, y, z = xyz
     data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
 
