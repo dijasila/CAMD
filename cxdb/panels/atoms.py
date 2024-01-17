@@ -186,19 +186,24 @@ def plot_atoms(atoms: Atoms,
     xyz[:, 2::3] = np.nan
 
     x, y, z = xyz
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
+                             line=dict(color='grey', width=10),
+                             showlegend=False))
 
     # Unit cell:
     if unitcell is None:
         unitcell = atoms.cell
     x, y, z = (UNITCELL @ unitcell).T
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
+                             line=dict(color='#fa9fb5', width=6),
+                             showlegend=False))
 
     fig = go.Figure(data=data)
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     fig.update_xaxes(showgrid=False)
     fig.update_layout(template='simple_white')
-    fig.update_scenes(aspectmode='data')
+    fig.update_scenes(aspectmode='data',
+                      camera=dict(projection=dict(type='orthographic')))
     return fig
 
 
