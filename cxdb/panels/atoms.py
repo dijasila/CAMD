@@ -244,7 +244,16 @@ SPHERE_POINTS = np.array(
 @cache
 def triangulate_sphere() -> np.ndarray:
     hull = ConvexHull(SPHERE_POINTS)
-    return hull.simplices.copy()
+    tri_tv = hull.simplices.copy()
+
+    # Make sure surface normals are pointing out from the sphere surface
+    tri_tvc = SPHERE_POINTS[tri_tv]
+    n_tc = np.cross(tri_tvc[:, 1, :] - tri_tvc[:, 0, :],
+                    tri_tvc[:, 2, :] - tri_tvc[:, 0, :])
+    flip_n = np.sum(n_tc * tri_tvc[:, 0, :], axis=1) < 0
+    tri_tv[flip_n, 1], tri_tv[flip_n, 2] = tri_tv[flip_n, 2], tri_tv[flip_n, 1]
+
+    return tri_tv
 
 
 @cache
