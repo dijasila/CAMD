@@ -20,9 +20,9 @@ from pathlib import Path
 import rich.progress as progress
 from ase.io import read
 
-from cxdb.atoms import AtomsPanel
+from cxdb.panels.atoms import AtomsPanel
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.web import CXDBApp
 from taskblaster.repository import Repository
 from taskblaster.state import State
@@ -156,7 +156,7 @@ def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
 
 class CRYSPAtomsPanel(AtomsPanel):
     def __init__(self):
-        super().__init__(ndims=3)
+        super().__init__()
         self.column_names.update(
             etot='Total Energy [eV]',
             magstate='Magnetic state',
