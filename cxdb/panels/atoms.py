@@ -49,13 +49,12 @@ HTML = """
 
 
 def default_repeat(material):
-    atoms = material.atoms
-    pbc_c = atoms.get_pbc()
-    if np.any(pbc_c):
-        V = np.abs(np.linalg.det(material.atoms.cell[pbc_c][:, pbc_c]))
-        return min(4, int(np.round(15 / V**(1 / np.sum(pbc_c)))))
-    else:
+    cell_cv = material.atoms.cell
+    pbc_c = material.atoms.get_pbc()
+    if not np.any(pbc_c):
         return 1
+    V = np.abs(np.linalg.det(cell_cv[pbc_c][:, pbc_c]))
+    return min(4, int(np.round(15 / V**(1 / np.sum(pbc_c)))))
 
 
 def repeat_options(selected, maximum):
