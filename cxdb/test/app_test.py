@@ -88,6 +88,5 @@ def test_help(c2db):
 def test_download(c2db, fmt, ref_substring):
     # In principle we should test that the downloaded file is the same
     # atoms object as the one we downloaded.
-    from ase.io.formats import ioformats
     data = c2db.download('h2', fmt)
     assert ref_substring in data
