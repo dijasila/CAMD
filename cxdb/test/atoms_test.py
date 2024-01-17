@@ -1,9 +1,10 @@
 from pathlib import Path
 
 from ase import Atoms
+from ase.build import bulk, molecule
 
 from cxdb.material import Material
-from cxdb.panels.atoms import AtomsPanel, plot_atoms
+from cxdb.panels.atoms import AtomsPanel, plot_atoms, get_bonds
 
 
 def test_1d():
@@ -17,3 +18,15 @@ def test_1d():
 
 def test_plot():
     plot_atoms(Atoms('H', [[1, 1, 1]], cell=[2, 2, 2]))
+
+
+def test_bonds_molecule():
+    assert len(get_bonds(molecule('CH3CH2OH'))[0]) == 8
+
+
+def test_bonds_bulk():
+    assert len(get_bonds(bulk('Al'))[0]) == 12
+
+
+def test_bonds_mixed():
+    assert len(get_bonds(bulk('Al') * (2, 1, 1))[0]) == 2 * 12 - 1
