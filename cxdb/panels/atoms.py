@@ -47,12 +47,26 @@ HTML = """
 </div>
 """
 
+def default_repeat(material):
+    atoms = material.atoms
+    pbc_c = atoms.get_pbc()
+    if np.any(pbc_c):
+        V = np.abs(np.linalg.det(material.atoms.cell[pbc_c][:, pbc_c]))
+        return min(4, int(np.round(15 / V**(1 / np.sum(pbc_c)))))
+    else:
+        return 1
+
+def repeat_options(selected, maximum):
+    return "".join([f'<option value="{value}"'
+                    f'{" selected" if value == selected else ""}>'
+                    f'{value}</option>'
+                    for value in range(1, maximum + 1)])
+
+
 COLUMN2 = """
     <label>Repeat:</label>
     <select onchange="cb(this.value, 'atoms', '{uid}')">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3" selected>3</option>
+    {options}
     </select>
     <div id='atoms' class='atoms'></div>
     {axes}
@@ -109,11 +123,13 @@ class AtomsPanel(Panel):
     def create_column_two(self,
                           material: Material,
                           materials: Materials) -> tuple[str, str]:
+        defrep = default_repeat(material)
         return (
             COLUMN2.format(
                 axes=self.axes(material),
+                options=repeat_options(defrep, 4),
                 uid=material.uid),
-            FOOTER.format(atoms_json=self.plot(material, 3)))
+            FOOTER.format(atoms_json=self.plot(material, defrep)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms
