@@ -145,9 +145,12 @@ class Index:
         ni = 0
         ns = 0
         nf = 0
+        # breakpoint()
         for i, (count, keys) in enumerate(rows):
             self.ids.add(i)
             for symbol, n in count.items():
+                if symbol == 'oqmd_entry_id':
+                    breakpoint()
                 integers[symbol].append((n, i))
                 ni += 1
             for name, value in keys.items():
@@ -158,8 +161,12 @@ class Index:
                     floats[name].append((value, i))
                     nf += 1
                 elif isinstance(value, (int, bool)):
+                    if name == 'oqmd_entry_id':
+                        continue
                     integers[name].append((int(value), i))
                     ni += 1
+                elif isinstance(value, (list, dict)):
+                    print(value)
                 else:
                     raise ValueError
         print(f'Strings: {ns}', flush=True)
@@ -171,7 +178,9 @@ class Index:
             indices = [0]
             nmin = idata[0][0]
             nmax = idata[-1][0]
-            assert nmax - nmin < 250, (symbol, nmax, nmin)  # too wide range!
+            if not nmax - nmin < 250:
+                print((symbol, nmax, nmin))  # too wide range!
+                breakpoint()
             m = nmin
             for j, (n, i) in enumerate(idata):
                 ids.append(i)

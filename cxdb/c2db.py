@@ -36,13 +36,7 @@ RESULT_FILES = [
 
 PATTERNS = [
     'tree/A*/*/*/',
-    'ICSD-COD/*el/*/',
-    'adhoc_materials/*/',
-    'tree_LDP/A*/*/*/',
-    'tree_CDVAE/A*/*/*/',
-    'tree_intercalated/A*/*/*/',
-    'push-manti-tree/A*/*/*/']
-# '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
+    ]
 
 
 def copy_all_c2db_materials():  # pragma: no cover
@@ -66,7 +60,8 @@ def copy_all_c2db_materials():  # pragma: no cover
         $ python -c "from cxdb.c2db import *; copy_all_c2db_materials()"
 
     """
-    root = Path('/home/niflheim2/cmr/C2DB-ASR')
+    #root = Path('/home/niflheim2/cmr/C2DB-ASR')
+    root = Path('/home/tara/webpage/tree-asr')
     copy_materials(root, PATTERNS)
 
 
