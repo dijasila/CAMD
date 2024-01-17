@@ -47,6 +47,7 @@ HTML = """
 </div>
 """
 
+
 def default_repeat(material):
     atoms = material.atoms
     pbc_c = atoms.get_pbc()
@@ -55,6 +56,7 @@ def default_repeat(material):
         return min(4, int(np.round(15 / V**(1 / np.sum(pbc_c)))))
     else:
         return 1
+
 
 def repeat_options(selected, maximum):
     return "".join([f'<option value="{value}"'
