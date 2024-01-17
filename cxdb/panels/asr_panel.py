@@ -6,7 +6,7 @@ from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.utils import table
 
 HTML = """

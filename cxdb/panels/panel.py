@@ -1,3 +1,4 @@
+"""Panel base class."""
 from __future__ import annotations
 import abc
 from typing import Callable, TYPE_CHECKING
@@ -15,7 +16,7 @@ class Panel(abc.ABC):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        ...
+        raise NotImplementedError
 
     def update_data(self, material: Material) -> None:
         pass

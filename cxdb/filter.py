@@ -1,21 +1,37 @@
+"""Code for efficient filtering of rows.
+
+Example filter string:
+
+* ``Cu>1``: more than 1 Cu atom
+* ``gap>1.1``: "gap" larger than 1.1
+* ``xc=PBE``: "xc" equal to "PBE"
+* ``MoS2``: one or more MoS2 formula units
+
+Strings can be combined with ``,`` (and) and ``|`` (or).  Grouping can be
+done using ``(`` and ``)``:
+
+* ``(Cu>1, gap>1.1) | Fe=0``
+"""
 from __future__ import annotations
 import functools
 import re
 import sys
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, Union
 
 import numpy as np
 from ase.data import chemical_symbols
 from ase.formula import Formula
 
+ColVal = Union[bool, int, float, str]
+
 
 @functools.lru_cache
 def parse(q: str) -> Callable[[Index], set[int]]:
-    """Convert query string to Python function.
+    """Convert filter string to Python function.
 
     >>> f = parse('H2,xc=PBE')
-    >>> i = Index([({'H': 2}, {'xc': 'PBE'})])
+    >>> i = Index([('H', {'H': 2}, {'xc': 'PBE'})])
     Rows: 1
     Strings: 1
     Integers: 1
@@ -23,8 +39,8 @@ def parse(q: str) -> Callable[[Index], set[int]]:
     >>> f(i)
     {0}
     >>> f = parse('gap > 5.0')
-    >>> i = Index([({'H': 2}, {'gap': 10.0}),
-    ...            ({'Si': 2}, {'gap': 1.1})])
+    >>> i = Index([('H', {'H': 2}, {'gap': 10.0}),
+    ...            ('Si', {'Si': 2}, {'gap': 1.1})])
     Rows: 2
     Strings: 0
     Integers: 2
@@ -37,10 +53,9 @@ def parse(q: str) -> Callable[[Index], set[int]]:
 
 
 def parse1(q: str) -> str:
-    """Quick'n'dirty hacky parsing of query string to Python expression.
+    """Quick'n'dirty hacky parsing of filter string to Python expression.
 
-    In the Python expression, *n* is a dict mapping chemical symbols their
-    numbers and *k* is a key-value dict:
+    In the Python expression, *i* is an Index object.
 
     >>> parse1('H2')
     "(i.formula('H2'))"
@@ -107,7 +122,7 @@ def parse1(q: str) -> str:
         q = q.replace(f'#{i}', v)
 
     if n1 != n:
-        raise SyntaxError(f'Bad query string: {q0!r}')
+        raise SyntaxError(f'Bad filter string: {q0!r}')
 
     return q
 
@@ -132,21 +147,27 @@ def str2obj(s: str) -> bool | int | float | str:
 
 
 class Index:
+    """Indices for speeding up row filtering."""
     def __init__(self,
-                 rows: list[tuple[dict[str, int],
-                                  dict[str, bool | int | float | str]]]):
+                 rows: list[tuple[str,
+                                  dict[str, int],
+                                  dict[str, ColVal]]]):
         integers = defaultdict(list)
         floats = defaultdict(list)
         self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
             defaultdict(lambda: defaultdict(set))
+        self.natoms: dict[int, int] = {}
+        self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         self.ids = set()
 
         print('Rows:', len(rows), flush=True)
         ni = 0
         ns = 0
         nf = 0
-        # breakpoint()
-        for i, (count, keys) in enumerate(rows):
+
+        for i, (reduced, count, keys) in enumerate(rows):
+            self.natoms[i] = sum(count.values())
+            self.reduced[reduced].add(i)
             self.ids.add(i)
             for symbol, n in count.items():
                 if symbol == 'oqmd_entry_id':
@@ -178,7 +199,8 @@ class Index:
             indices = [0]
             nmin = idata[0][0]
             nmax = idata[-1][0]
-            if not nmax - nmin < 250:
+            # assert nmax - nmin < 350, (symbol, nmax, nmin)  # too wide range!
+            if not nmax - nmin < 350:
                 print((symbol, nmax, nmin))  # too wide range!
                 breakpoint()
             m = nmin
@@ -193,7 +215,7 @@ class Index:
 
         self.floats = {}
         for name, fdata in floats.items():
-            assert name not in self.integers
+            assert name not in self.integers, name
             fdata.sort()
             ids = [i for value, i in fdata]
             values = [value for value, i in fdata]
@@ -226,8 +248,7 @@ class Index:
             if op == '=':
                 if value in self.strings[name]:
                     return self.strings[name][value]
-                else:
-                    return set()
+                return set()
             if op == '!=':
                 result = set()
                 for val, ids in self.strings[name].items():
@@ -239,9 +260,8 @@ class Index:
         if name in self.floats:
             assert isinstance(value, (int, float))
             return self.float_key(name, op, value)
-
         if name in self.integers:
-            assert isinstance(value, (int, bool))
+            assert isinstance(value, (int, bool)), (name, value)
             return self.integer_key(name, op, value)
 
         return set()
@@ -257,10 +277,10 @@ class Index:
             value = np.nextafter(value, value + 1)
             op = '>='
         j1 = bisect(values, value)
-        N = len(values)
+        n = len(values)
         if op == '=':
             result = set()
-            while j1 < N and values[j1] == value:
+            while j1 < n and values[j1] == value:
                 result.add(ids[j1])
                 j1 += 1
             return result
@@ -277,8 +297,7 @@ class Index:
                 d = n - nmin
                 j1, j2 = indices[d:d + 2]
                 return set(ids[j1:j2])
-            else:
-                return set()
+            return set()
         if op == '!=':
             return (self.integer_key(name, '<=', n - 1) |
                     self.integer_key(name, '>', n))
@@ -289,8 +308,7 @@ class Index:
         if op == '<=':
             if n < nmin:
                 return set()
-            if n > nmax:
-                n = nmax
+            n = min(n, nmax)
             d = n - nmin
             j = indices[d + 1]
             return set(ids[:j])
@@ -305,14 +323,13 @@ class Index:
         assert False, op
 
     def formula(self, f: str) -> set[int]:
-        ids = None
-        for symbol, n in Formula(f).count().items():
-            if ids is None:
-                ids = self.key(symbol, '>=', n)
-            else:
-                ids &= self.key(symbol, '>=', n)
-        assert ids is not None
-        return ids
+        formula = Formula(f)
+        stoichiometry, reduced, n = formula.stoichiometry()
+        ids = self.reduced[str(reduced)]
+        if n == 1:
+            return ids
+        m = len(formula)
+        return {id for id in ids if self.natoms[id] % m == 0}
 
 
 def bisect(values: list[float], value: float) -> int:
@@ -327,11 +344,11 @@ def bisect(values: list[float], value: float) -> int:
     """
     if values[0] >= value:
         return 0
-    N = len(values)
+    n = len(values)
     if values[-1] < value:
-        return N
+        return n
     j1 = 0
-    j2 = N - 1
+    j2 = n - 1
     while True:
         j = (j1 + j2 + 1) // 2
         if values[j] < value:
@@ -343,4 +360,4 @@ def bisect(values: list[float], value: float) -> int:
 
 
 if __name__ == '__main__':
-    print(parse1(' '.join(sys.argv[1:])))  # pragma: no cover
+    print(parse1(' '.join(sys.argv[1:])))

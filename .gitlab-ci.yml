@@ -1,19 +1,19 @@
 tests:
-  image: python:3.11
+  image: python:3.12
   script:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install flake8 mypy coverage pytest scipy click
+    - pip install flake8 mypy coverage pytest scipy click boddle
     - pip install --no-deps git+https://gitlab.com/ase/ase.git
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .
-    - coverage run --source=cxdb -m pytest -v --color=yes
-    - coverage report -i --precision=2 --fail-under=98
+    - coverage run --branch --source=cxdb -m pytest -v --color=yes
+    - coverage report -i --precision=2 --fail-under=99
     - coverage html
     - mypy
     - flake8 cxdb
-  coverage: '/TOTAL +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
+  coverage: '/TOTAL +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
       - htmlcov

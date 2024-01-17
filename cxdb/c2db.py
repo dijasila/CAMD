@@ -19,11 +19,11 @@ import rich.progress as progress
 from ase import Atoms
 from ase.io import read
 
-from cxdb.asr_panel import ASRPanel, read_result_file
-from cxdb.atoms import AtomsPanel
+from cxdb.panels.asr_panel import (ASRPanel, read_result_file)
+from cxdb.panels.atoms import AtomsPanel
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
-from cxdb.shift import ShiftPanel
+from cxdb.panels.panel import Panel
+from cxdb.panels.shift_current import ShiftCurrentPanel
 from cxdb.web import CXDBApp
 
 RESULT_FILES = [
@@ -161,7 +161,7 @@ def main(root: Path) -> CXDBApp:
                  'phonons',
                  'bader']:
         panels.append(ASRPanel(name))
-    panels.append(ShiftPanel())
+    panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
 

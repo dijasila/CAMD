@@ -1,3 +1,20 @@
+"""Panel for showing the atomic structure and additional tables.
+
+Content::
+
+  +-----------+-------------------------------+
+  | column 1  | repeat-unit-cell button       |
+  | ...       | download button (TODO)        |
+  |           +-------------------------------+
+  |           | ball and stick plotly plot    |
+  |           | ...                           |
+  |           |                               |
+  |           +-------------------------------+
+  |           | unit cell: vectors            |
+  |           +-------------------------------+
+  |           | unit cell: lengths and angles |
+  +-----------+-------------------------------+
+"""
 from __future__ import annotations
 import json
 import sys
@@ -15,26 +32,30 @@ from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from cxdb.material import Material, Materials
-from cxdb.panel import Panel
+from cxdb.panels.panel import Panel
 from cxdb.utils import table
 
 HTML = """
-<h4>Basic properties: {formula}</h4>
+<h4>{formula}</h4>
 <div class="row">
   <div class="col-6">
-   {table}
+    {column1}
   </div>
   <div class="col-6">
+    {column2}
+  </div>
+</div>
+"""
+
+COLUMN2 = """
     <label>Repeat:</label>
     <select onchange="cb(this.value, 'atoms', '{uid}')">
       <option value="1">1</option>
       <option value="2">2</option>
-      <option value="3">3</option>
+      <option value="3" selected>3</option>
     </select>
     <div id='atoms' class='atoms'></div>
     {axes}
-  </div>
-</div>
 """
 
 FOOTER = """
@@ -50,38 +71,49 @@ DIMS = ['', 'length', 'area', 'volume']
 class AtomsPanel(Panel):
     title = 'Atoms'
 
-    def __init__(self, ndims: int) -> None:
+    def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
-        self.ndims = ndims
         self.column_names = {}
         self.columns = ['stoichiometry', 'uid']
-        if ndims:
-            if ndims == 1:
-                unit = 'Å'
-            else:
-                unit = f'Å<sup>{ndims}</sup>'
-            name = DIMS[ndims]
-            self.column_names[name] = f'{name.title()} [{unit}]'
-            self.columns.append(name)
 
     def update_data(self, material):
-        if self.ndims > 0:
-            pbc = material.atoms.pbc
+        pbc = material.atoms.pbc
+        dims = pbc.sum()
+        if dims > 0:
             vol = abs(np.linalg.det(material.atoms.cell[pbc][:, pbc]))
-            material.add_column(DIMS[self.ndims], vol)
+            name = DIMS[dims]
+            if name not in self.column_names:
+                if dims == 1:
+                    unit = 'Å'
+                else:
+                    unit = f'Å<sup>{dims}</sup>'
+                self.column_names[name] = f'{name.title()} [{unit}]'
+                self.columns.append(name)
+            material.add_column(name, vol)
 
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        tbl = table(None,
-                    [(materials.column_names[name], material[name])
-                     for name in self.columns
-                     if name in material._values])
-        return (HTML.format(table=tbl,
-                            axes=self.axes(material),
-                            uid=material.uid,
+        col1, foot1 = self.create_column_one(material, materials)
+        col2, foot2 = self.create_column_two(material, materials)
+        return (HTML.format(column1=col1,
+                            column2=col2,
                             formula=material['formula']),
-                FOOTER.format(atoms_json=self.plot(material, 3)))
+                foot1 + foot2)
+
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> tuple[str, str]:
+        return (table(None, materials.table(material, self.columns)), '')
+
+    def create_column_two(self,
+                          material: Material,
+                          materials: Materials) -> tuple[str, str]:
+        return (
+            COLUMN2.format(
+                axes=self.axes(material),
+                uid=material.uid),
+            FOOTER.format(atoms_json=self.plot(material, 3)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms
@@ -105,6 +137,7 @@ class AtomsPanel(Panel):
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
+# The 12 edges of a cube:
 UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
             [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1], [0, 0, 1],
             [nan, nan, nan], [1, 0, 0], [1, 0, 1],
@@ -114,6 +147,7 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
 
 def plot_atoms(atoms: Atoms,
                unitcell: np.ndarray | None = None) -> go.Figure:
+    """Ball and stick plotly figure."""
     data = []
 
     # Atoms:
@@ -153,6 +187,7 @@ def plot_atoms(atoms: Atoms,
     return fig
 
 
+# 50 Lebedev quadrature points:
 SPHERE_POINTS = np.array(
     [[-1.0, 0.0, 0.0],
      [1.0, 0.0, 0.0],
@@ -218,7 +253,7 @@ def color(Z: int) -> str:
     return f'rgb({a},{b},{c})'
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     atoms = read(sys.argv[1])
     assert isinstance(atoms, Atoms)
     plot_atoms(atoms).show()

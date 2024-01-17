@@ -5,13 +5,13 @@ import ase.io.ulm as ulm
 import numpy as np
 from ase import Atoms
 from ase.build import mx2
+from ase.io.jsonio import encode
 from ase.io.trajectory import write_atoms
 from ase.spectrum.band_structure import BandStructure
-from ase.io.jsonio import encode
+from asr.bandstructure import Result
 
 
 def create_data(dir: Path, atoms: Atoms) -> None:
-    from asr.bandstructure import Result
 
     # Create fake gpw-file:
     writer = ulm.Writer(dir / 'gs.gpw', tag='gpaw')
@@ -35,7 +35,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
         '{"kwargs": {"data": {"uid": "MoS2-b3b4685fb6e1"}}}')
 
-    # Bandstructure:
+    # Band-structure:
     kpts = atoms.cell.bandpath('GK', npoints=5)
     bs = BandStructure(kpts, np.zeros((1, 5, 2)), reference=-0.5)
     nosoc = copy.deepcopy(bs.todict())
