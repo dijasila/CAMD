@@ -91,7 +91,10 @@
    <tr>
    % for name, column in header:
     <th>
-     <a href="?sid={{ session.sid }}&sort={{ name }}">{{ !column }}</a>
+     <a href="?sid={{ session.sid }}&sort={{ name }}">
+     {{ !column }}
+     {{ '' if name != session.sort else ('^' if session.direction == 1 else 'v') }}
+     </a>
      <a href="?sid={{ session.sid }}&toggle={{ name }}">-</a>
     </th>
    % end

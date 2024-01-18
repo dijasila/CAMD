@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from functools import partial
 from math import isfinite
 from pathlib import Path
 from typing import Callable
@@ -29,8 +30,14 @@ class CMRProjectsApp:
         self.app.route('/<project_name>')(self.index1)
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
-        self.app.route('/<project_name>/download')(self.download_db_file)
         self.app.route('/<project_name>/png/<uid>')(self.png)
+
+        for fmt in ['xyz', 'cif', 'json']:
+            self.app.route(f'/<project_name>/<uid>/download/{fmt}')(
+                partial(self.download, fmt=fmt))
+
+    def download(self, project_name: str, uid: str, fmt: str):
+        return self.project_apps[project_name].download(uid=uid, fmt=fmt)
 
     def overview(self) -> str:
         tbl = table(
@@ -40,7 +47,8 @@ class CMRProjectsApp:
              'Description'],
             [[f'<a href="/{name}">{app.title}</a>',
               len(app.materials),
-              f'<a download="" href="/{name}/download">{name}.db</a>',
+              (f'<a download="{name}.db" ' +
+               f'href="{CMR}/_downloads/{name}.db">{name}.db</a>'),
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, app in sorted(self.project_apps.items())])
         return template('cmr/overview', table=tbl, title='CMR projects')
@@ -57,10 +65,6 @@ class CMRProjectsApp:
 
     def callback(self, project_name: str):
         return self.project_apps[project_name].callback()
-
-    def download_db_file(self, project_name: str) -> bytes:
-        path = self.project_apps[project_name].dbpath
-        return static_file(path.name, path.parent)
 
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')

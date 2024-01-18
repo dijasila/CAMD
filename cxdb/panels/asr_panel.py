@@ -2,9 +2,9 @@
 import importlib
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
-
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
 from cxdb.utils import table
@@ -86,6 +86,7 @@ class ASRPanel(Panel):
             return ('', '')
         result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
+        plt.close()
 
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):

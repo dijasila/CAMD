@@ -58,7 +58,7 @@ def copy_materials(root: Path, patterns: list[str]) -> None:
             if dir.name[0] != '.']
     names: defaultdict[str, int] = defaultdict(int)
     with progress.Progress() as pb:
-        pid = pb.add_task('Copying matrerials:', total=len(dirs))
+        pid = pb.add_task('Copying materials:', total=len(dirs))
         for dir in dirs:
             copy_material(dir, names)
             pb.advance(pid)
@@ -114,4 +114,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         copy_materials(ROOT, PATTERNS)
     else:
-        copy_materials(Path(sys.argv[1]), sys.argv[1:])
+        copy_materials(Path(sys.argv[1]), sys.argv[2:])
