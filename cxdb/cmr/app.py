@@ -15,7 +15,7 @@ from cxdb.cmr.projects import ProjectDescription, create_project_description
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, table
+from cxdb.html import FormPart, table
 from cxdb.web import CXDBApp
 
 CMR = 'https://cmr.fysik.dtu.dk'

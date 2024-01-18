@@ -17,7 +17,7 @@ from ase.db import connect
 from cxdb.cmr.lowdim import LowDimPanel, keysfortable0
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, Input, Range, Select, table, RangeX, RangeS
+from cxdb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}

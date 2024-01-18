@@ -8,7 +8,7 @@ from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
 
 from cxdb.material import Materials
 from cxdb.session import Sessions
-from cxdb.utils import Select, FormPart
+from cxdb.html import Select, FormPart
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 

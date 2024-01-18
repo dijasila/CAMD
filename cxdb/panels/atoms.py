@@ -33,7 +33,7 @@ from scipy.spatial import ConvexHull
 
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import table
+from cxdb.html import table
 
 HTML = """
 <h4>{formula}</h4>

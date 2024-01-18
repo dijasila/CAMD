@@ -2,7 +2,7 @@ import json
 
 from cxdb.panels.panel import Panel
 from cxdb.material import Material, Materials
-from cxdb.utils import table
+from cxdb.html import table
 
 
 HTML = """
