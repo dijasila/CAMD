@@ -32,6 +32,14 @@ class CMRProjectsApp:
         self.app.route('/<project_name>/download')(self.download_db_file)
         self.app.route('/<project_name>/png/<uid>')(self.png)
 
+        for fmt in ['xyz', 'cif', 'json']:
+            from functools import partial
+            self.app.route(f'/<project_name>/<uid>/download/{fmt}')(
+                partial(self.download, fmt=fmt))
+
+    def download(self, project_name: str, uid: str, fmt: str):
+        return self.project_apps[project_name].download(uid=uid, fmt=fmt)
+
     def overview(self) -> str:
         tbl = table(
             ['Project',

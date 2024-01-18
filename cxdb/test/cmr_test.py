@@ -34,6 +34,9 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
         html = app.material('oqmd123', 'id-1')
         assert 'http://oqmd.org' in html
 
+        xyz = app.download('oqmd123', 'id-1', 'xyz')
+        assert 'energy=-27.0' in xyz
+
     if name == 'abs3':
         app.download_db_file('abs3')
         app.png('abs3', '1')

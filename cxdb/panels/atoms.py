@@ -69,9 +69,18 @@ COLUMN2 = """
     <select onchange="cb(this.value, 'atoms', '{uid}')">
     {options}
     </select>
+
+    &emsp;
+
+    <label>Download:</label>
+    <a download="atoms.xyz" href={uid}/download/xyz>XYZ</a>
+    <a download="atoms.cif" href={uid}/download/cif>CIF</a>
+    <a download="atoms.json" href={uid}/download/json>JSON</a>
+
     <div id='atoms' class='atoms'></div>
     {axes}
 """
+
 
 FOOTER = """
 <script type='text/javascript'>
