@@ -12,6 +12,7 @@ from cxdb.filter import Index, parse
 from cxdb.paging import get_pages
 from cxdb.panels.panel import Panel
 from cxdb.session import Session
+from cxdb.utils import formula_dict_to_strings, fft
 
 
 class Material:
@@ -33,18 +34,18 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
-        formula = self.atoms.symbols.formula.convert('periodic')
-        s11y, reduced, _ = formula.stoichiometry()
-
-        self._count: dict[str, int] = formula.count()
-
         self._values: dict[str, bool | int | float | str] = {}
         self._html_reprs: dict[str, str] = {}
 
-        self.add_column('formula', formula.format(), formula.format('html'))
+        # Get number of atoms dicts:
+        self._count, reduced, stoichiometry = fft(atoms.numbers)
+
+        self.add_column('formula',
+                        *formula_dict_to_strings(self._count))
         self.add_column('reduced_formula',
-                        reduced.format(), reduced.format('html'))
-        self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
+                        *formula_dict_to_strings(reduced))
+        self.add_column('stoichiometry',
+                        *formula_dict_to_strings(stoichiometry))
         self.add_column('nspecies', len(self._count))
         self.add_column('uid', uid)
 

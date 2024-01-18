@@ -1,4 +1,4 @@
-from cxdb.utils import Range, RangeX, RangeS
+from cxdb.html import Range, RangeX, RangeS
 
 
 def test_range():

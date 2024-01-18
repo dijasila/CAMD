@@ -10,7 +10,7 @@ from ase.formula import Formula
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
-from cxdb.utils import table
+from cxdb.html import table
 from cxdb.web import CXDBApp
 
 
