@@ -48,7 +48,8 @@ class CMRProjectsApp:
              'Description'],
             [[f'<a href="/{name}">{app.title}</a>',
               len(app.materials),
-              f'<a download="{name}.db" href="/{name}/download">{name}.db</a>',
+              (f'<a download="{name}.db" ' +
+               f'href="{CMR}/_downloads/{name}.db">{name}.db</a>'),
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, app in sorted(self.project_apps.items())])
         return template('cmr/overview', table=tbl, title='CMR projects')
