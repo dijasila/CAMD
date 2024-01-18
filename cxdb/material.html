@@ -1,12 +1,12 @@
 % rebase('base', plotly=True, callback=True)
 <body>
+
 <nav
   class="navbar navbar-expand-md bg-dark border-bottom border-body"
   data-bs-theme="dark">
   <div class="container-md">
-    <a
-      class="navbar-brand"
-      href="https://cmr.fysik.dtu.dk/c2db/c2db.html">CxDB</a>
+    <a class="navbar-brand"
+       href="https://cmr.fysik.dtu.dk/c2db/c2db.html">CxDB</a>
     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
       <li class="nav-item">
         <a
@@ -19,26 +19,45 @@
     </ul>
   </div>
 </nav>
-<div class="container-lg">
 
-% for p, (panel_title, html) in enumerate(panels):
-<p class="d-inline-flex gap-1">
-  <button
-    class="btn btn-primary"
-    type="button"
-    data-bs-toggle="collapse"
-    data-bs-target="#collapse{{ p }}"
-    aria-expanded="false"
-    aria-controls="collapseExample">
-    {{ panel_title }}
-  </button>
-</p>
-<div class="collapse" id="collapse{{ p }}">
-  <div class="card card-body">
-  {{ !html }}
-  </div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="sticky-top col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+            <div class="sticky-top d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-10">
+                <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <span class="fs-5 d-none d-sm-inline">Home</span>
+                </a>
+                <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
+                    <li class="nav-item">
+                        % for p, (panel_title, html) in enumerate(panels):
+                        <button
+                            class="nav-link px-0 align-middle"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#collapse{{ p }}"
+                            aria-expanded="false"
+                            aria-controls="collapseExample">
+                        <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                      </button>
+                        % end
+                    </li>
+                </ul>
+                <hr>
+            </div>
+        </div>
+
+        <div class="col py-3">
+            % for p, (panel_title, html) in enumerate(panels):
+            <div class="{{'collapse show' if panel_title=='Atoms' else 'collapse'}}"
+                 id="collapse{{ p }}">
+                <div class="card card-body">
+                    {{ !html }}
+                </div>
+            </div>
+            % end
+        </div>
+    </div>
 </div>
- % end
-</div>
+
 </body>
 {{ !footer }}
