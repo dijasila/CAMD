@@ -43,5 +43,6 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
                                      for symbol, c in zip(symbols, counts))}
     reduced = {symbol: c // nunits for symbol, c in count.items()}
     abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    stoichiometry = {abc[i]: c for i, (symbol, c) in enumerate(reduced.items())}
+    stoichiometry = {abc[i]: c
+                     for i, (symbol, c) in enumerate(reduced.items())}
     return count, reduced, stoichiometry
