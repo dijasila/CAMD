@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from functools import partial
 from math import isfinite
 from pathlib import Path
 from typing import Callable
@@ -33,7 +34,6 @@ class CMRProjectsApp:
         self.app.route('/<project_name>/png/<uid>')(self.png)
 
         for fmt in ['xyz', 'cif', 'json']:
-            from functools import partial
             self.app.route(f'/<project_name>/<uid>/download/{fmt}')(
                 partial(self.download, fmt=fmt))
 
@@ -66,10 +66,6 @@ class CMRProjectsApp:
 
     def callback(self, project_name: str):
         return self.project_apps[project_name].callback()
-
-    def download_db_file(self, project_name: str) -> bytes:
-        path = self.project_apps[project_name].dbpath
-        return static_file(path.name, path.parent)
 
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
