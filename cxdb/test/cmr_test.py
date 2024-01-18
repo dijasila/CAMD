@@ -38,7 +38,6 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
         assert 'energy=-27.0' in xyz
 
     if name == 'abs3':
-        app.download_db_file('abs3')
         app.png('abs3', '1')
         # Test also when png-files have already been generated:
         app.material('abs3', '1')

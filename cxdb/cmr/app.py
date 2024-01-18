@@ -30,7 +30,6 @@ class CMRProjectsApp:
         self.app.route('/<project_name>')(self.index1)
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
-        self.app.route('/<project_name>/download')(self.download_db_file)
         self.app.route('/<project_name>/png/<uid>')(self.png)
 
         for fmt in ['xyz', 'cif', 'json']:
