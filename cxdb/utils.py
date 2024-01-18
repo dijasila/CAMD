@@ -3,6 +3,9 @@ from __future__ import annotations
 import abc
 from typing import Iterable, Sequence
 
+import numpy as np
+from ase.data import chemical_symbols
+
 
 def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
     """Create HTML table.
@@ -247,3 +250,17 @@ class RangeS(Range):
         if to:
             filters.append(f'{self.name}<={to}')
         return filters
+
+
+def fft(atomic_numbers: list[int] | np.ndarray):
+    """Fast formula-transformations."""
+    values, counts = np.unique(atomic_numbers)
+    nunits = np.gcd.reduce(counts)
+    symbols = [chemical_symbols[v] for v in values]
+    count = {symbol: c
+             for c, symbol in sorted((c, symbol)
+                                     for symbol, c in zip(symbols, counts))}
+    formula =
+    for symbol, c in count.items():
+
+
