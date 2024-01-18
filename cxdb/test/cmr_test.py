@@ -8,10 +8,17 @@ from cxdb.test.cmr import create_db_file
 from boddle import boddle
 
 
-@pytest.mark.parametrize('project_name', projects)
-def test_cmr(tmp_path, project_name):
-    name = project_name
+@pytest.fixture
+def in_tmp_path(tmp_path):
+    orig_cwd = os.getcwd()
     os.chdir(tmp_path)
+    yield
+    os.chdir(orig_cwd)
+
+
+@pytest.mark.parametrize('project_name', projects)
+def test_cmr(in_tmp_path, tmp_path, project_name):
+    name = project_name
     create_db_file(project_name, tmp_path)
 
     app = main([f'{name}.db'])
