@@ -37,8 +37,10 @@ packages = "cxdb"
 ignore_missing_imports = true
 disallow_untyped_defs = false
 
-[tool.coverage.report]
+[tool.coverage.run]
 source = ['cxdb']
+
+[tool.coverage.report]
 exclude_also = [
     "if __name__ == .__main__.:",
     "@(abc\\.)?abstractmethod",

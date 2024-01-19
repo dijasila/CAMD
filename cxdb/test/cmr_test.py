@@ -65,3 +65,14 @@ def test_pd():
 def test_abs3():
     assert not abs3_bs({}, Path())
     assert not abs3_bs({'X': [1, 2], 'names': 'ABC'}, Path())
+
+
+def test_pickle(in_tmp_path, tmp_path):
+    create_db_file('abs3', tmp_path)
+    app1 = main(['abs3.db', '--pickle'])
+    (tmp_path / 'abs3.db').unlink()
+    assert (tmp_path / 'abs3.pckl').is_file()
+    app2 = main(['abs3.db'])
+    n1 = len(app1.project_apps['abs3'].materials)
+    n2 = len(app2.project_apps['abs3'].materials)
+    assert n1 == n2 == 2
