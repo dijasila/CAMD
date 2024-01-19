@@ -34,17 +34,19 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
+        self.columns = {'uid': uid}
         self._html_reprs: dict[str, str] = {'uid': uid}
 
-        # Get number of atoms dicts:
+        # Get number-of-atoms dicts:
         self._count, reduced, stoichiometry = fft(atoms.numbers)
+        f1, html1 = formula_dict_to_strings(self._count)
+        f2, html2 = formula_dict_to_strings(reduced)
+        f3, html3 = formula_dict_to_strings(stoichiometry)
 
-        self.add_column('formula',
-                        *formula_dict_to_strings(self._count))
-        self.add_column('reduced_formula',
-                        *formula_dict_to_strings(reduced))
-        self.add_column('stoichiometry',
-                        *formula_dict_to_strings(stoichiometry))
+        self.add_column('formula', f1, html1)
+        self.add_column('reduced_formula', f2, html2)
+        self.add_column('stoichiometry', f3, html3)
+
         self.add_column('nspecies', len(self._count))
 
     @classmethod
@@ -53,13 +55,6 @@ class Material:
         assert isinstance(atoms, Atoms)
         return cls(file.parent, uid, atoms)
 
-    @property
-    def column_names(self):
-        return self._html_reprs
-
-    def columns_as_dict(self):
-        return {key: self.__dict__[key] for key in self._html_reprs}
-
     def add_column(self,
                    name: str,
                    value: bool | int | float | str,
@@ -67,14 +62,19 @@ class Material:
                    update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
         if not update:
-            assert not hasattr(self, name), name
-        self.__dict__[name] = value
+            assert name not in self.columns, name
+        self.columns[name] = value
         if html is None:
             if isinstance(value, float):
                 html = f'{value:.3f}'
             else:
                 html = str(value)
         self._html_reprs[name] = html
+
+    def __getattr__(self, name):
+        if name.startswith('_') or name not in self.columns:
+            raise AttributeError(name)
+        return self.columns[name]
 
     def __getitem__(self, name: str) -> str:
         """Get HTML string for data."""
@@ -117,7 +117,7 @@ class Materials:
         self.index = Index(
             [(mat.reduced_formula,
               mat._count,
-              mat.columns_as_dict())
+              mat.columns)
              for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
@@ -147,7 +147,7 @@ class Materials:
               columns: list[str]) -> list[tuple[str, str]]:
         return [(self.column_names[name], material[name])
                 for name in columns
-                if name in material.column_names]
+                if name in material.columns]
 
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]
