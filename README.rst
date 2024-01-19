@@ -27,7 +27,6 @@ Important links
 Test URLs
 ---------
 
-* `CXDB-test <https://fysik-cmr02.fysik.dtu.dk:8081/>`__
 * `C2DB-test <https://c2db-test.fysik.dtu.dk/>`__
 * `CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__
 

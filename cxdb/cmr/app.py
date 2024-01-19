@@ -194,4 +194,4 @@ def main(filenames: list[str]) -> CMRProjectsApp:
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:]).app.run(host='0.0.0.0', port=8081, debug=True)
+    main(sys.argv[1:]).app.run(host='0.0.0.0', port=8082, debug=True)
