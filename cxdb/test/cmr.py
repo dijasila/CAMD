@@ -1,3 +1,4 @@
+"""Create fake CMR-project databases for testing."""
 import sys
 from pathlib import Path
 

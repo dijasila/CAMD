@@ -161,49 +161,40 @@ class Index:
         self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         self.ids = set()
 
-        print('Rows:', len(rows), flush=True)
-        ni = 0
-        ns = 0
-        nf = 0
         for i, (reduced, count, keys) in enumerate(rows):
             self.natoms[i] = sum(count.values())
             self.reduced[reduced].add(i)
             self.ids.add(i)
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
-                ni += 1
             for name, value in keys.items():
                 if isinstance(value, str):
                     self.strings[name][value].add(i)
-                    ns += 1
                 elif isinstance(value, float):
                     floats[name].append((value, i))
-                    nf += 1
                 elif isinstance(value, (int, bool)):
                     integers[name].append((int(value), i))
-                    ni += 1
                 else:
                     raise ValueError
-        print(f'Strings: {ns}', flush=True)
 
         self.integers = {}
         self.floats = {}
+        ni = 0  # number of ints converted to floats
         for name, idata in integers.items():
             idata.sort()
-            ids = []
+            ids = np.array([i for value, i in idata], dtype=np.int32)
             indices = [0]
             nmin = idata[0][0]
             nmax = idata[-1][0]
             if nmax - nmin > max_int_range:
-                # too wide range!
-                ids = np.array([i for value, i in idata], dtype=np.int32)
+                # Avoid too wide range of integer-index
                 values = np.array([value
                                    for value, i in idata], dtype=np.int32)
                 self.floats[name] = (values, ids)
+                ni += 1
                 continue
             m = nmin
             for j, (n, i) in enumerate(idata):
-                ids.append(i)
                 if n > m:
                     indices += [j] * (n - m)
                     m = n
@@ -214,15 +205,18 @@ class Index:
                 np.array(ids, dtype=np.int32),
                 np.array(indices, dtype=np.int32))
 
-        print(f'Integers: {ni}', flush=True)
-
         for name, fdata in floats.items():
             assert name not in self.integers, name
             fdata.sort()
             ids = np.array([i for value, i in fdata], dtype=np.int32)
             values = np.array([value for value, i in fdata])
             self.floats[name] = (values, ids)
-        print(f'Floats: {nf}', flush=True)
+
+        print(f'Rows: {len(rows):6} | '
+              f'Strings: {len(self.strings):6} | '
+              f'Integers: {len(self.integers):6} | '
+              f'Floats: {len(self.floats) - ni:6} | '
+              f'Int-floats: {ni:6}')
 
     def key(self,
             name: str,
