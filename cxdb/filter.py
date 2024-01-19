@@ -149,8 +149,7 @@ class Index:
                  max_int_range: int = 350):
         integers = defaultdict(list)
         floats = defaultdict(list)
-        self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
-            defaultdict(lambda: defaultdict(set))
+        self.strings: defaultdict[str, dict[str, set[int]]] = defaultdict(dict)
         self.natoms: dict[int, int] = {}
         self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         self.ids = set()
@@ -163,7 +162,11 @@ class Index:
                 integers[symbol].append((n, i))
             for name, value in keys.items():
                 if isinstance(value, str):
-                    self.strings[name][value].add(i)
+                    dct = self.strings[name]
+                    if value not in dct:
+                        dct[value] = {i}
+                    else:
+                        dct[value].add(i)
                 elif isinstance(value, float):
                     floats[name].append((value, i))
                 elif isinstance(value, (int, bool)):

@@ -1,7 +1,9 @@
+import pickle
 from pathlib import Path
 
 import pytest
 from ase import Atoms
+
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.session import Session
@@ -42,3 +44,7 @@ def test_materials(material):
 def test_attribute_error(material):
     with pytest.raises(AttributeError):
         material.asdf
+
+
+def test_pickle(material):
+    pickle.loads(pickle.dumps(material))
