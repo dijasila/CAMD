@@ -8,7 +8,7 @@ description = "CAMd web-apps"
 version = "24.1.0"
 readme = "README.rst"
 authors = [
-  { name="Jens Jørgen Mortensen", email="jjmo@dtu.dk" },
+  { name="CAMd web-team", email="jjmo@dtu.dk" },
 ]
 dependencies = [
     "bottle",
@@ -38,12 +38,8 @@ ignore_missing_imports = true
 disallow_untyped_defs = false
 
 [tool.coverage.report]
-# Regexes for lines to exclude from consideration
+source = ['cxdb']
 exclude_also = [
-    # Don't complain if non-runnable code isn't run:
     "if __name__ == .__main__.:",
-
-    # Don't complain about abstract methods, they aren't run:
     "@(abc\\.)?abstractmethod",
-
     "if TYPE_CHECKING:"]
