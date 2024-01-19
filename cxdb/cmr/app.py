@@ -126,6 +126,10 @@ def app_from_db(dbpath: Path,
                 project_description: ProjectDescription) -> CMRProjectApp:
     pd = project_description
     root = dbpath.parent
+    if 0:
+        import pickle
+        with open('x.pckl', 'rb') as fd:
+            return pickle.load(fd)
     rows = []
     db = connect(dbpath)
     with progress.Progress() as pb:
@@ -194,4 +198,14 @@ def main(filenames: list[str]) -> CMRProjectsApp:
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:]).app.run(host='0.0.0.0', port=8082, debug=True)
+    import psutil
+    import os
+    from time import time
+    p = psutil.Process(os.getpid())
+    t1 = time()
+    m1 = p.memory_info().rss
+    app = main(sys.argv[1:])
+    app.run(host='0.0.0.0', port=8082, debug=True)
+    m2 = p.memory_info().rss
+    print(time() - t1)
+    print(m1, m2, m2 - m1, (m2 - m1) / 6000)

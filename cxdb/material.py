@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Container
 from math import nan
 from pathlib import Path
-from typing import Any, Sequence, Generator
+from typing import Sequence, Generator
 
 from ase import Atoms
 from ase.io import read
@@ -34,8 +34,7 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
-        self._values: dict[str, bool | int | float | str] = {}
-        self._html_reprs: dict[str, str] = {}
+        self._html_reprs: dict[str, str] = {'uid': uid}
 
         # Get number of atoms dicts:
         self._count, reduced, stoichiometry = fft(atoms.numbers)
@@ -47,13 +46,19 @@ class Material:
         self.add_column('stoichiometry',
                         *formula_dict_to_strings(stoichiometry))
         self.add_column('nspecies', len(self._count))
-        self.add_column('uid', uid)
 
     @classmethod
     def from_file(cls, file: Path, uid: str) -> Material:
         atoms = read(file)
         assert isinstance(atoms, Atoms)
         return cls(file.parent, uid, atoms)
+
+    @property
+    def column_names(self):
+        return self._html_reprs
+
+    def columns_as_dict(self):
+        return {key: self.__dict__[key] for key in self._html_reprs}
 
     def add_column(self,
                    name: str,
@@ -62,21 +67,14 @@ class Material:
                    update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
         if not update:
-            assert name not in self._values, (name, self._values)
-        self._values[name] = value
+            assert not hasattr(self, name), name
+        self.__dict__[name] = value
         if html is None:
             if isinstance(value, float):
                 html = f'{value:.3f}'
             else:
                 html = str(value)
         self._html_reprs[name] = html
-
-    def __getattr__(self, name: str) -> Any:
-        """Get data by attribute."""
-        if name not in self._values:
-            raise AttributeError(f'Material object has no attribute {name!r}')
-
-        return self._values[name]
 
     def __getitem__(self, name: str) -> str:
         """Get HTML string for data."""
@@ -88,7 +86,7 @@ class Material:
 
     def check_columns(self, column_names: Container[str]) -> None:
         """Make sure we don't have unknown columns."""
-        for name in self._values:
+        for name in self._html_reprs:
             assert name in column_names, name
 
 
@@ -116,8 +114,11 @@ class Materials:
         for material in materials:
             material.check_columns(self.column_names)
 
-        self.index = Index([(mat.reduced_formula, mat._count, mat._values)
-                            for mat in self._materials.values()])
+        self.index = Index(
+            [(mat.reduced_formula,
+              mat._count,
+              mat.columns_as_dict())
+             for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
@@ -146,7 +147,7 @@ class Materials:
               columns: list[str]) -> list[tuple[str, str]]:
         return [(self.column_names[name], material[name])
                 for name in columns
-                if name in material._values]
+                if name in material.column_names]
 
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]
