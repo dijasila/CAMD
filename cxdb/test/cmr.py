@@ -22,7 +22,7 @@ def create_db_file(projects_name: str,
         data: dict | None = None
         if pd.uid != 'id':
             kwargs[pd.uid] = 'id-1'
-        # int id's should be converted to strings
+
         if name == 'mp_gllbsc':
             kwargs['mpid'] = 50000
             kwargs['icsd_id'] = 70000
@@ -58,7 +58,11 @@ def create_db_file(projects_name: str,
 
         db.write(atoms, abc=27.3, gap=0, **kwargs, data=data)
 
-        if name == 'abs3':
+        if name == 'pv_pec_oqmd':
+            # Trigger special index code for large range of ints
+            # (70-70000):
+            db.write(atoms, icsd=70)
+        elif name == 'abs3':
             db.write(atoms)
         elif name == 'bidb':
             db.write(atoms, uid='id-2', number_of_layers=1)

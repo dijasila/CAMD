@@ -151,7 +151,8 @@ class Index:
     def __init__(self,
                  rows: list[tuple[str,
                                   dict[str, int],
-                                  dict[str, ColVal]]]):
+                                  dict[str, ColVal]]],
+                 max_int_range: int = 350):
         integers = defaultdict(list)
         floats = defaultdict(list)
         self.strings: defaultdict[str, defaultdict[str, set[int]]] = \
@@ -186,13 +187,20 @@ class Index:
         print(f'Strings: {ns}', flush=True)
 
         self.integers = {}
-        for symbol, idata in integers.items():
+        self.floats = {}
+        for name, idata in integers.items():
             idata.sort()
             ids = []
             indices = [0]
             nmin = idata[0][0]
             nmax = idata[-1][0]
-            assert nmax - nmin < 350, (symbol, nmax, nmin)  # too wide range!
+            if nmax - nmin > max_int_range:
+                # too wide range!
+                ids = np.array([i for value, i in idata], dtype=np.int32)
+                values = np.array([value
+                                   for value, i in idata], dtype=np.int32)
+                self.floats[name] = (values, ids)
+                continue
             m = nmin
             for j, (n, i) in enumerate(idata):
                 ids.append(i)
@@ -200,15 +208,19 @@ class Index:
                     indices += [j] * (n - m)
                     m = n
             indices.append(j + 1)
-            self.integers[symbol] = (nmin, nmax, ids, indices)
+            self.integers[name] = (
+                nmin,
+                nmax,
+                np.array(ids, dtype=np.int32),
+                np.array(indices, dtype=np.int32))
+
         print(f'Integers: {ni}', flush=True)
 
-        self.floats = {}
         for name, fdata in floats.items():
             assert name not in self.integers, name
             fdata.sort()
-            ids = [i for value, i in fdata]
-            values = [value for value, i in fdata]
+            ids = np.array([i for value, i in fdata], dtype=np.int32)
+            values = np.array([value for value, i in fdata])
             self.floats[name] = (values, ids)
         print(f'Floats: {nf}', flush=True)
 
@@ -217,9 +229,9 @@ class Index:
             op: str,
             value: bool | int | float | str) -> set[int]:
         if name in chemical_symbols:
-            n = value
+            n = value  # number of atoms
             assert isinstance(n, int)
-            if name not in self.integers:
+            if name not in self.integers and name not in self.floats:
                 if op == '=' and n != 0:
                     return set()
                 if op == '<' and n == 0:
@@ -231,7 +243,14 @@ class Index:
                 if op == '>=' and n > 0:
                     return set()
                 return self.ids
-            return self.integer_key(name, op, n)
+
+        if name in self.integers:
+            assert isinstance(value, (int, bool)), (name, value)
+            return self.integer_key(name, op, value)
+
+        if name in self.floats:
+            assert isinstance(value, (int, float))
+            return self.float_key(name, op, value)
 
         if name in self.strings:
             value = str(value)
@@ -247,13 +266,6 @@ class Index:
                 return result
             raise ValueError
 
-        if name in self.floats:
-            assert isinstance(value, (int, float))
-            return self.float_key(name, op, value)
-        if name in self.integers:
-            assert isinstance(value, (int, bool)), (name, value)
-            return self.integer_key(name, op, value)
-
         return set()
 
     def float_key(self, name: str, op: str, value: float) -> set[int]:
@@ -266,7 +278,7 @@ class Index:
         if op == '>':
             value = np.nextafter(value, value + 1)
             op = '>='
-        j1 = bisect(values, value)
+        j1 = np.searchsorted(values, value)
         n = len(values)
         if op == '=':
             result = set()
@@ -320,33 +332,6 @@ class Index:
             return ids
         m = len(formula)
         return {id for id in ids if self.natoms[id] % m == 0}
-
-
-def bisect(values: list[float], value: float) -> int:
-    """Find index of value in sorted list of floats.
-
-    >>> bisect([0.0, 1.0, 2.0], 1.5)
-    2
-    >>> bisect([0.0, 1.0, 2.0], 2.0)
-    2
-    >>> bisect([0.0, 1.0, 2.0], 2.5)
-    3
-    """
-    if values[0] >= value:
-        return 0
-    n = len(values)
-    if values[-1] < value:
-        return n
-    j1 = 0
-    j2 = n - 1
-    while True:
-        j = (j1 + j2 + 1) // 2
-        if values[j] < value:
-            j1 = j
-        else:
-            if j == j2:
-                return j
-            j2 = j
 
 
 if __name__ == '__main__':
