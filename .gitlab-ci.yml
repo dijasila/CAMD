@@ -8,7 +8,7 @@ tests:
     - pip install --no-deps git+https://gitlab.com/ase/ase.git
     - pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
     - pip install .
-    - coverage run --branch -m pytest -v -We --color=yes
+    - coverage run --branch -m pytest -v --color=yes
     - coverage report -i --precision=2 --fail-under=99.5
     - coverage html
     - mypy
