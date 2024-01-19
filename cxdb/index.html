@@ -1,22 +1,53 @@
 % rebase('base', plotly=False, callback=False)
 <body>
 
-<nav
-  class="navbar navbar-expand-md bg-dark border-bottom border-body"
-  data-bs-theme="dark">
+<!-- css temporary override of scroll-behavior: smooth for instant page scroll on refresh --!>
+<style>
+    /* Your existing CSS styles */
+    html, body {
+      scroll-behavior: smooth; /* Optional: Define smooth scroll in your CSS */
+    }
+</style>
+<script>
+    // Function to store scroll position in sessionStorage when the anchor is clicked
+    function storeScrollPosition(event) {
+      if (event.target.tagName === 'A') {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+      }
+    }
+
+    // Function to retrieve scroll position from sessionStorage
+    function restoreScrollPosition() {
+      const scrollPosition = sessionStorage.getItem('scrollPosition');
+      if (scrollPosition !== null) {
+        // Temporarily disable smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'auto';
+        // Set the scroll position without animating
+        window.scrollTo(0, scrollPosition);
+        // Re-enable smooth scroll behavior after setting the scroll position
+        document.documentElement.style.scrollBehavior = 'smooth';
+        sessionStorage.removeItem('scrollPosition');
+      }
+    }
+
+    // Attach the storeScrollPosition function to the click event of your anchor
+    document.addEventListener('click', storeScrollPosition);
+
+    // Call the restoreScrollPosition function on page load
+    document.addEventListener('DOMContentLoaded', restoreScrollPosition);
+</script>
+
+<nav class="navbar navbar-expand-md bg-dark border-bottom border-body" data-bs-theme="dark">
   <div class="container-md">
-    <a
-      class="navbar-brand"
+    <a class="navbar-brand"
       href="https://cmr.fysik.dtu.dk/c2db/c2db.html">CxDB</a>
     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
       <li class="nav-item">
-        <a
-          class="nav-link active" aria-current="page"
+        <a class="nav-link active" aria-current="page"
           href="https://cmr.fysik.dtu.dk/">CMR</a>
       </li>
       <li class="nav-item">
-      <a class="nav-link"
-      href="">C2DB</a>
+        <a class="nav-link" href="">C2DB</a>
       </li>
     </ul>
   </div>
@@ -24,92 +55,104 @@
 
 <div class="container">
   <div class="row" style="padding-bottom:15px;padding-right:50px">
-    <div class="col-lg-9"><h1>Computational 2D Materials Database</h1></div>
+    <div class="col-lg-9">
+      <h1>Computational 2D Materials Database</h1>
+    </div>
   </div>
 </div>
 
 <div class="container">
-<div class="row">
-<div class="card text-bg-light">
-<form>
-  <div>
-    <input type="hidden" name="sid" value="{{ session.sid }}">
-    <input
-      class="form-control"
-      type="text"
-      name="filter"
-      value="{{ query.get('filter', '') }}"
-      placeholder="chemical symbol">
-  <button type="submit" class="btn btn-primary">Search</button>
-  <a class="btn btn-info" href="/help" role="button">Help</a>
+  <div class="row">
+    <div class="card text-bg-light">
+      <form>
+        <div>
+          <input type="hidden" name="sid" value="{{ session.sid }}">
+          <input class="form-control" type="text" name="filter"
+            value="{{ query.get('filter', '') }}"
+            placeholder="chemical symbol">
+          <button type="submit" class="btn btn-primary">Search</button>
+          <a class="btn btn-info" href="/help" role="button">Help</a>
+        </div>
+        <div>
+          {{ !search }}
+        </div>
+      </form>
+    </div>
   </div>
-  <div>
-  {{ !search }}
+</div>
+
+
+<div class="container">
+  <div class="row">
+    <ul class="pagination">
+      % for page, text in pages:
+        % if page != -1:
+          <li class="page-item">
+            <a class="page-link" href="?sid={{ session.sid }}&page={{ page }}">
+              {{ text }}
+            </a>
+          </li>
+        % end
+      % end
+    </ul>
   </div>
-</form>
-</div>
-</div>
-</div>
-
-
-<div class="container">
-<div class="row">
-<ul class="pagination">
-  % for page, text in pages:
-  %   if page != -1:
-  <li class="page-item">
-    <a
-      class="page-link"
-      href="?sid={{ session.sid }}&page={{ page }}">{{ text }}</a>
-  </li>
-  %   end
-  % end
-</ul>
-</div>
 </div>
 
 <div class="container">
-<div class="row">
-<div class="card text-bg-light">
-<form>
-  <input type="hidden" name="sid" value="{{ session.sid }}">
-   <select name="toggle">
-   % for name, value in new_columns:
-    <option value="{{ name }}">{{ !value }}</option>
-   % end
-   </select>
-   <button type="submit">Add column</button>
-</form>
-</div>
-</div>
+  <div class="row">
+    <div class="card text-bg-light">
+      <form>
+        <input type="hidden" name="sid" value="{{ session.sid }}">
+        <select name="toggle">
+          % for name, value in new_columns:
+            <option value="{{ name }}">{{ !value }}</option>
+          % end
+        </select>
+        <button type="submit">Add column</button>
+      </form>
+    </div>
+  </div>
 </div>
 
 <div class="container">
-<div class="row">
-  <table class="table table-striped">
-  <thead>
-   <tr>
-   % for name, column in header:
-    <th>
-     <a href="?sid={{ session.sid }}&sort={{ name }}">
-     {{ !column }}
-     {{ '' if name != session.sort else ('^' if session.direction == 1 else 'v') }}
-     </a>
-     <a href="?sid={{ session.sid }}&toggle={{ name }}">-</a>
-    </th>
-   % end
-   </tr>
-  <thead>
-  <tbody>
-   % for uid, columns in rows:
-   <tr>
-    % for column in columns:
-    <td><a href=/material/{{ uid }}>{{ !column }}</a></td>
-    % end
-   </tr>
-   % end
-  </tbody>
-  </table>
+  <div class="row">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          % for name, column in header:
+            <th>
+              <a href="?sid={{ session.sid }}&sort={{ name }}" onclick="storeScrollPosition(event)" class="sticky-top">
+                {{ !column }}
+                % if name != session.sort:
+
+                % else:
+                  % if session.direction == 1:
+                    <a class="text-decoration-none">&#x25B2;</a>
+                  % else:
+                    <a class="text-decoration-none">&#x25BC;</a>
+                  % end
+                % end
+              </a>
+              <a href="?sid={{ session.sid }}&toggle={{ name }}" onclick="storeScrollPosition(event)" class="text-decoration-none font-size-sm" style="color:red;font-size: 10px;">
+                &#x274C;
+              </a>
+            </th>
+          % end
+        </tr>
+      </thead>
+      <tbody>
+        % for uid, columns in rows:
+          <tr>
+            % for column in columns:
+              <td>
+                <a href=/material/{{ uid }}>{{ !column }}</a>
+              </td>
+            % end
+          </tr>
+        % end
+      </tbody>
+    </table>
+  </div>
 </div>
-</div>
+
 </body>
