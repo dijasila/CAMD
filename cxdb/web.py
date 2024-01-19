@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import sys
+from functools import partial
+from io import BytesIO, StringIO
 from pathlib import Path
 
-from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
+from ase.io import write
+from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
+from cxdb.html import FormPart, Select
 from cxdb.material import Materials
 from cxdb.session import Sessions
-from cxdb.html import Select, FormPart
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -53,14 +56,10 @@ class CXDBApp:
         self.app.route('/help')(self.help)
 
         for fmt in ['xyz', 'cif', 'json']:
-            from functools import partial
             self.app.route(f'/material/<uid>/download/{fmt}')(
                 partial(self.download, fmt=fmt))
 
     def download(self, uid: str, fmt: str) -> bytes | str:
-        from io import StringIO, BytesIO
-        from ase.io import write
-
         ase_fmt = fmt
 
         if fmt == 'xyz':

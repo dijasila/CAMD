@@ -48,7 +48,7 @@ CxDB-web needs Python_ version 3.9 or later.
     $ pip install click
     $ And CXDB:
     $ git clone git@gitlab.com:jensj/cxdb-web
-    $ pip install -e cxdb-web
+    $ pip install -e cxdb-web[test]
 
 
 .. _Python: https://python.org/

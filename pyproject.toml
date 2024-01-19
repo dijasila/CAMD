@@ -12,7 +12,6 @@ authors = [
 ]
 dependencies = [
     "bottle",
-    "boddle",
     "textual",
     "plotly",
     "ase",
@@ -24,6 +23,14 @@ classifiers = [
 
 [project.scripts]
 cxdb = "cxdb.cli:main"
+
+[project.optional-dependencies]
+test = [
+    "flake8",
+    "mypy",
+    "coverage",
+    "pytest",
+    "boddle"]
 
 [tool.mypy]
 packages = "cxdb"

@@ -25,7 +25,7 @@ def sab_key_descriptions() -> dict[str, Desc]:
     for x in ['s', 'a', 'b']:
         for comb in combs:
             combstr = ''.join([str(d) for d in comb])
-            keys.append('{}_{}'.format(x, combstr))
+            keys.append(f'{x}_{combstr}')
 
     key_descriptions = {}
     # add description of s, a, and b keys
@@ -66,8 +66,8 @@ def all_key_descriptions():
     key_descriptions = sab_key_descriptions()
     # add description of number of dimensional components
     for d in range(4):
-        desc = 'Number of {}D components'.format(d)
-        key = 'numc_{}'.format(d)
+        desc = f'Number of {d}D components'
+        key = f'numc_{d}'
         key_descriptions[key] = Desc(short=desc, long='', unit='')
     # add description of external db ids
     key_descriptions['source'] = Desc('Source', 'Database source', '')
