@@ -8,7 +8,7 @@ from typing import Sequence, Generator
 from ase import Atoms
 from ase.io import read
 
-from cxdb.filter import Index, parse
+from cxdb.filter import Index, parse, ColVal
 from cxdb.paging import get_pages
 from cxdb.panels.panel import Panel
 from cxdb.session import Session
@@ -34,7 +34,7 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
-        self.columns = {'uid': uid}
+        self.columns: dict[str, ColVal] = {'uid': uid}
         self._html_reprs: dict[str, str] = {'uid': uid}
 
         # Get number-of-atoms dicts:
