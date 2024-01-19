@@ -87,9 +87,6 @@ class CMRProjectApp(CXDBApp):
         self.title = title
         self.form_parts += form_parts
 
-    def index(self, query: dict | None = None) -> str:
-        return super().index()
-
     def route(self) -> None:
         pass
 

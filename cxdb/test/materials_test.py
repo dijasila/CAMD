@@ -7,10 +7,15 @@ from cxdb.panels.atoms import AtomsPanel
 from cxdb.session import Session
 
 
-def test_mat():
+@pytest.fixture(scope='module')
+def material():
     atoms = Atoms('H2', [(0, 0, 0), (0.7, 0, 0)], pbc=True)
     atoms.center(vacuum=2)
     material = Material(Path(), 'x', atoms)
+    return material
+
+
+def test_materials(material):
     materials = Materials([material], [AtomsPanel()])
     s = Session(1, ['uid'])
     rows, header, pages, new_columns = materials.get_rows(s)
@@ -33,5 +38,7 @@ def test_mat():
     rows, _, _, _ = materials.get_rows(s)
     assert len(rows) == 0
 
+
+def test_attribute_error(material):
     with pytest.raises(AttributeError):
         material.asdf
