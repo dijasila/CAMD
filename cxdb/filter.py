@@ -32,19 +32,13 @@ def parse(q: str) -> Callable[[Index], set[int]]:
 
     >>> f = parse('H2,xc=PBE')
     >>> i = Index([('H', {'H': 2}, {'xc': 'PBE'})])
-    Rows: 1
-    Strings: 1
-    Integers: 1
-    Floats: 0
+    Rows: 1 | Strings: 1 | Integers: 1 | Floats: 0 | Int-floats: 0
     >>> f(i)
     {0}
     >>> f = parse('gap > 5.0')
     >>> i = Index([('H', {'H': 2}, {'gap': 10.0}),
     ...            ('Si', {'Si': 2}, {'gap': 1.1})])
-    Rows: 2
-    Strings: 0
-    Integers: 2
-    Floats: 2
+    Rows: 2 | Strings: 0 | Integers: 2 | Floats: 1 | Int-floats: 0
     >>> f(i)
     {0}
     """
@@ -212,11 +206,11 @@ class Index:
             values = np.array([value for value, i in fdata])
             self.floats[name] = (values, ids)
 
-        print(f'Rows: {len(rows):6} | '
-              f'Strings: {len(self.strings):6} | '
-              f'Integers: {len(self.integers):6} | '
-              f'Floats: {len(self.floats) - ni:6} | '
-              f'Int-floats: {ni:6}')
+        print(f'Rows: {len(rows)} | '
+              f'Strings: {len(self.strings)} | '
+              f'Integers: {len(self.integers)} | '
+              f'Floats: {len(self.floats) - ni} | '
+              f'Int-floats: {ni}')
 
     def key(self,
             name: str,
