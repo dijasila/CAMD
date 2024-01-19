@@ -1,17 +1,13 @@
 % rebase('base', plotly=False, callback=False)
 <body>
 
-<!-- css temporary override of scroll-behavior: smooth for instant page scroll on refresh --!>
-<style>
-    /* Your existing CSS styles */
-    html, body {
-      scroll-behavior: smooth; /* Optional: Define smooth scroll in your CSS */
-    }
-</style>
 <script>
     // Function to store scroll position in sessionStorage when the anchor is clicked
-    function storeScrollPosition(event) {
-      if (event.target.tagName === 'A') {
+    function storeScrollPosition(event, qualifier) {
+      if (event.target.tagName === 'A' &&  qualifier === 'load') {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+      }
+      if (event.target.tagName === 'BUTTON' &&  qualifier === 'load') {
         sessionStorage.setItem('scrollPosition', window.scrollY);
       }
     }
@@ -37,6 +33,7 @@
     document.addEventListener('DOMContentLoaded', restoreScrollPosition);
 </script>
 
+<!--  Top Navigation Banner/Bar  -->
 <nav class="navbar navbar-expand-md bg-dark border-bottom border-body" data-bs-theme="dark">
   <div class="container-md">
     <a class="navbar-brand"
@@ -53,7 +50,8 @@
   </div>
 </nav>
 
-<div class="container">
+<!--  Database Name/Logo  -->
+<div class="container-fluid col-md-10">
   <div class="row" style="padding-bottom:15px;padding-right:50px">
     <div class="col-lg-9">
       <h1>Computational 2D Materials Database</h1>
@@ -61,46 +59,48 @@
   </div>
 </div>
 
-<div class="container">
+<!--  Search Table Forum  -->
+<div class="container-fluid col-md-10 mb-1">
   <div class="row">
-    <div class="card text-bg-light">
+    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
       <form>
-        <div>
-          <input type="hidden" name="sid" value="{{ session.sid }}">
-          <input class="form-control" type="text" name="filter"
-            value="{{ query.get('filter', '') }}"
-            placeholder="chemical symbol">
-          <button type="submit" class="btn btn-primary">Search</button>
-          <a class="btn btn-info" href="/help" role="button">Help</a>
-        </div>
-        <div>
-          {{ !search }}
-        </div>
+          <input class="shadow-sm form-control"
+                 type="hidden"
+                 name="sid"
+                 value="{{ session.sid }}">
+          <div class="row">
+            <div class="col-7">
+              <div class="input-group">
+                <input class="form-control shadow-sm"
+                   type="text"
+                   name="filter"
+                   value="{{ query.get('filter', '') }}"
+                   placeholder="chemical symbol">
+                <button class="btn btn-primary shadow-sm" type="submit">
+                   Search
+                </button>
+              </div>
+            </div>
+            <div class="col-1">
+              <div class="input-group-append">
+                <button class="btn btn-info shadow-sm ms-2"
+                        type="button" onclick="location.href='/help'">Help
+                </button>
+              </div>
+            </div>
+            <div>
+              {{ !search }}
+            </div>
+          </div>
       </form>
     </div>
   </div>
 </div>
 
-
-<div class="container">
-  <div class="row">
-    <ul class="pagination">
-      % for page, text in pages:
-        % if page != -1:
-          <li class="page-item">
-            <a class="page-link" href="?sid={{ session.sid }}&page={{ page }}">
-              {{ text }}
-            </a>
-          </li>
-        % end
-      % end
-    </ul>
-  </div>
-</div>
-
-<div class="container">
-  <div class="row">
-    <div class="card text-bg-light">
+<!--  Add Column to Search Table Results  -->
+<div class="container-fluid col-md-10">
+  <div class="row col-6 mb-3 pt-1">
+    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
       <form>
         <input type="hidden" name="sid" value="{{ session.sid }}">
         <select name="toggle">
@@ -108,20 +108,23 @@
             <option value="{{ name }}">{{ !value }}</option>
           % end
         </select>
-        <button type="submit">Add column</button>
+        <button type="submit" onclick="storeScrollPosition(event, 'load')">Add column</button>
       </form>
     </div>
   </div>
 </div>
 
-<div class="container">
-  <div class="row">
-    <table class="table table-striped">
-      <thead>
+<!--  Search Result Table  -->
+<div class="container-fluid col-md-10 col-12" >
+  <div class="row card">
+    <table class="table table-hover">
+      <thead class="sticky-top table-light">
         <tr>
           % for name, column in header:
             <th>
-              <a href="?sid={{ session.sid }}&sort={{ name }}" onclick="storeScrollPosition(event)" class="sticky-top">
+              <a href="?sid={{ session.sid }}&sort={{ name }}"
+                 onclick="storeScrollPosition(event, 'load')"
+                 class="sticky-top">
                 {{ !column }}
                 % if name != session.sort:
 
@@ -133,20 +136,26 @@
                   % end
                 % end
               </a>
-              <a href="?sid={{ session.sid }}&toggle={{ name }}" onclick="storeScrollPosition(event)" class="text-decoration-none font-size-sm" style="color:red;font-size: 10px;">
+              <a href="?sid={{ session.sid }}&toggle={{ name }}"
+                 onclick="storeScrollPosition(event, 'load')"
+                 class="text-decoration-none font-size-sm"
+                 style="color:red;font-size: 10px;">
                 &#x274C;
               </a>
             </th>
           % end
         </tr>
       </thead>
-      <tbody>
+      <tbody class="table-responsive">
         % for uid, columns in rows:
-          <tr>
+          <tr style="transform: rotate(0);">
             % for column in columns:
-              <td>
-                <a href=/material/{{ uid }}>{{ !column }}</a>
-              </td>
+              <th scope="row">
+                <a href=/material/{{ uid }} target="_blank" class="stretched-link"
+                   style="text-decoration: none; color: black; font-weight: normal;">
+                  {{ !column }}
+                </a>
+              </th>
             % end
           </tr>
         % end
@@ -154,5 +163,25 @@
     </table>
   </div>
 </div>
+
+<!--  Footer Pagination  -->
+<nav class="bg-dark border-bottom border-body sticky-bottom" data-bs-theme="dark">
+  <div class="container-fluid d-flex flex-column justify-content-center align-items-center">
+    <div class="row">
+      <ul class="pagination mb-1 mt-1">
+        % for page, text in pages:
+          % if page != -1:
+            <li class="page-item">
+              <a class="page-link"
+                 href="?sid={{ session.sid }}&page={{ page }}">
+                {{ text }}
+              </a>
+            </li>
+          % end
+        % end
+      </ul>
+    </div>
+  </div>
+</nav>
 
 </body>
