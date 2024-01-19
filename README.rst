@@ -8,6 +8,7 @@ Web-apps for:
 * BiDB
 * CRYSP
 * QPOD
+* OQMD12345
 
 
 Important links
@@ -21,16 +22,22 @@ Important links
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
-* `CXDB-test <http://fysik-cmr02.fysik.dtu.dk:8081/>`__
+
+
+Test URLs
+---------
+
+* `CXDB-test <https://fysik-cmr02.fysik.dtu.dk:8081/>`__
+* `C2DB-test <https://c2db-test.fysik.dtu.dk/>`__
+* `CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__
+
 
 Installation
 ------------
 
 CxDB-web needs Python_ version 3.9 or later.
 
-.. highlight:: bash
-
-::
+.. code:: bash
 
     $ python -m venv venv
     $ source venv/bin/activate
