@@ -73,9 +73,12 @@ COLUMN2 = """
     &emsp;
 
     <label>Download:</label>
-    <a download="atoms.xyz" href={uid}/download/xyz>XYZ</a>
-    <a download="atoms.cif" href={uid}/download/cif>CIF</a>
-    <a download="atoms.json" href={uid}/download/json>JSON</a>
+    <a download="atoms.xyz"
+       class="btn btn-info btn-sm" href={uid}/download/xyz>XYZ</a>
+    <a download="atoms.cif"
+       class="btn btn-info btn-sm" href={uid}/download/cif>CIF</a>
+    <a download="atoms.json"
+       class="btn btn-info btn-sm" href={uid}/download/json>JSON</a>
 
     <div id='atoms' class='atoms'></div>
     {axes}
