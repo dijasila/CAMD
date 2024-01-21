@@ -23,35 +23,37 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
 
     app = main([f'{name}.db'])
 
-    app.index1(name)
-    for material in app.project_apps[name].materials:
-        app.material(name, material.uid)
-
     app.overview()
     app.favicon()
 
+    papp = app.project_apps[name]
+
+    papp.index()
+    for material in papp.materials:
+        papp.material(material.uid)
+
     if name == 'oqmd123':
-        html = app.material('oqmd123', 'id-1')
+        html = papp.material('id-1')
         assert 'http://oqmd.org' in html
 
-        xyz = app.download('oqmd123', 'id-1', 'xyz')
+        xyz = papp.download('id-1', 'xyz')
         assert 'energy=-27.0' in xyz
 
     if name == 'abs3':
-        app.png('abs3', '1')
+        papp.png('1')
         # Test also when png-files have already been generated:
-        app.material('abs3', '1')
+        papp.material('1')
 
     if name == 'lowdim':
-        app.material('lowdim', 'a1')
+        papp.material('a1')
 
     if name == 'ads1d':
         with boddle(query={'name': 'atoms', 'uid': 'id-1', 'data': '1'}):
-            dct = app.callback('ads1d')
+            dct = papp.callback()
         assert 'data' in dct
 
     if name == 'abx2':
-        mat = app.project_apps['abx2'].materials['1']
+        mat = papp.materials['1']
         gap = mat.KS_gap
         assert isinstance(gap, float)
         with pytest.raises(AttributeError):

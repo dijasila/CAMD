@@ -31,16 +31,7 @@ class CMRProjectsApp:
         self.app.route('/favicon.ico')(self.favicon)
 
         for name, app in project_apps.items():
-            self.app.mount(f'/{name}', app)
-        return
-        self.app.route('/<project_name>')(self.index1)
-        self.app.route('/<project_name>/row/<uid>')(self.material)
-        self.app.route('/<project_name>/callback')(self.callback)
-        self.app.route('/<project_name>/png/<uid>')(self.png)
-
-        for fmt in ['xyz', 'cif', 'json']:
-            self.app.route(f'/<project_name>/<uid>/download/{fmt}')(
-                partial(self.download, fmt=fmt))
+            self.app.mount(f'/{name}', app.app)
 
     def download(self, project_name: str, uid: str, fmt: str):
         return self.project_apps[project_name].download(uid=uid, fmt=fmt)
@@ -59,19 +50,6 @@ class CMRProjectsApp:
              for name, app in sorted(self.project_apps.items())])
         return template('cmr/overview', table=tbl, title='CMR projects')
 
-    def index1(self, project_name: str) -> str:
-        html = self.project_apps[project_name].index()
-        return html.replace('/material/', f'/{project_name}/row/')
-
-    def material(self, project_name: str, uid: str) -> str:
-        html = self.project_apps[project_name].material(uid)
-        html = html.replace('/callback', f'/{project_name}/callback')
-        return html.replace('href="/">Search<',
-                            f'href="/{project_name}">Search<', 1)
-
-    def callback(self, project_name: str):
-        return self.project_apps[project_name].callback()
-
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
@@ -89,12 +67,20 @@ class CMRProjectApp(CXDBApp):
                  title: str,
                  form_parts: list[FormPart]):
         super().__init__(materials, initial_columns)
+        self.name = dbpath.stem
         self.dbpath = dbpath
         self.title = title
         self.form_parts += form_parts
 
-    def route(self) -> None:
-        pass
+    def index(self) -> str:
+        html = super().index()
+        return html.replace('/material/', f'/{self.name}/material/')
+
+    def material(self, uid: str) -> str:
+        html = super().material(uid)
+        html = html.replace('/callback', f'/{self.name}/callback')
+        return html.replace('href="/">Search<',
+                            f'href="/{self.name}">Search<', 1)
 
 
 class CMRAtomsPanel(AtomsPanel):
@@ -154,8 +140,9 @@ def app_from_db(dbpath: Path,
 
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
-    return CMRProjectApp(materials, initial_columns,
-                         dbpath, pd.title, pd.form_parts)
+    return CMRProjectApp(
+        materials, initial_columns,
+        dbpath, pd.title, pd.form_parts)
 
 
 def row2material(row: AtomsRow,
@@ -200,7 +187,9 @@ def main(argv: list[str] | None = None) -> CMRProjectsApp:
         'db_name', nargs='+',
         help='Filename of CMR-project SQLite- database.')
     parser.add_argument('--pickle', action='store_true')
+
     args = parser.parse_args(argv)
+
     project_apps = {}
     for filename in args.db_name:
         path = Path(filename)
@@ -209,6 +198,7 @@ def main(argv: list[str] | None = None) -> CMRProjectsApp:
         project_description = create_project_description(name)
         app = app_from_db(path, project_description)
         project_apps[name] = app
+
         if args.pickle:
             with open(path.with_suffix('.pckl'), 'wb') as fd:
                 pickle.dump(app.materials, fd)
