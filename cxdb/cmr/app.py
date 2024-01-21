@@ -29,6 +29,10 @@ class CMRProjectsApp:
         self.app = Bottle()
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
+
+        for name, app in project_apps.items():
+            self.app.mount(f'/{name}', app)
+        return
         self.app.route('/<project_name>')(self.index1)
         self.app.route('/<project_name>/row/<uid>')(self.material)
         self.app.route('/<project_name>/callback')(self.callback)
