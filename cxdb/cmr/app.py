@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import pickle
 import sys
-from functools import partial
 from math import isfinite
 from pathlib import Path
 from typing import Callable
@@ -33,9 +32,6 @@ class CMRProjectsApp:
         for name, app in project_apps.items():
             self.app.mount(f'/{name}', app.app)
 
-    def download(self, project_name: str, uid: str, fmt: str):
-        return self.project_apps[project_name].download(uid=uid, fmt=fmt)
-
     def overview(self) -> str:
         tbl = table(
             ['Project',
@@ -53,10 +49,6 @@ class CMRProjectsApp:
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
-
-    def png(self, project_name: str, uid: str) -> bytes:
-        app = self.project_apps[project_name]
-        return app.png(uid, f'{project_name}/{uid}.png')
 
 
 class CMRProjectApp(CXDBApp):
