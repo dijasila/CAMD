@@ -40,10 +40,11 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
         assert 'energy=-27.0' in xyz
 
     if name == 'abs3':
-        papp.png('1')
-        # Test also when png-files have already been generated:
-        papp.material('1')
+        papp.png('abs3/bs-1.png')
 
+    # Test also when png-files have already been generated:
+    if name == 'abs3':
+        papp.material('1')
     if name == 'lowdim':
         papp.material('a1')
 

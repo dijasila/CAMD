@@ -73,7 +73,7 @@ def test_callback(c2db):
 
 
 def test_png(c2db):
-    c2db.png('h2', 'dos.png')
+    c2db.png('H2/dos.png')
 
 
 def test_help(c2db):
