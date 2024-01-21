@@ -81,19 +81,22 @@ def plot_convex_hull(data: dict, n_elements: int, uid: str) -> go.Figure:
 
 def plot_2D(df_ref, pd, colors):
     xcoord, energy, _, hull, simplices, xlabel, ylabel = pd.plot2d2()
-
     df_ref['xcoord'] = xcoord
     df_ref['energy'] = energy
     df_ref['hull'] = hull
 
-    figs = []
+    n = len(simplices)
+    x = np.empty(3 * n - 1)
+    y = np.empty(3 * n - 1)
+    i, j = simplices
+    x[::3] = xcoord[i]
+    x[1::3] = xcoord[j]
+    x[2::3] = np.nan
+    y[::3] = energy[i]
+    y[1::3] = energy[j]
+    y[2::3] = np.nan
 
-    for i, j in simplices:
-        fig_temp = px.line(
-            x=xcoord[[i, j]], y=energy[[i, j]], color_discrete_sequence=[colors[2]]
-        )
-        figs.append(fig_temp)
-
+    figs = [go.Scatter(x=x, y=y, mode='lines')]
     delta = energy.ptp() / 30
     ymin = energy.min() - 2.5 * delta
     A, B = pd.symbols
@@ -108,31 +111,32 @@ def plot_2D(df_ref, pd, colors):
         'uid': True,
         'name': True,
     }
-    fig_temp = px.scatter(
-        df_ref,
-        x='xcoord',
-        y='energy',
-        color='legend',
-        symbol='legend',
-        hover_data=hover_data,
-        custom_data=['link'],
-        labels={
-            'xcoord': xlabel_text + ', x',
-            'energy': '\u0394H [eV/atom]',
-            'latexname': 'Formula',
-        },
-        color_discrete_sequence=colors,
-        symbol_sequence=['circle', 'circle-open'],
+
+    fig_temp = go.Scatter(
+        x=xcoord,
+        y=energy,
+        #color='legend',
+        #symbol='legend',
+        #hover_data=hover_data,
+        hovertemplate='%{y}',
+        #custom_data=['link'],
+        #labels={
+        #    'xcoord': xlabel_text + ', x',
+        #    'energy': '\u0394H [eV/atom]',
+        #    'latexname': 'Formula',
+        #},
+        #color_discrete_sequence=colors,
+        #symbol_sequence=['circle', 'circle-open'],
     )
 
     # Set edgecolor to same color as facecolor
-    for data, color in zip(fig_temp.data, colors):
-        data.marker.line.color = color
+    #for data, color in zip(fig_temp.data, colors):
+    #    data.marker.line.color = color
 
     figs.append(fig_temp)
 
     fig = go.Figure(
-        data=sum([fig.data for fig in figs], ()), layout_yaxis_range=[ymin, 0.1]
+        data=figs, layout_yaxis_range=[ymin, 0.1]
     )
 
     #  Highlight materials on the hull with formula and thisrow
