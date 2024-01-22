@@ -3,11 +3,11 @@ CxDB web-apps
 
 Web-apps for:
 
-* old CMR-projects
 * C2DB
+* old CMR-projects
+* QPOD
 * BiDB
 * CRYSP
-* QPOD
 * OQMD12345
 
 
@@ -27,8 +27,18 @@ Important links
 Test URLs
 ---------
 
-* `C2DB-test <https://c2db-test.fysik.dtu.dk/>`__
-* `CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__
+Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
+
+===============================================  ====
+Link                                             port
+===============================================  ====
+`C2DB-test <https://c2db-test.fysik.dtu.dk/>`__  8081
+`CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__  8082
+`QPOD <https://qpod.fysik.dtu.dk/>`__            8083
+`BiDB <https://bidb.fysik.dtu.dk/>`__            8084
+`CRYSP <https://crysp.fysik.dtu.dk/>`__          8085
+`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__  8086
+===============================================  ====
 
 
 Installation
