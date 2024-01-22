@@ -5,9 +5,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
+from cxdb.html import table
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.html import table
 
 HTML = """
 <h4>{title}</h4>
@@ -33,11 +33,14 @@ class Row:
     """Fake row object."""
     def __init__(self, material: Material):
         self.data = Data(material.folder)
-        self.magstate = material.magstate
-        self.has_inversion_symmetry = material.has_inversion_symmetry
-        self.cell = material.atoms.cell
-        self.minhessianeig = 117.0
-        self.evac = material.evac
+        self.__dict__.update(material.columns)
+        self.atoms = material.atoms
+        self.cell = self.atoms.cell
+        self.pbc = self.atoms.pbc
+        self.symbols = self.atoms.symbols
+
+    def toatoms(self):
+        return self.atoms
 
     def get(self, name: str, default=None):
         if hasattr(self, name):
@@ -72,12 +75,14 @@ class ASRPanel(Panel):
         self.result_class = mod.Result
         self.key_descriptions = {
             key: KeyDescription(key, desc)
-            for key, desc in self.result_class.key_descriptions.items()}
+            for key, desc
+            in getattr(self.result_class, 'key_descriptions', {}).items()}
 
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
+        print('+++++++', self.name)
         row = Row(material)
         try:
             dct = row.data.get(f'results-asr.{self.name}.json')
@@ -90,8 +95,10 @@ class ASRPanel(Panel):
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
             for thing in column:
-                html = thing2html(thing, material.folder)
-                columns[i].append(html)
+                # print(thing)
+                if thing is not None:
+                    html = thing2html(thing, material.folder)
+                    columns[i].append(html)
 
         for desc in p.get('plot_descriptions', []):
             paths = [material.folder / filename
@@ -115,7 +122,7 @@ def thing2html(thing: dict, path: Path) -> str:
         filename = thing['filename']
         html = f'<img src="/png/{path}/{filename}" />'
     elif thing['type'] == 'table':
-        html = table(thing['header'], thing['rows'])
+        html = table(thing.get('header'), thing['rows'])
     else:
         raise ValueError
     return html

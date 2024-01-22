@@ -34,13 +34,15 @@ class C2DBAtomsPanel(AtomsPanel):
             energy='Energy [eV]',
             has_inversion_symmetry='Inversion symmetry',
             uid0='Old uid',
-            evac='Vacuum level [eV]')
+            evac='Vacuum level [eV]',
+            minhessianeig='Minimum eigenvalue of Hessian eV/Å²')
         self.columns = list(self.column_names)
 
     def update_data(self, material: Material):
         super().update_data(material)
         data = json.loads((material.folder / 'data.json').read_text())
         for key, value in data.items():
+            print(key, value)
             material.add_column(key, value)
 
 
@@ -56,17 +58,37 @@ def main(root: Path) -> CXDBApp:
             pb.advance(pid)
 
     panels: list[Panel] = [C2DBAtomsPanel()]
-    for name in ['bandstructure',
+    for name in ['stiffness',
                  'phonons',
-                 'bader']:
+                 'deformationpotentials',
+                 'bandstructure',
+                 'pdos',
+                 'effective_masses',
+                 'hse',
+                 'gw',
+                 'borncharges',
+                 'shg',
+                 'polarizability',
+                 'infraredpolarizability',
+                 'raman',
+                 # 'bse',
+                 'bader',
+                 'piezoelectrictensor']:
+        print(name)
         panels.append(ASRPanel(name))
     panels.append(ShiftCurrentPanel())
 
+
     materials = Materials(mlist, panels)
 
-    initial_columns = ['magstate', 'ehull', 'hform', 'gap', 'formula', 'area']
+    initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 
     return CXDBApp(materials, initial_columns, root)
+
+
+def test():
+    app = main(Path())
+    app.material('1MoS2-2')
 
 
 if __name__ == '__main__':

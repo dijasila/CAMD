@@ -31,11 +31,24 @@ from ase.io import read
 from cxdb.panels.asr_panel import read_result_file
 
 RESULT_FILES = [
-    'bandstructure',
+    'stiffness',
     'phonons',
+    'deformationpotentials',
+    'bandstructure',
+    'pdos',
+    'effective_masses',
+    'hse',
+    'gw',
+    'borncharges',
+    'shg',
+    'polarizability',
+    'infraredpolarizability',
+    'raman',
+    'bse',
+    'bader',
+    'piezoelectrictensor',
     'gs',
     'gs@calculate',
-    'bader',
     'shift']
 
 ROOT = Path('/home/niflheim2/cmr/C2DB-ASR')
@@ -95,7 +108,13 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     except FileNotFoundError:  # pragma: no cover
         return
 
+    try:
+        data['minhessianeig'] = rrf('phonons')['minhessianeig']
+    except SyntaxError:#FileNotFoundError:
+        pass
+
     data['energy'] = atoms.get_potential_energy()
+    print(data)
 
     folder.mkdir(exist_ok=False, parents=True)
 
