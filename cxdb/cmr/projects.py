@@ -150,7 +150,7 @@ class ABS3BandStructurePanel(Panel):
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         uid = material.uid
-        path = material.folder / f'abs3/{uid}.png'
+        path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
         if not path.is_file():
             dbpath = material.folder / 'abs3.db'
@@ -159,7 +159,7 @@ class ABS3BandStructurePanel(Panel):
             if not ok:
                 return ('', '')
         return (
-            f'<img alt="BS for {uid}" src="/abs3/png/{uid}" />', '')
+            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />', '')
 
 
 def abs3_bs(d: dict, path: Path) -> bool:

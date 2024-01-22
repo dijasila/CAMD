@@ -121,5 +121,6 @@ class LowDimPanel(Panel):
 
         col1 = table(['Item', ''],
                      materials.table(material, keysfortable2))
-        col2 = f'<img alt="Dim. analysis for {uid}" src="/lowdim/png/{uid}" />'
+        col2 = (f'<img alt="Dim. analysis for {uid}" '
+                f'src="/png/lowdim/{uid}.png" />')
         return HTML.format(col1, col2), ''

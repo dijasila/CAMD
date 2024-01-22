@@ -52,7 +52,7 @@ class CXDBApp:
         self.app.route('/')(self.index)
         self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
-        self.app.route('/png/<uid>/<filename>')(self.png)
+        self.app.route('/png/<path:path>')(self.png)
         self.app.route('/help')(self.help)
 
         for fmt in ['xyz', 'cif', 'json']:
@@ -139,6 +139,5 @@ class CXDBApp:
     def help(self):
         return template('help.html')
 
-    def png(self, uid: str, filename: str) -> bytes:
-        material = self.materials[uid]
-        return static_file(str(material.folder / filename), self.root)
+    def png(self, path: str) -> bytes:
+        return static_file(path, self.root)
