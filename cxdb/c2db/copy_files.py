@@ -110,11 +110,10 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
 
     try:
         data['minhessianeig'] = rrf('phonons')['minhessianeig']
-    except SyntaxError:#FileNotFoundError:
+    except FileNotFoundError:
         pass
 
     data['energy'] = atoms.get_potential_energy()
-    print(data)
 
     folder.mkdir(exist_ok=False, parents=True)
 

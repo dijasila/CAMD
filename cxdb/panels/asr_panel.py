@@ -74,6 +74,7 @@ class ASRPanel(Panel):
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
         self.key_descriptions = {}
+        self.column_names = {}
         for key, desc in getattr(self.result_class,
                                  'key_descriptions', {}).items():
             self.key_descriptions[key] = KeyDescription(key, desc)

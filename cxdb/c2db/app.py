@@ -26,21 +26,16 @@ from cxdb.web import CXDBApp
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
         super().__init__()
-        if 0:
-            self.column_names.update(
-                magstate='Magnetic state',
-                ehull='Energy above convex hull [eV/atom]',
-                hform='Heat of formation [eV/atom]',
-                gap='Band gap (PBE) [eV]',
-                energy='Energy [eV]',
-                has_inversion_symmetry='Inversion symmetry',
-                uid0='Old uid',
-                evac='Vacuum level [eV]',
-                minhessianeig='Minimum eigenvalue of Hessian eV/Å²')
+        self.column_names.update(
+            has_inversion_symmetry='Inversion symmetry',
+            gap='Band gap (PBE) [eV]',
+            evac='Vacuum level [eV]',
+            hform='Heat of formation [eV/atom]',
+            uid0='Old uid',
+            magstate='Magnetic state',
+            ehull='Energy above convex hull [eV/atom]',
+            energy='Energy [eV]')
         self.columns = list(self.column_names)
-
-    def update_data(self, material: Material):
-        super().update_data(material)
 
 
 def main(root: Path) -> CXDBApp:
@@ -56,7 +51,6 @@ def main(root: Path) -> CXDBApp:
             mlist.append(material)
             data = json.loads((f / 'data.json').read_text())
             for key, value in data.items():
-                print(key, value)
                 material.add_column(key, value)
                 keys.add(key)
             pb.advance(pid)
@@ -91,7 +85,7 @@ def main(root: Path) -> CXDBApp:
 
 def test():
     app = main(Path())
-    app.material('1MoS2-2')
+    app.material('1MoS2-1')
 
 
 if __name__ == '__main__':

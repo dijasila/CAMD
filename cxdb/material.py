@@ -108,7 +108,9 @@ class Materials:
             self._materials[material.uid] = material
 
         for panel in panels:
-            assert panel.column_names.keys().isdisjoint(self.column_names)
+            if not panel.column_names.keys().isdisjoint(self.column_names):
+                overlap = panel.column_names.keys() & self.column_names
+                raise ValueError(f'{overlap}')
             self.column_names.update(panel.column_names)
 
         for material in materials:
@@ -121,6 +123,7 @@ class Materials:
              for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
+        print(self.i2uid)
         self.panels = panels
 
     def __iter__(self) -> Generator[Material, None, None]:
