@@ -68,15 +68,17 @@ class Data:
 
 class ASRPanel(Panel):
     """Generic ASR-panel."""
-    def __init__(self, name: str):
+    def __init__(self, name: str, keys: set[str]):
         self.name = name
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
-        self.key_descriptions = {
-            key: KeyDescription(key, desc)
-            for key, desc
-            in getattr(self.result_class, 'key_descriptions', {}).items()}
+        self.key_descriptions = {}
+        for key, desc in getattr(self.result_class,
+                                 'key_descriptions', {}).items():
+            self.key_descriptions[key] = KeyDescription(key, desc)
+            if key in keys:
+                self.column_names[key] = desc
 
     def get_html(self,
                  material: Material,

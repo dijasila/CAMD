@@ -26,35 +26,39 @@ from cxdb.web import CXDBApp
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
         super().__init__()
-        self.column_names.update(
-            magstate='Magnetic state',
-            ehull='Energy above convex hull [eV/atom]',
-            hform='Heat of formation [eV/atom]',
-            gap='Band gap (PBE) [eV]',
-            energy='Energy [eV]',
-            has_inversion_symmetry='Inversion symmetry',
-            uid0='Old uid',
-            evac='Vacuum level [eV]',
-            minhessianeig='Minimum eigenvalue of Hessian eV/Å²')
+        if 0:
+            self.column_names.update(
+                magstate='Magnetic state',
+                ehull='Energy above convex hull [eV/atom]',
+                hform='Heat of formation [eV/atom]',
+                gap='Band gap (PBE) [eV]',
+                energy='Energy [eV]',
+                has_inversion_symmetry='Inversion symmetry',
+                uid0='Old uid',
+                evac='Vacuum level [eV]',
+                minhessianeig='Minimum eigenvalue of Hessian eV/Å²')
         self.columns = list(self.column_names)
 
     def update_data(self, material: Material):
         super().update_data(material)
-        data = json.loads((material.folder / 'data.json').read_text())
-        for key, value in data.items():
-            print(key, value)
-            material.add_column(key, value)
 
 
 def main(root: Path) -> CXDBApp:
     """Create C2DB app."""
     mlist: list[Material] = []
-    files = list(root.glob('A*/*/*/'))
+    folders = list(root.glob('A*/*/*/'))
+    keys = set()
     with progress.Progress() as pb:
-        pid = pb.add_task('Reading matrerials:', total=len(files))
-        for f in files:
+        pid = pb.add_task('Reading matrerials:', total=len(folders))
+        for f in folders:
             uid = f'{f.parent.name}-{f.name}'
-            mlist.append(Material.from_file(f / 'structure.xyz', uid))
+            material = Material.from_file(f / 'structure.xyz', uid)
+            mlist.append(material)
+            data = json.loads((f / 'data.json').read_text())
+            for key, value in data.items():
+                print(key, value)
+                material.add_column(key, value)
+                keys.add(key)
             pb.advance(pid)
 
     panels: list[Panel] = [C2DBAtomsPanel()]
@@ -75,9 +79,8 @@ def main(root: Path) -> CXDBApp:
                  'bader',
                  'piezoelectrictensor']:
         print(name)
-        panels.append(ASRPanel(name))
+        panels.append(ASRPanel(name, keys))
     panels.append(ShiftCurrentPanel())
-
 
     materials = Materials(mlist, panels)
 
