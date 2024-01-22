@@ -78,7 +78,6 @@ class ASRPanel(Panel):
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
-        uid = material.uid
         row = Row(material)
         try:
             dct = row.data.get(f'results-asr.{self.name}.json')
@@ -91,7 +90,7 @@ class ASRPanel(Panel):
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
             for thing in column:
-                html = thing2html(thing, uid)
+                html = thing2html(thing, material.folder)
                 columns[i].append(html)
 
         for desc in p.get('plot_descriptions', []):
@@ -110,11 +109,11 @@ class ASRPanel(Panel):
                 '')
 
 
-def thing2html(thing: dict, uid: str) -> str:
+def thing2html(thing: dict, path: Path) -> str:
     """Convert webpanel() output to HTML."""
     if thing['type'] == 'figure':
         filename = thing['filename']
-        html = f'<img src="/png/{uid}/{filename}" />'
+        html = f'<img src="/png/{path}/{filename}" />'
     elif thing['type'] == 'table':
         html = table(thing['header'], thing['rows'])
     else:
