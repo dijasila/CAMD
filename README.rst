@@ -1,3 +1,4 @@
+=============
 CxDB web-apps
 =============
 
@@ -12,7 +13,7 @@ Web-apps for:
 
 
 Important links
----------------
+===============
 
 * `Bottle <https://bottlepy.org/docs/dev/index.html>`__
 * `Plotly <https://plotly.com/python/>`__
@@ -25,7 +26,7 @@ Important links
 
 
 Test URLs
----------
+=========
 
 Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
 
@@ -42,7 +43,7 @@ Link                                             port
 
 
 Installation
-------------
+============
 
 CxDB-web needs Python_ version 3.9 or later.
 
@@ -62,8 +63,9 @@ CxDB-web needs Python_ version 3.9 or later.
 
 .. _Python: https://python.org/
 
+
 Command-line interface
-----------------------
+======================
 
 usage: cxdb [-h] filename [filename ...]
 
@@ -75,7 +77,7 @@ options:
 
 
 CMR-app for old projects
-------------------------
+========================
 
 ::
 
@@ -83,10 +85,28 @@ CMR-app for old projects
 
 
 C2DB-app
---------
+========
 
 ::
 
     $ python -m cxdb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
-    $ python -m cxdb.c2db.app
+    $ python -m cxdb.c2db.app A*/
 
+
+Testing
+-------
+
+For development work, just copy one or a few meterial folders from Niflheim
+to your local machine::
+
+    $ mkdir C2DB-test
+    $ ssh sylg
+    $ cd /home/niflheim2/cmr/C2DB-ASR/tree/AB2/MoS2
+    $ scp -r MoS2-b3b4685fb6e1 <your-machine>:C2DB-test/
+    $ ^D
+
+Then you can play with those files like this::
+
+    $ cd C2DB-test
+    $ python -m cxdb.c2db.copy_files . "MoS2*/"
+    $ python -m cxdb.c2db.app AB2

@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> CXDBApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('1MoS2-1')
+    app.material('2MoS2-2')
 
 
 if __name__ == '__main__':
