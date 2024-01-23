@@ -60,7 +60,7 @@ def test_collision():
 
     with pytest.raises(ValueError):
         panel = MyPanel()
-        panel.get_html()
+        panel.get_html(1, 2)
         Materials([], [panel])
 
 
