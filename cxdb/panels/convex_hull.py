@@ -72,121 +72,40 @@ def plot_convex_hull(data: dict, n_elements: int, uid: str) -> go.Figure:
     pd = PhaseDiagram(pdrefs, verbose=False)
 
     if n_elements == 2:
-        fig = plot_2D(df_ref, pd, colors)
+        fig = plot_2D(pd)
     else:
         fig = plot_3D(df_ref, pd, colors)
 
     return fig
 
 
-def plot_2D(df_ref, pd, colors):
-    xcoord, energy, _, hull, simplices, xlabel, ylabel = pd.plot2d2()
-    df_ref['xcoord'] = xcoord
-    df_ref['energy'] = energy
-    df_ref['hull'] = hull
+def plot_2D(pd):
+    x, y = pd.points[:, 1:].T
 
-    n = len(simplices)
-    x = np.empty(3 * n - 1)
-    y = np.empty(3 * n - 1)
-    i, j = simplices
-    x[::3] = xcoord[i]
-    x[1::3] = xcoord[j]
-    x[2::3] = np.nan
-    y[::3] = energy[i]
-    y[1::3] = energy[j]
-    y[2::3] = np.nan
+    X = []
+    Y = []
+    for i, j in pd.simplices:
+        X += [x[i], x[j], None]
+        Y += [y[i], y[j], None]
+    data = [go.Scatter(x=X, y=Y, mode='lines')]
 
-    figs = [go.Scatter(x=x, y=y, mode='lines')]
-    delta = energy.ptp() / 30
-    ymin = energy.min() - 2.5 * delta
+    data.append(go.Scatter(
+        x=x,
+        y=y,
+        text=[name for _, _, name, _ in pd.references],
+        hovertemplate=' %{text}: %{y} eV/atom',
+        mode='markers'))
+
+    delta = y.ptp() / 30
+    ymin = y.min() - 2.5 * delta
+    fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
+
     A, B = pd.symbols
-
-    xlabel_text = f'{A}<sub>1-x</sub>{B}<sub>x</sub>'
-
-    hover_data = {
-        'xcoord': True,
-        'energy': ':.2f',
-        'legend': False,
-        'latexname': True,
-        'uid': True,
-        'name': True,
-    }
-
-    fig_temp = go.Scatter(
-        x=xcoord,
-        y=energy,
-        #color='legend',
-        #symbol='legend',
-        #hover_data=hover_data,
-        hovertemplate='%{y}',
-        #custom_data=['link'],
-        #labels={
-        #    'xcoord': xlabel_text + ', x',
-        #    'energy': '\u0394H [eV/atom]',
-        #    'latexname': 'Formula',
-        #},
-        #color_discrete_sequence=colors,
-        #symbol_sequence=['circle', 'circle-open'],
-    )
-
-    # Set edgecolor to same color as facecolor
-    #for data, color in zip(fig_temp.data, colors):
-    #    data.marker.line.color = color
-
-    figs.append(fig_temp)
-
-    fig = go.Figure(
-        data=figs, layout_yaxis_range=[ymin, 0.1]
-    )
-
-    #  Highlight materials on the hull with formula and thisrow
-    materials_with_text = df_ref[df_ref.hull | df_ref.thisrow]
-
-    for row in materials_with_text.itertuples(index=False):
-        fig.add_annotation(
-            x=row.xcoord,
-            y=row.energy,
-            text=row.latexname,
-            xanchor='left',
-            showarrow=False,
-            xshift=10,
-        )
-
-    fig.update_traces(
-        textposition='middle right', marker={'size': 8}, marker_line_width=2
-    )
     fig.update_layout(
-        xaxis_title=xlabel_text,
-        yaxis_title='\u0394H [eV/atom]',
-        yaxis=dict(zerolinecolor='lightgrey'),
-        xaxis=dict(zerolinecolor='lightgrey'),
-        legend=dict(
-            orientation='h',
-            entrywidth=100,
-            yanchor='bottom',
-            y=1.1,
-            xanchor='left',
-            x=0.01,
-            font=dict(size=14),
-        ),
-        margin=dict(t=20, r=20),
-        plot_bgcolor='white',
-    )
+        xaxis_title=f'{A}<sub>1-x</sub>{B}<sub>x</sub>',
+        yaxis_title='ΔH [eV/atom]',
+        template='simple_white')
 
-    fig.update_xaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        gridcolor='lightgrey',
-    )
-    fig.update_yaxes(
-        mirror=True,
-        ticks='outside',
-        showline=True,
-        linecolor='black',
-        gridcolor='lightgrey',
-    )
     return fig
 
 
@@ -347,6 +266,6 @@ if __name__ == '__main__':
         'ehull': 0.0,
         'thermodynamic_stability_level': 3,
     }
-
+    print(data)
     fig = plot_convex_hull(data, 2, 'MoS2-b3b4685fb6e1')
     fig.show()
