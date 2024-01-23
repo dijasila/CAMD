@@ -3,9 +3,10 @@ from pathlib import Path
 
 import pytest
 from ase import Atoms
-
 from cxdb.material import Material, Materials
+from cxdb.panels.asr_panel import Row
 from cxdb.panels.atoms import AtomsPanel
+from cxdb.panels.panel import Panel
 from cxdb.session import Session
 
 
@@ -48,3 +49,20 @@ def test_attribute_error(material):
 
 def test_pickle(material):
     pickle.loads(pickle.dumps(material))
+
+
+def test_collision():
+    class MyPanel(Panel):
+        column_names = {'formula': '...'}
+
+        def get_html(self, material, materials):
+            return '', ''
+
+    with pytest.raises(ValueError):
+        panel = MyPanel()
+        panel.get_html(1, 2)
+        Materials([], [panel])
+
+
+def test_row(material):
+    assert Row(material).toatoms().pbc.all()

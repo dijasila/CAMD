@@ -48,7 +48,8 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.bandstructure.json').write_text(encode(dct))
 
     # Phonons:
-    dct = {'path': kpts,
+    dct = {'minhessianeig': 0.001,
+           'path': kpts,
            'omega_kl': np.zeros((2, 7)),
            'q_qc': np.array([[0, 0, 0], [0, 0.5, 0]]),
            'interp_freqs_kl': np.zeros((5, 7))}

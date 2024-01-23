@@ -9,7 +9,14 @@ def test_c2db(tmp_path):
     create_tree(tmp_path)
     os.chdir(tmp_path)
     copy_materials(tmp_path, ['MoS2*'])
-    app = main(tmp_path)
+
+    app = main(['AB2'])
+    assert len(app.materials) == 1
+    app = main(['AB2/1MoS2'])
+    assert len(app.materials) == 1
+    app = main(['AB2/1MoS2/1'])
+    assert len(app.materials) == 1
+
     app.index()
 
     html = app.material('1MoS2-1')
