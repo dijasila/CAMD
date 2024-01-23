@@ -16,7 +16,7 @@ dependencies = [
     "plotly",
     "ase@git+https://gitlab.com/ase/ase.git",
     "asr@git+https://gitlab.com/asr-dev/asr.git"]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]

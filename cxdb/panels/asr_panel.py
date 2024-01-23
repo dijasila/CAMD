@@ -85,7 +85,6 @@ class ASRPanel(Panel):
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
-        print('+++++++', self.name)
         row = Row(material)
         try:
             dct = row.data.get(f'results-asr.{self.name}.json')

@@ -123,7 +123,6 @@ class Materials:
              for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
-        print(self.i2uid)
         self.panels = panels
 
     def __iter__(self) -> Generator[Material, None, None]:
