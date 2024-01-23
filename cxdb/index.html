@@ -1,6 +1,6 @@
 % rebase('base', plotly=False, callback=False)
 <body>
-
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <script>
     // Function to store scroll position in sessionStorage when the anchor is clicked
     function storeScrollPosition(event, qualifier) {
@@ -139,8 +139,8 @@
               <a href="?sid={{ session.sid }}&toggle={{ name }}"
                  onclick="storeScrollPosition(event, 'load')"
                  class="text-decoration-none font-size-sm"
-                 style="color:red;font-size: 10px;">
-                &#x274C;
+                 style="color:#ea8888;font-size: 10px;">
+                <i class="fa fa-trash-o" style="font-size:18px"></i>
               </a>
             </th>
           % end
