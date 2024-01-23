@@ -51,12 +51,6 @@ CxDB-web needs Python_ version 3.9 or later.
 
     $ python -m venv venv
     $ source venv/bin/activate
-    $ # ASE master:
-    $ pip install --no-deps git+https://gitlab.com/ase/ase.git
-    $ # A minimal ASR installation:
-    $ pip install --no-deps git+https://gitlab.com/asr-dev/asr.git
-    $ pip install click
-    $ And CXDB:
     $ git clone git@gitlab.com:jensj/cxdb-web
     $ pip install -e cxdb-web[test]
 

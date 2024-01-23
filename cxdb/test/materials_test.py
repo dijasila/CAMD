@@ -3,8 +3,8 @@ from pathlib import Path
 
 import pytest
 from ase import Atoms
-
 from cxdb.material import Material, Materials
+from cxdb.panels.asr_panel import Row
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
 from cxdb.session import Session
@@ -59,4 +59,10 @@ def test_collision():
             return '', ''
 
     with pytest.raises(ValueError):
-        Materials([], [MyPanel()])
+        panel = MyPanel()
+        panel.get_html()
+        Materials([], [panel])
+
+
+def test_row(material):
+    assert Row(material).toatoms().pbc.all()
