@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import argparse
+import pickle
 import sys
 from math import isfinite
 from pathlib import Path
@@ -11,10 +13,10 @@ from ase.db.row import AtomsRow
 from bottle import Bottle, static_file, template
 
 from cxdb.cmr.projects import ProjectDescription, create_project_description
+from cxdb.html import FormPart, table
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, table
 from cxdb.web import CXDBApp
 
 CMR = 'https://cmr.fysik.dtu.dk'
@@ -26,11 +28,14 @@ class CMRProjectsApp:
         self.app = Bottle()
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
-        self.app.route('/<project_name>')(self.index1)
-        self.app.route('/<project_name>/row/<uid>')(self.material)
-        self.app.route('/<project_name>/callback')(self.callback)
-        self.app.route('/<project_name>/download')(self.download_db_file)
-        self.app.route('/<project_name>/png/<uid>')(self.png)
+
+        # Pick random project app to use for png and help endpoints:
+        project_app = next(iter(project_apps.values()))
+        self.app.route('/png/<path:path>')(project_app.png)
+        self.app.route('/help')(project_app.help)
+
+        for name, app in project_apps.items():
+            self.app.mount(f'/{name}', app.app)
 
     def overview(self) -> str:
         tbl = table(
@@ -40,35 +45,15 @@ class CMRProjectsApp:
              'Description'],
             [[f'<a href="/{name}">{app.title}</a>',
               len(app.materials),
-              f'<a download="" href="/{name}/download">{name}.db</a>',
+              (f'<a download="{name}.db" ' +
+               f'href="{CMR}/_downloads/{name}.db">{name}.db</a>'),
               f'<a href="{CMR}/{name}/{name}.html">{name}</a>']
              for name, app in sorted(self.project_apps.items())])
         return template('cmr/overview', table=tbl, title='CMR projects')
 
-    def index1(self, project_name: str) -> str:
-        html = self.project_apps[project_name].index()
-        return html.replace('/material/', f'/{project_name}/row/')
-
-    def material(self, project_name: str, uid: str) -> str:
-        html = self.project_apps[project_name].material(uid)
-        html = html.replace('/callback', f'/{project_name}/callback')
-        return html.replace('href="/">Search<',
-                            f'href="/{project_name}">Search<', 1)
-
-    def callback(self, project_name: str):
-        return self.project_apps[project_name].callback()
-
-    def download_db_file(self, project_name: str) -> bytes:
-        path = self.project_apps[project_name].dbpath
-        return static_file(path.name, path.parent)
-
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
-
-    def png(self, project_name: str, uid: str) -> bytes:
-        app = self.project_apps[project_name]
-        return app.png(uid, f'{project_name}/{uid}.png')
 
 
 class CMRProjectApp(CXDBApp):
@@ -79,15 +64,20 @@ class CMRProjectApp(CXDBApp):
                  title: str,
                  form_parts: list[FormPart]):
         super().__init__(materials, initial_columns)
+        self.name = dbpath.stem
         self.dbpath = dbpath
         self.title = title
         self.form_parts += form_parts
 
-    def index(self, query: dict | None = None) -> str:
-        return super().index()
+    def index(self) -> str:
+        html = super().index()
+        return html.replace('/material/', f'/{self.name}/material/')
 
-    def route(self) -> None:
-        pass
+    def material(self, uid: str) -> str:
+        html = super().material(uid)
+        html = html.replace('/callback', f'/{self.name}/callback')
+        return html.replace('href="/">Search<',
+                            f'href="/{self.name}">Search<', 1)
 
 
 class CMRAtomsPanel(AtomsPanel):
@@ -125,23 +115,31 @@ def app_from_db(dbpath: Path,
                 project_description: ProjectDescription) -> CMRProjectApp:
     pd = project_description
     root = dbpath.parent
-    rows = []
-    db = connect(dbpath)
-    with progress.Progress() as pb:
-        pid = pb.add_task('Processing rows:', total=len(db))
-        for row in db.select():
-            rows.append(row2material(row, pd, root))
-            pb.advance(pid)
+    pickle_file = dbpath.with_suffix('.pckl')
+    if pickle_file.is_file():
+        with open(pickle_file, 'rb') as fd:
+            materials = pickle.load(fd)
+    else:
+        rows = []
+        db = connect(dbpath)
+        with progress.Progress() as pb:
+            pid = pb.add_task('Reading rows:', total=len(db))
+            for row in db.select():
+                rows.append(row2material(row, pd, root))
+                pb.advance(pid)
 
-    panels: list[Panel] = [CMRAtomsPanel(pd.column_names,
-                                         pd.create_column_one,
-                                         pd.create_column_two)]
-    panels += pd.panels
-    materials = Materials(rows, panels)
+        panels: list[Panel] = [
+            CMRAtomsPanel(pd.column_names,
+                          pd.create_column_one,
+                          pd.create_column_two)]
+        panels += pd.panels
+        materials = Materials(rows, panels)
+
     initial_columns = [name for name in pd.initial_columns
                        if name in materials.column_names]
-    return CMRProjectApp(materials, initial_columns,
-                         dbpath, pd.title, pd.form_parts)
+    return CMRProjectApp(
+        materials, initial_columns,
+        dbpath, pd.title, pd.form_parts)
 
 
 def row2material(row: AtomsRow,
@@ -169,8 +167,9 @@ def row2material(row: AtomsRow,
         value = row.get(name)
         if value is not None:
             if isinstance(value, int) and pd.column_names[name][-1] == ']':
-                # An integer with a unit!  (column description is
-                # something like "Description ... [unit]")
+                # Column description is something like
+                # "Description ... [unit]".  This means we
+                # have an integer with a unit!
                 value = float(value)
             elif isinstance(value, float) and not isfinite(value):
                 continue
@@ -179,9 +178,17 @@ def row2material(row: AtomsRow,
     return material
 
 
-def main(filenames: list[str]) -> CMRProjectsApp:
+def main(argv: list[str] | None = None) -> CMRProjectsApp:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'db_name', nargs='+',
+        help='Filename of CMR-project SQLite- database.')
+    parser.add_argument('--pickle', action='store_true')
+
+    args = parser.parse_args(argv)
+
     project_apps = {}
-    for filename in filenames:
+    for filename in args.db_name:
         path = Path(filename)
         print(path)
         name = path.stem
@@ -189,8 +196,13 @@ def main(filenames: list[str]) -> CMRProjectsApp:
         app = app_from_db(path, project_description)
         project_apps[name] = app
 
+        if args.pickle:
+            with open(path.with_suffix('.pckl'), 'wb') as fd:
+                pickle.dump(app.materials, fd)
+
     return CMRProjectsApp(project_apps)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:]).app.run(host='0.0.0.0', port=8081, debug=True)
+    app = main(sys.argv[1:])
+    app.app.run(host='0.0.0.0', port=8082, debug=True)

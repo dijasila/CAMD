@@ -3,15 +3,16 @@ from __future__ import annotations
 from collections.abc import Container
 from math import nan
 from pathlib import Path
-from typing import Any, Sequence, Generator
+from typing import Sequence, Generator
 
 from ase import Atoms
 from ase.io import read
 
-from cxdb.filter import Index, parse
+from cxdb.filter import Index, parse, ColVal
 from cxdb.paging import get_pages
 from cxdb.panels.panel import Panel
 from cxdb.session import Session
+from cxdb.utils import formula_dict_to_strings, fft
 
 
 class Material:
@@ -33,20 +34,20 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
-        formula = self.atoms.symbols.formula.convert('periodic')
-        s11y, reduced, _ = formula.stoichiometry()
+        self.columns: dict[str, ColVal] = {'uid': uid}
+        self._html_reprs: dict[str, str] = {'uid': uid}
 
-        self._count: dict[str, int] = formula.count()
+        # Get number-of-atoms dicts:
+        self._count, reduced, stoichiometry = fft(atoms.numbers)
+        f1, html1 = formula_dict_to_strings(self._count)
+        f2, html2 = formula_dict_to_strings(reduced)
+        f3, html3 = formula_dict_to_strings(stoichiometry)
 
-        self._values: dict[str, bool | int | float | str] = {}
-        self._html_reprs: dict[str, str] = {}
+        self.add_column('formula', f1, html1)
+        self.add_column('reduced_formula', f2, html2)
+        self.add_column('stoichiometry', f3, html3)
 
-        self.add_column('formula', formula.format(), formula.format('html'))
-        self.add_column('reduced_formula',
-                        reduced.format(), reduced.format('html'))
-        self.add_column('stoichiometry', s11y.format(), s11y.format('html'))
         self.add_column('nspecies', len(self._count))
-        self.add_column('uid', uid)
 
     @classmethod
     def from_file(cls, file: Path, uid: str) -> Material:
@@ -61,8 +62,8 @@ class Material:
                    update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
         if not update:
-            assert name not in self._values, (name, self._values)
-        self._values[name] = value
+            assert name not in self.columns, name
+        self.columns[name] = value
         if html is None:
             if isinstance(value, float):
                 html = f'{value:.3f}'
@@ -70,12 +71,10 @@ class Material:
                 html = str(value)
         self._html_reprs[name] = html
 
-    def __getattr__(self, name: str) -> Any:
-        """Get data by attribute."""
-        if name not in self._values:
-            raise AttributeError(f'Material object has no attribute {name!r}')
-
-        return self._values[name]
+    def __getattr__(self, name):
+        if name.startswith('_') or name not in self.columns:
+            raise AttributeError(name)
+        return self.columns[name]
 
     def __getitem__(self, name: str) -> str:
         """Get HTML string for data."""
@@ -87,7 +86,7 @@ class Material:
 
     def check_columns(self, column_names: Container[str]) -> None:
         """Make sure we don't have unknown columns."""
-        for name in self._values:
+        for name in self._html_reprs:
             assert name in column_names, name
 
 
@@ -115,8 +114,11 @@ class Materials:
         for material in materials:
             material.check_columns(self.column_names)
 
-        self.index = Index([(mat.reduced_formula, mat._count, mat._values)
-                            for mat in self._materials.values()])
+        self.index = Index(
+            [(mat.reduced_formula,
+              mat._count,
+              mat.columns)
+             for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
@@ -145,7 +147,7 @@ class Materials:
               columns: list[str]) -> list[tuple[str, str]]:
         return [(self.column_names[name], material[name])
                 for name in columns
-                if name in material._values]
+                if name in material.columns]
 
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]

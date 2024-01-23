@@ -3,11 +3,12 @@ CxDB web-apps
 
 Web-apps for:
 
-* old CMR-projects
 * C2DB
+* old CMR-projects
+* QPOD
 * BiDB
 * CRYSP
-* QPOD
+* OQMD12345
 
 
 Important links
@@ -21,16 +22,31 @@ Important links
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
-* `CXDB-test <http://fysik-cmr02.fysik.dtu.dk:8081/>`__
+
+
+Test URLs
+---------
+
+Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
+
+===============================================  ====
+Link                                             port
+===============================================  ====
+`C2DB-test <https://c2db-test.fysik.dtu.dk/>`__  8081
+`CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__  8082
+`QPOD <https://qpod.fysik.dtu.dk/>`__            8083
+`BiDB <https://bidb.fysik.dtu.dk/>`__            8084
+`CRYSP <https://crysp.fysik.dtu.dk/>`__          8085
+`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__  8086
+===============================================  ====
+
 
 Installation
 ------------
 
 CxDB-web needs Python_ version 3.9 or later.
 
-.. highlight:: bash
-
-::
+.. code:: bash
 
     $ python -m venv venv
     $ source venv/bin/activate
@@ -41,7 +57,7 @@ CxDB-web needs Python_ version 3.9 or later.
     $ pip install click
     $ And CXDB:
     $ git clone git@gitlab.com:jensj/cxdb-web
-    $ pip install -e cxdb-web
+    $ pip install -e cxdb-web[test]
 
 
 .. _Python: https://python.org/

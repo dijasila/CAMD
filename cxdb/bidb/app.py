@@ -10,7 +10,7 @@ from ase.formula import Formula
 from cxdb.material import Material, Materials
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
-from cxdb.utils import table
+from cxdb.html import table
 from cxdb.web import CXDBApp
 
 
@@ -123,4 +123,4 @@ def main(root: Path) -> CXDBApp:
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8083, debug=True)

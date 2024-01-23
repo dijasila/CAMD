@@ -17,7 +17,7 @@ from ase.db import connect
 from cxdb.cmr.lowdim import LowDimPanel, keysfortable0
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import FormPart, Input, Range, Select, table, RangeX, RangeS
+from cxdb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -57,13 +57,6 @@ class ProjectDescription:
 
     def create_column_two(self, material: Material, materials: Materials):
         return '', ''
-
-
-def convert_int_to_str(material: Material, name: str) -> None:
-    """Avoid large integer-index in Index object."""
-    val = getattr(material, name, None)
-    if val is not None:
-        material.add_column(name, str(val), update=True)
 
 
 @project('solar')
@@ -157,7 +150,7 @@ class ABS3BandStructurePanel(Panel):
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
         uid = material.uid
-        path = material.folder / f'abs3/{uid}.png'
+        path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
         if not path.is_file():
             dbpath = material.folder / 'abs3.db'
@@ -166,7 +159,7 @@ class ABS3BandStructurePanel(Panel):
             if not ok:
                 return ('', '')
         return (
-            f'<img alt="BS for {uid}" src="/abs3/png/{uid}" />', '')
+            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />', '')
 
 
 def abs3_bs(d: dict, path: Path) -> bool:
@@ -405,10 +398,6 @@ class MPGLLBSCProjectDescription(ProjectDescription):
         'volume', 'charge', 'magmom',
         'gllbsc_dir_gap', 'gllbsc_ind_gap', 'mpid']
 
-    def postprocess(self, material: Material):
-        convert_int_to_str(material, 'mpid')
-        convert_int_to_str(material, 'icsd_id')
-
 
 @project('oqmd123')
 class OQMD123ProjectDescription(ProjectDescription):
@@ -465,9 +454,6 @@ class PVPECOQMDProjectDescription(ProjectDescription):
         'formula', 'lattice', 'spacegroup',
         'GLLB_ind', 'GLLB_dir', 'Dxc', 'PBE_gap',
         'defect_tolerant', 'magnetic', 'icsd', 'm_e', 'm_h']
-
-    def postprocess(self, material: Material):
-        convert_int_to_str(material, 'icsd')
 
 
 @project('imp2d')
@@ -586,10 +572,6 @@ class BiDBProjectDescription(ProjectDescription):
                ['', 'Stable']),
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
-
-    def postprocess(self, material: Material):
-        convert_int_to_str(material, 'icsd_id')
-        convert_int_to_str(material, 'cod_id')
 
     def create_column_one(self,
                           material: Material,
@@ -715,9 +697,6 @@ class LowDimProjectDescription(ProjectDescription):
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
 
-    def postprocess(self, material: Material):
-        convert_int_to_str(material, 'dbid')
-
     def create_column_one(self,
                           material: Material,
                           materials: Materials) -> tuple[str, str]:
@@ -780,9 +759,6 @@ class C1DBProjectDescription(ProjectDescription):
                ['', 'True', 'False'], ['All', 'Yes', 'No']),
         RangeX('Band gap range [eV]', 'xc',
                ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
-
-    def postprocess(self, material: Material):
-        convert_int_to_str(material, 'derived_from')
 
     def create_column_one(self, material, materials):
         rows = materials.table(material, self.column_names)

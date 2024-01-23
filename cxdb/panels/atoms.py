@@ -33,7 +33,7 @@ from scipy.spatial import ConvexHull
 
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
-from cxdb.utils import table
+from cxdb.html import table
 
 HTML = """
 <h4>{formula}</h4>
@@ -47,16 +47,43 @@ HTML = """
 </div>
 """
 
+
+def default_repeat(material):
+    cell_cv = material.atoms.cell
+    pbc_c = material.atoms.get_pbc()
+    if not np.any(pbc_c):
+        return 1
+    V = np.abs(np.linalg.det(cell_cv[pbc_c][:, pbc_c]))
+    return min(4, int(np.round(15 / V**(1 / np.sum(pbc_c)))))
+
+
+def repeat_options(selected, maximum):
+    return "".join([f'<option value="{value}"'
+                    f'{" selected" if value == selected else ""}>'
+                    f'{value}</option>'
+                    for value in range(1, maximum + 1)])
+
+
 COLUMN2 = """
     <label>Repeat:</label>
     <select onchange="cb(this.value, 'atoms', '{uid}')">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3" selected>3</option>
+    {options}
     </select>
+
+    &emsp;
+
+    <label>Download:</label>
+    <a download="atoms.xyz"
+       class="btn btn-info btn-sm" href={uid}/download/xyz>XYZ</a>
+    <a download="atoms.cif"
+       class="btn btn-info btn-sm" href={uid}/download/cif>CIF</a>
+    <a download="atoms.json"
+       class="btn btn-info btn-sm" href={uid}/download/json>JSON</a>
+
     <div id='atoms' class='atoms'></div>
     {axes}
 """
+
 
 FOOTER = """
 <script type='text/javascript'>
@@ -109,16 +136,18 @@ class AtomsPanel(Panel):
     def create_column_two(self,
                           material: Material,
                           materials: Materials) -> tuple[str, str]:
+        defrep = default_repeat(material)
         return (
             COLUMN2.format(
                 axes=self.axes(material),
+                options=repeat_options(defrep, 4),
                 uid=material.uid),
-            FOOTER.format(atoms_json=self.plot(material, 3)))
+            FOOTER.format(atoms_json=self.plot(material, defrep)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms
         tbl1 = table(
-            ['Axis', 'x [Å]', 'y [Å]', 'y [Å]', 'Periodic'],
+            ['Axis', 'x [Å]', 'y [Å]', 'z [Å]', 'Periodic'],
             [[i + 1, *[f'{x:.3f}' for x in axis], 'Yes' if p else 'No']
              for i, (axis, p) in enumerate(zip(atoms.cell, atoms.pbc))])
         C = atoms.cell.cellpar()
@@ -145,6 +174,20 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
             [nan, nan, nan], [1, 1, 0], [1, 1, 1]]
 
 
+def get_bonds(atoms):
+    i, j, D, S = neighbor_list('ijDS', atoms,
+                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+
+    # For bonds inside the cell (i.e., cell displacement S==(0, 0, 0)),
+    # bonds are double-counted.  This mask un-doublecounts them:
+    doublecount_mask = (i < j) | S.any(1)
+    i = i[doublecount_mask]
+    j = j[doublecount_mask]
+    D = D[doublecount_mask]
+    S = S[doublecount_mask]
+    return i, j, D, S
+
+
 def plot_atoms(atoms: Atoms,
                unitcell: np.ndarray | None = None) -> go.Figure:
     """Ball and stick plotly figure."""
@@ -162,28 +205,34 @@ def plot_atoms(atoms: Atoms,
         data.append(mesh)
 
     # Bonds:
+    i, j, D, S = get_bonds(atoms)
     p = atoms.positions
-    i, j, D, S = neighbor_list('ijDS', atoms,
-                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+
     xyz = np.empty((3, len(i) * 3))
     xyz[:, 0::3] = p[i].T
     D[S.any(1)] *= 0.5
     xyz[:, 1::3] = (p[i] + D).T
     xyz[:, 2::3] = np.nan
+
     x, y, z = xyz
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
+                             line=dict(color='grey', width=10),
+                             showlegend=False))
 
     # Unit cell:
     if unitcell is None:
         unitcell = atoms.cell
     x, y, z = (UNITCELL @ unitcell).T
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines'))
+    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
+                             line=dict(color='#fa9fb5', width=6),
+                             showlegend=False))
 
     fig = go.Figure(data=data)
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     fig.update_xaxes(showgrid=False)
     fig.update_layout(template='simple_white')
-    fig.update_scenes(aspectmode='data')
+    fig.update_scenes(aspectmode='data',
+                      camera=dict(projection=dict(type='orthographic')))
     return fig
 
 
@@ -244,7 +293,16 @@ SPHERE_POINTS = np.array(
 @cache
 def triangulate_sphere() -> np.ndarray:
     hull = ConvexHull(SPHERE_POINTS)
-    return hull.simplices.copy()
+    tri_tv = hull.simplices.copy()
+
+    # Make sure surface normals are pointing out from the sphere surface
+    tri_tvc = SPHERE_POINTS[tri_tv]
+    n_tc = np.cross(tri_tvc[:, 1, :] - tri_tvc[:, 0, :],
+                    tri_tvc[:, 2, :] - tri_tvc[:, 0, :])
+    flip_n = np.sum(n_tc * tri_tvc[:, 0, :], axis=1) < 0
+    tri_tv[flip_n, 1], tri_tv[flip_n, 2] = tri_tv[flip_n, 2], tri_tv[flip_n, 1]
+
+    return tri_tv
 
 
 @cache

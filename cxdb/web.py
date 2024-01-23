@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import sys
+from functools import partial
+from io import BytesIO, StringIO
 from pathlib import Path
 
-from bottle import Bottle, request, template, TEMPLATE_PATH, static_file
+from ase.io import write
+from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
+from cxdb.html import FormPart, Select
 from cxdb.material import Materials
 from cxdb.session import Sessions
-from cxdb.utils import Select, FormPart
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -49,8 +52,27 @@ class CXDBApp:
         self.app.route('/')(self.index)
         self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
-        self.app.route('/png/<uid>/<filename>')(self.png)
+        self.app.route('/png/<path:path>')(self.png)
         self.app.route('/help')(self.help)
+
+        for fmt in ['xyz', 'cif', 'json']:
+            self.app.route(f'/material/<uid>/download/{fmt}')(
+                partial(self.download, fmt=fmt))
+
+    def download(self, uid: str, fmt: str) -> bytes | str:
+        ase_fmt = fmt
+
+        if fmt == 'xyz':
+            # Only the extxyz writer includes cell, pbc etc.
+            ase_fmt = 'extxyz'
+
+        # (Can also query ASE's IOFormat for whether bytes or str,
+        # in fact, ASE should make this easier.)
+        buf: BytesIO | StringIO = BytesIO() if fmt == 'cif' else StringIO()
+
+        atoms = self.materials[uid].atoms
+        write(buf, atoms, format=ase_fmt)
+        return buf.getvalue()
 
     def index(self) -> str:
         """Page showing table of selected materials."""
@@ -117,6 +139,5 @@ class CXDBApp:
     def help(self):
         return template('help.html')
 
-    def png(self, uid: str, filename: str) -> bytes:
-        material = self.materials[uid]
-        return static_file(str(material.folder / filename), self.root)
+    def png(self, path: str) -> bytes:
+        return static_file(path, self.root)

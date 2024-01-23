@@ -2,47 +2,59 @@ import os
 from pathlib import Path
 
 import pytest
+from boddle import boddle
 from cxdb.cmr.app import main
 from cxdb.cmr.projects import abs3_bs, create_project_description, projects
 from cxdb.test.cmr import create_db_file
-from boddle import boddle
+
+
+@pytest.fixture
+def in_tmp_path(tmp_path):
+    orig_cwd = os.getcwd()
+    os.chdir(tmp_path)
+    yield
+    os.chdir(orig_cwd)
 
 
 @pytest.mark.parametrize('project_name', projects)
-def test_cmr(tmp_path, project_name):
+def test_cmr(in_tmp_path, tmp_path, project_name):
     name = project_name
-    os.chdir(tmp_path)
     create_db_file(project_name, tmp_path)
 
     app = main([f'{name}.db'])
 
-    app.index1(name)
-    for material in app.project_apps[name].materials:
-        app.material(name, material.uid)
-
     app.overview()
     app.favicon()
 
+    papp = app.project_apps[name]
+
+    papp.index()
+    for material in papp.materials:
+        papp.material(material.uid)
+
     if name == 'oqmd123':
-        html = app.material('oqmd123', 'id-1')
+        html = papp.material('id-1')
         assert 'http://oqmd.org' in html
 
-    if name == 'abs3':
-        app.download_db_file('abs3')
-        app.png('abs3', '1')
-        # Test also when png-files have already been generated:
-        app.material('abs3', '1')
+        xyz = papp.download('id-1', 'xyz')
+        assert 'energy=-27.0' in xyz
 
+    if name == 'abs3':
+        papp.png('abs3/bs-1.png')
+
+    # Test also when png-files have already been generated:
+    if name == 'abs3':
+        papp.material('1')
     if name == 'lowdim':
-        app.material('lowdim', 'a1')
+        papp.material('a1')
 
     if name == 'ads1d':
         with boddle(query={'name': 'atoms', 'uid': 'id-1', 'data': '1'}):
-            dct = app.callback('ads1d')
+            dct = papp.callback()
         assert 'data' in dct
 
     if name == 'abx2':
-        mat = app.project_apps['abx2'].materials['1']
+        mat = papp.materials['1']
         gap = mat.KS_gap
         assert isinstance(gap, float)
         with pytest.raises(AttributeError):
@@ -56,3 +68,14 @@ def test_pd():
 def test_abs3():
     assert not abs3_bs({}, Path())
     assert not abs3_bs({'X': [1, 2], 'names': 'ABC'}, Path())
+
+
+def test_pickle(in_tmp_path, tmp_path):
+    create_db_file('abs3', tmp_path)
+    app1 = main(['abs3.db', '--pickle'])
+    (tmp_path / 'abs3.db').unlink()
+    assert (tmp_path / 'abs3.pckl').is_file()
+    app2 = main(['abs3.db'])
+    n1 = len(app1.project_apps['abs3'].materials)
+    n2 = len(app2.project_apps['abs3'].materials)
+    assert n1 == n2 == 2
