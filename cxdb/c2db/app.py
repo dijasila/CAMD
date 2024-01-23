@@ -10,11 +10,11 @@ Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
 """
 from __future__ import annotations
 
+import argparse
 import json
 from pathlib import Path
 
 import rich.progress as progress
-
 from cxdb.material import Material, Materials
 from cxdb.panels.asr_panel import ASRPanel
 from cxdb.panels.atoms import AtomsPanel
@@ -38,10 +38,26 @@ class C2DBAtomsPanel(AtomsPanel):
         self.columns = list(self.column_names)
 
 
-def main(root: Path) -> CXDBApp:
+def main(argv: list[str] | None = None) -> CXDBApp:
     """Create C2DB app."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        'path', nargs='+',
+        help='Path to tree.  Examples: "AB2" (same as "AB2/*/*"), '
+        '"AB2/1MoS2" (same as "AB2/1MoS2/*/") or "AB2/1MoS2/1".')
+    args = parser.parse_args(argv)
+
     mlist: list[Material] = []
-    folders = list(root.glob('A*/*/*/'))
+    folders = []
+    for path in args.path:
+        p = Path(path)
+        if p.name.startswith('A'):
+            folders += list(p.glob('*/*/'))
+        elif p.name.isdigit():
+            folders.append(p)
+        else:
+            folders += list(p.glob('*/'))
+
     keys = set()
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
@@ -80,13 +96,14 @@ def main(root: Path) -> CXDBApp:
 
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 
+    root = folders[0].parent.parent.parent
     return CXDBApp(materials, initial_columns, root)
 
 
-def test():
-    app = main(Path())
+def test():  # pragma: no cover
+    app = main(['AB2'])
     app.material('1MoS2-1')
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    main().app.run(host='0.0.0.0', port=8081, debug=True)
