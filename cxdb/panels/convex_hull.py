@@ -4,6 +4,7 @@ from pathlib import Path
 from cxdb.panels.asr_panel import read_result_file
 from cxdb.material import Material, Materials
 from cxdb.panels.panel import Panel
+from cxdb.html import table, image
 
 from ase.phasediagram import PhaseDiagram
 from ase.formula import Formula
@@ -12,74 +13,71 @@ import plotly.express as px
 import pandas
 
 HTML = """
-<img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
+<div class="row">
+  <div class="col-6">
+    <div id='chull' class='chull'></div>
+  </div>
+  <div class="col-6">
+    {table}
+  </div>
+</div>
+"""
+
+FOOTER = """
+<script type='text/javascript'>
+var graphs = {chull_json};
+Plotly.newPlot('chull', graphs, {{}});
+</script>
 """
 
 
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
-    def get_html(self, material: Material, materials: Materials) -> tuple[str, str]:
+    def get_html(self,
+                 material: Material,
+                 materials: Materials) -> tuple[str, str]:
         result_file = material.folder / 'results-asr.convex_hull.json'
-        n_elements = len(set(material.atoms.get_atomic_numbers()))
-        uid = material.uid
         if not result_file.is_file():
-            return ('', '')
-        self.make_figures(result_file, n_elements, uid)
-        return (HTML.format(uid=material.uid), '')
+            return '', ''
+        chull, tbl = self.make_figure_and_table(result_file, material)
+        html = HTML.format(table=tbl)
+        if chull:
+            return (html, FOOTER.format(chull_json=chull))
+        return html, ''
 
-    def make_figures(self, result_file: Path, n_elements: int, uid: str):
+    def make_figure_and_table(self,
+                              result_file: Path,
+                              material: Material) -> tuple[str, str]:
         data = read_result_file(result_file)
-        plot_convex_hull(data)
+        references = []
+        extra_info = []
+        for ref in data['references']:
+            references.append(
+                (ref['formula'],
+                 ref['hform'] * ref['natoms']))
+            extra.append((
+                 ref['uid'],
+                 ref['title'])
+
+        if 2 <= material.nspecies <= 3:
+            pd = PhaseDiagram([(formula, energy * natoms)
+                               for formula, energy, natom, uid, source
+                               in references])
+            if material.nspecies == 2:
+                fig = plot_2d_convex_hull(pd, extra)
+            else:
+                1 / 0
+            chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        else:
+            chull = ''
+
+        tbl = ''  # table()
+        return chull, tbl
 
 
-def plot_convex_hull(data: dict, n_elements: int, uid: str) -> go.Figure:
-    colors = px.colors.qualitative.D3
-
-    if not (2 <= n_elements <= 3):
-        return
-
-    references = data['references']
-
-    df_ref = pandas.DataFrame(references)
-
-    df_ref['thisrow'] = df_ref.apply(
-        lambda x: True if x['uid'] == uid else False, axis=1
-    )
-
-    names = [ref['label'] for ref in references]
-    latexnames = [
-        format(Formula(name.split(' ')[0]).reduce()[0], 'html') for name in names
-    ]
-
-    df_ref['latexname'] = latexnames
-
-    # Highlight this material by making it bold
-    name_column_to_plot = 'latexname'
-    try:
-        df_ref.loc[df_ref['thisrow'], name_column_to_plot] = (
-            '<b>' + df_ref[df_ref['thisrow']][name_column_to_plot].values[0] + '</b>'
-        )
-    except IndexError:
-        pass
-
-    pdrefs = []
-
-    for reference in references:
-        h = reference['natoms'] * reference['hform']
-        pdrefs.append((reference['formula'], h))
-
-    pd = PhaseDiagram(pdrefs, verbose=False)
-
-    if n_elements == 2:
-        fig = plot_2D(pd)
-    else:
-        fig = plot_3D(df_ref, pd, colors)
-
-    return fig
-
-
-def plot_2D(pd):
+def plot_2d_convex_hull(pd: PhaseDiagram,
+                        extra: list[tuple[str, float, str]]) -> go.Figure:
     x, y = pd.points[:, 1:].T
 
     X = []
@@ -91,6 +89,13 @@ def plot_2D(pd):
 
     data.append(go.Scatter(
         x=x,
+        y=y,
+        text=[name for _, _, name, _ in pd.references],
+        hovertemplate=' %{text}: %{y} eV/atom',
+        mode='markers'))
+
+    data.append(go.Scatter(
+        x=,
         y=y,
         text=[name for _, _, name, _ in pd.references],
         hovertemplate=' %{text}: %{y} eV/atom',
@@ -229,7 +234,7 @@ if __name__ == '__main__':
                 'formula': 'Mo',
                 'uid': 'Mo',
                 'natoms': 1,
-                'title': 'Bulk crystals (from OQMD123)',
+                'title':
                 'legend': 'Bulk crystals',
                 'name': 'Mo',
                 'label': 'Mo',

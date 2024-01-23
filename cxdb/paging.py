@@ -1,10 +1,10 @@
 def get_pages(page: int,
               nrows: int,
               limit: int = 25,
-              extra: int = 2) -> list[tuple[int, str]]:
+              pad: int = 2) -> list[tuple[int, str]]:
     """Paging button helper.
 
-    >>> for p in get_pages(1, 100, 9):
+    >>> for p in get_pages(5, 100, 9, 1):
     ...     print(p)
     (0, 'previous')
     (2, 'next')
@@ -17,9 +17,9 @@ def get_pages(page: int,
     (11, '100-100')
     """
     npages = nrows // limit + 1
-    pages = set(range(extra))
-    pages.update(range(page - extra, page + extra + 1))
-    pages.update(range(npages - extra, npages))
+    pages = set(range(pad))
+    pages.update(range(page - pad, page + pad + 1))
+    pages.update(range(npages - pad, npages))
     buttons = [(max(page - 1, 0), 'previous'),
                (min(page + 1, npages - 1), 'next')]
     prev = -1

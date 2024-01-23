@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+from pathlib import Path
 from typing import Iterable, Sequence
 
 
@@ -48,6 +49,10 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
             '\n   '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
         '\n  </tr>\n </tbody>\n</table>')
+
+
+def image(path: Path, alt=None) -> str:
+    return f'<img alt="{alt or path}" src="/png/{path}" />'
 
 
 class FormPart(abc.ABC):
