@@ -123,9 +123,8 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     for name in RESULT_FILES:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
-            data = result.read_bytes()
             with gzip.open(folder / (result.name + '.gz'), 'w') as fd:
-                fd.write(data)
+                fd.write(result.read_bytes())
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
