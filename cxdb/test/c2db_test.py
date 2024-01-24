@@ -24,6 +24,7 @@ def test_c2db(tmp_path):
 
     (tmp_path / 'AB2/1MoS2/1/results-asr.bader.json').unlink()
     (tmp_path / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
+    (tmp_path / 'AB2/1MoS2/1/results-asr.convex_hull.json').unlink()
     html = app.material('1MoS2-1')
     assert '1.24' not in html  # Bader charge
 
