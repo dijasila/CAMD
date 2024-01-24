@@ -15,6 +15,7 @@ r"""
 
 import json
 import sys
+from collections import defaultdict
 
 
 import plotly
@@ -182,6 +183,15 @@ def plot_3d(pd: PhaseDiagram,
                       template='simple_white')
 
     return fig
+
+
+def update(energies: list[tuple[dict[str, int], float, str]]):
+    index = defaultdict(set)
+    for count, e, uid in energies:
+        for symbol in count:
+            index[symbol].add(uid)
+    for count, e, uid in energies:
+
 
 
 if __name__ == '__main__':

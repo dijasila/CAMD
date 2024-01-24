@@ -22,7 +22,7 @@ from cxdb.c2db.asr_panel import ASRPanel
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
 from cxdb.panels.shift_current import ShiftCurrentPanel
-from cxdb.panels.convex_hull import ConvexHullPanel
+from cxdb.panels.convex_hull import ConvexHullPanel, update_chull_files
 from cxdb.web import CXDBApp
 
 
@@ -97,6 +97,8 @@ def main(argv: list[str] | None = None) -> CXDBApp:
     panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
+
+    update_chull_files(mlist)
 
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 
