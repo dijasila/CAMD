@@ -24,7 +24,7 @@ from ase.phasediagram import PhaseDiagram
 
 from cxdb.html import table
 from cxdb.material import Material, Materials
-from cxdb.panels.asr_panel import read_result_file
+from cxdb.c2db.asr_panel import read_result_file
 from cxdb.panels.panel import Panel
 
 HTML = """

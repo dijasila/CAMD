@@ -28,7 +28,7 @@ import rich.progress as progress
 from ase import Atoms
 from ase.io import read
 
-from cxdb.panels.asr_panel import read_result_file
+from cxdb.c2db.asr_panel import read_result_file
 
 RESULT_FILES = [
     'convex_hull',

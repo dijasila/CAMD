@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from ase import Atoms
 from cxdb.material import Material, Materials
-from cxdb.panels.asr_panel import Row
+from cxdb.c2db.asr_panel import Row
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
 from cxdb.session import Session

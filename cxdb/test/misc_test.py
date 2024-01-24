@@ -1,6 +1,6 @@
 import pytest
 from ase import Atoms
-from cxdb.panels.asr_panel import thing2html
+from cxdb.c2db.asr_panel import thing2html
 from cxdb.panels.bader import BaderPanel
 from cxdb.filter import str2obj
 from cxdb.material import Material
