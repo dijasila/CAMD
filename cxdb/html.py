@@ -51,7 +51,12 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
         '\n  </tr>\n </tbody>\n</table>')
 
 
-def image(path: Path, alt=None) -> str:
+def image(path: Path | str, alt=None) -> str:
+    """Create <img> tag.
+
+    >>> image('abc/def.png', alt='Short description')
+    '<img alt="Short description" src="/png/abc/def.png" />'
+    """
     return f'<img alt="{alt or path}" src="/png/{path}" />'
 
 
