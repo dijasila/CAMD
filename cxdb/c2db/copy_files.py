@@ -18,8 +18,8 @@ Build tree like this::
     $ python -m cxdb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
     """
-import gzip
 import json
+import shutil
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -70,6 +70,7 @@ def copy_materials(root: Path, patterns: list[str]) -> None:
             for dir in root.glob(pattern)
             if dir.name[0] != '.']
     names: defaultdict[str, int] = defaultdict(int)
+    print(len(dirs), 'folders')
     with progress.Progress() as pb:
         pid = pb.add_task('Copying materials:', total=len(dirs))
         for dir in dirs:
@@ -123,9 +124,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     for name in RESULT_FILES:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
-            with gzip.open(folder / (result.name + '.gz'), 'w') as fd:
-                fd.write(result.read_bytes())
-
+            shutil.copyfile(result, folder / result.name)
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
 

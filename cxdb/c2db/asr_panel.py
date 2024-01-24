@@ -1,4 +1,5 @@
 """Hack to use webpanel() functions from ASR."""
+import gzip
 import importlib
 from pathlib import Path
 
@@ -23,7 +24,12 @@ HTML = """
 
 
 def read_result_file(path: Path) -> dict:
-    dct = decode(path.read_text())
+    if path.name.endswith('gz'):
+        with gzip.open(path, 'r') as fd:
+            txt = fd.read()
+    else:
+        txt = path.read_text()
+    dct = decode(txt)
     if 'kwargs' in dct:
         dct = dct['kwargs']['data']
     return dct
