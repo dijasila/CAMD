@@ -1,16 +1,31 @@
-import numpy as np
+r"""
++---------------------+-----------+
+|    ^                | OQMR refs |
+|    |  *       *     | ...       |
+|    |   \   * /      |           |
+| ΔH,|    \   /       | C2DB refs |
+| eV/|     \ /        | ...       |
+| atm|      *         |           |
+|    |                |           |
+|     ------------>   |           |
+|         A   B       |           |
+|          1-x x      |           |
++---------------------+-----------+
+"""
+
+import json
+import sys
 from pathlib import Path
 
-from cxdb.panels.asr_panel import read_result_file
-from cxdb.material import Material, Materials
-from cxdb.panels.panel import Panel
-from cxdb.html import table, image
-
-from ase.phasediagram import PhaseDiagram
-from ase.formula import Formula
+import plotly
 import plotly.graph_objs as go
-import plotly.express as px
-import pandas
+from ase.formula import Formula
+from ase.phasediagram import PhaseDiagram
+
+from cxdb.html import table
+from cxdb.material import Material, Materials
+from cxdb.panels.asr_panel import read_result_file
+from cxdb.panels.panel import Panel
 
 HTML = """
 <div class="row">
@@ -18,7 +33,7 @@ HTML = """
     <div id='chull' class='chull'></div>
   </div>
   <div class="col-6">
-    {table}
+    {tables}
   </div>
 </div>
 """
@@ -30,6 +45,8 @@ Plotly.newPlot('chull', graphs, {{}});
 </script>
 """
 
+OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
+
 
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
@@ -40,44 +57,58 @@ class ConvexHullPanel(Panel):
         result_file = material.folder / 'results-asr.convex_hull.json'
         if not result_file.is_file():
             return '', ''
-        chull, tbl = self.make_figure_and_table(result_file, material)
-        html = HTML.format(table=tbl)
+        chull, tbls = self.make_figure_and_tables(result_file)
+        html = HTML.format(tables=tbls)
         if chull:
             return (html, FOOTER.format(chull_json=chull))
         return html, ''
 
-    def make_figure_and_table(self,
-                              result_file: Path,
-                              material: Material) -> tuple[str, str]:
+    def make_figure_and_tables(self,
+                               result_file: Path) -> tuple[str, str]:
         data = read_result_file(result_file)
-        references = []
-        extra_info = []
-        for ref in data['references']:
-            references.append(
-                (ref['formula'],
-                 ref['hform'] * ref['natoms']))
-            extra.append((
-                 ref['uid'],
-                 ref['title'])
 
-        if 2 <= material.nspecies <= 3:
-            pd = PhaseDiagram([(formula, energy * natoms)
-                               for formula, energy, natom, uid, source
-                               in references])
-            if material.nspecies == 2:
-                fig = plot_2d_convex_hull(pd, extra)
+        tbl1 = []
+        tbl2 = []
+        references = []
+        labels = []
+        for ref in data['references']:
+            e = ref['hform']
+            f = Formula(ref['formula'])
+            uid = ref['uid']
+            references.append((f.count(), e * ref['natoms']))
+            if 'OQMD' in ref['title']:
+                source = 'OQMD'
+                tbl1.append(
+                    [f'<a href={OQMD}/{uid}>{f:html}</a>', f'{e:.2f} eV/atom'])
             else:
-                1 / 0
+                assert 'C2DB' in ref['title']
+                source = 'C2DB'
+                tbl2.append(
+                    [f'<a href={uid}>{f:html}</a>', f'{e:.2f} eV/atom'])
+            labels.append(f'{source}({uid})')
+
+        pd = PhaseDiagram(references)
+        if 2 <= len(pd.symbols) <= 3:
+            if len(pd.symbols) == 2:
+                fig = plot_2d(pd, labels)
+            else:
+                fig = plot_3d(pd, labels)
             chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
         else:
             chull = ''
 
-        tbl = ''  # table()
-        return chull, tbl
+        tbls = (
+            table(['Bulk crystals from OQMD123', ''], tbl1) +
+            table(['Monolayers from C2DB', ''], tbl2))
+
+        return chull, tbls
 
 
-def plot_2d_convex_hull(pd: PhaseDiagram,
-                        extra: list[tuple[str, float, str]]) -> go.Figure:
+def plot_2d(pd: PhaseDiagram,
+            labels: list[str] | None = None) -> go.Figure:
+    if labels is None:
+        labels = [r[2] for r in pd.references]
+
     x, y = pd.points[:, 1:].T
 
     X = []
@@ -90,15 +121,8 @@ def plot_2d_convex_hull(pd: PhaseDiagram,
     data.append(go.Scatter(
         x=x,
         y=y,
-        text=[name for _, _, name, _ in pd.references],
-        hovertemplate=' %{text}: %{y} eV/atom',
-        mode='markers'))
-
-    data.append(go.Scatter(
-        x=,
-        y=y,
-        text=[name for _, _, name, _ in pd.references],
-        hovertemplate=' %{text}: %{y} eV/atom',
+        text=labels,
+        hovertemplate='%{text}: %{y} eV/atom',
         mode='markers'))
 
     delta = y.ptp() / 30
@@ -114,7 +138,11 @@ def plot_2d_convex_hull(pd: PhaseDiagram,
     return fig
 
 
-def plot_3D(df_ref, pd, colors):
+def plot_3d(pd: PhaseDiagram,
+            labels: list[str] | None = None) -> go.Figure:
+    if labels is None:
+        labels = [r[2] for r in pd.references]
+    """
     x, y, e = pd.points[:, 1:].T
     df_ref['x'] = x
     df_ref['y'] = y
@@ -149,7 +177,7 @@ def plot_3D(df_ref, pd, colors):
         'uid': True,
         'name': True,
     }
-    fig_temp = px.scatter_3d(
+    fig_temp = go.scatter_3d(
         df_ref,
         x='x',
         y='y',
@@ -210,67 +238,17 @@ def plot_3D(df_ref, pd, colors):
         ),
     )
     return fig
+    """
 
 
 if __name__ == '__main__':
-    # Example data
-    data = {
-        'hform': -0.920927544752896,
-        'references': [
-            {
-                'hform': 0.0,
-                'formula': 'S48',
-                'uid': 'S48',
-                'natoms': 48,
-                'title': 'Bulk crystals (from OQMD123)',
-                'legend': 'Bulk crystals',
-                'name': 'S48',
-                'label': 'S48',
-                'link': 'https://cmrdb.fysik.dtu.dk/oqmd123/row/S48',
-                'method': 'DFT',
-            },
-            {
-                'hform': 0.0,
-                'formula': 'Mo',
-                'uid': 'Mo',
-                'natoms': 1,
-                'title':
-                'legend': 'Bulk crystals',
-                'name': 'Mo',
-                'label': 'Mo',
-                'link': 'https://cmrdb.fysik.dtu.dk/oqmd123/row/Mo',
-                'method': 'DFT',
-            },
-            {
-                'hform': -0.18018421551178587,
-                'formula': 'Mo2S2',
-                'uid': 'Mo2S2-925d20f42e31',
-                'natoms': 4,
-                'title': 'Monolayers (from C2DB)',
-                'legend': 'Monolayers',
-                'name': 'Mo2S2 (AB-187-hi)',
-                'label': 'Mo2S2 (AB-187-hi)',
-                'link': '/c2db/row/Mo2S2-925d20f42e31',
-                'method': 'DFT',
-            },
-            {
-                'hform': -0.920927544752896,
-                'formula': 'MoS2',
-                'uid': 'MoS2-b3b4685fb6e1',
-                'natoms': 3,
-                'title': 'Monolayers (from C2DB)',
-                'legend': 'Monolayers',
-                'name': 'MoS2 (AB2-187-bi)',
-                'label': 'MoS2 (AB2-187-bi)',
-                'link': '/c2db/row/MoS2-b3b4685fb6e1',
-                'method': 'DFT',
-            },
-        ],
-        'indices': [7, 2],
-        'coefs': [1.0, 0.0],
-        'ehull': 0.0,
-        'thermodynamic_stability_level': 3,
-    }
-    print(data)
-    fig = plot_convex_hull(data, 2, 'MoS2-b3b4685fb6e1')
+    refs = []
+    for arg in sys.argv[1:]:
+        formula, energy = arg.split(':')
+        refs.append((formula, float(energy)))
+    pd = PhaseDiagram(refs)
+    if len(pd.symbols) == 2:
+        fig = plot_2d(pd)
+    else:
+        fig = plot_3d(pd)
     fig.show()

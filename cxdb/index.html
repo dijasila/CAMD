@@ -172,11 +172,17 @@
         % for page, text in pages:
           % if page != -1:
             <li class="page-item">
+            % if page == session.page:
+                {{ text }}
+            % else:
               <a class="page-link"
                  href="?sid={{ session.sid }}&page={{ page }}">
                 {{ text }}
               </a>
+            % end
             </li>
+          % else:
+            ...
           % end
         % end
       </ul>

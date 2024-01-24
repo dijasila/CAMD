@@ -20,6 +20,7 @@ from cxdb.panels.asr_panel import ASRPanel
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
 from cxdb.panels.shift_current import ShiftCurrentPanel
+from cxdb.panels.convex_hull import ConvexHullPanel
 from cxdb.web import CXDBApp
 
 
@@ -71,7 +72,8 @@ def main(argv: list[str] | None = None) -> CXDBApp:
                 keys.add(key)
             pb.advance(pid)
 
-    panels: list[Panel] = [C2DBAtomsPanel()]
+    panels: list[Panel] = [C2DBAtomsPanel(),
+                           ConvexHullPanel()]
     for name in ['stiffness',
                  'phonons',
                  'deformationpotentials',
