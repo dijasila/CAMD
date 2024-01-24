@@ -95,13 +95,11 @@ def make_figure_and_tables(references: list[dict]) -> tuple[str, str]:
         pdrefs.append((f.count(), e * len(f)))
         if 'OQMD' in ref['title']:
             source = 'OQMD'
-            tbl1.append(
-                [f'<a href={OQMD}/{uid}>{f:html}</a>', f'{e:.2f} eV/atom'])
+            tbl1.append((e, f'<a href={OQMD}/{uid}>{f:html}</a>'))
         else:
             assert 'C2DB' in ref['title']
             source = 'C2DB'
-            tbl2.append(
-                [f'<a href={uid}>{f:html}</a>', f'{e:.2f} eV/atom'])
+            tbl2.append((e, f'<a href={uid}>{f:html}</a>'))
         labels.append(f'{source}({uid})')
 
     try:
@@ -119,8 +117,10 @@ def make_figure_and_tables(references: list[dict]) -> tuple[str, str]:
             chull = ''
 
     tbls = (
-        table(['Bulk crystals from OQMD123', ''], tbl1) +
-        table(['Monolayers from C2DB', ''], tbl2))
+        table(['Bulk crystals from OQMD123', ''],
+              [[link, f'{e:.2f} eV/atom'] for e, link in sorted(tbl1)]) +
+        table(['Monolayers from C2DB', ''],
+              [[link, f'{e:.2f} eV/atom'] for e, link in sorted(tbl2)]))
 
     return chull, tbls
 
