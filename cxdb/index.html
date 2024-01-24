@@ -170,20 +170,18 @@
     <div class="row">
       <ul class="pagination mb-1 mt-1">
         % for page, text in pages:
-          % if page != -1:
-            <li class="page-item">
-            % if page == session.page:
-                {{ text }}
-            % else:
-              <a class="page-link"
-                 href="?sid={{ session.sid }}&page={{ page }}">
-                {{ text }}
-              </a>
-            % end
-            </li>
+        <li class="page-item">
+          % if page == -1:
+            <a class="page-link">...</a>
+          % elif page == session.page:
+            <a class="page-link">{{ text }}</a>
           % else:
-            ...
+          <a class="page-link"
+             href="?sid={{ session.sid }}&page={{ page }}">
+             {{ text }}
+          </a>
           % end
+        </li>
         % end
       </ul>
     </div>

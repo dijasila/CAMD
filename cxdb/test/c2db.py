@@ -1,4 +1,5 @@
 import copy
+import json
 from pathlib import Path
 
 import ase.io.ulm as ulm
@@ -10,9 +11,8 @@ from ase.io.trajectory import write_atoms
 from ase.spectrum.band_structure import BandStructure
 from asr.bandstructure import Result
 
-
-# Example data
-data = {
+# Convex-hull example data:
+CHULL = {
     'hform': -0.920927544752896,
     'references': [
         {
@@ -85,7 +85,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.gs@calculate.json').write_text(
         '{}')
     (dir / 'results-asr.convex_hull.json').write_text(
-        '{"kwargs": {"data": {"hform": -0.9}}}')
+        json.dumps({'kwargs': {'data': CHULL}}))
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
         '{"kwargs": {"data": {"uid": "MoS2-b3b4685fb6e1"}}}')
 
