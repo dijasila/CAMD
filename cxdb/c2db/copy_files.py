@@ -18,8 +18,8 @@ Build tree like this::
     $ python -m cxdb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
     """
+import gzip
 import json
-import shutil
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -27,7 +27,6 @@ from pathlib import Path
 import rich.progress as progress
 from ase import Atoms
 from ase.io import read
-
 from cxdb.c2db.asr_panel import read_result_file
 
 RESULT_FILES = [
@@ -124,7 +123,9 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     for name in RESULT_FILES:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
-            shutil.copyfile(result, folder / result.name)
+            data = result.read_bytes()
+            with gzip.open(folder / (result.name + '.gz'), 'w') as fd:
+                fd.write(data)
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
