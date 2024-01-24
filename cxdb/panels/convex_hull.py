@@ -1,6 +1,6 @@
 r"""
 +---------------------+-----------+
-|    ^                | OQMR refs |
+|    ^                | OQMD refs |
 |    |  *       *     | ...       |
 |    |   \   * /      |           |
 | ΔH,|    \   /       | C2DB refs |
@@ -58,14 +58,15 @@ class ConvexHullPanel(Panel):
         if not result_file.is_file():
             return '', ''
         data = read_result_file(result_file)
-        chull, tbls = make_figure_and_tables(data['references'])
+        chull, tbls = make_figure_and_tables(data['references'], verbose=False)
         html = HTML.format(tables=tbls)
         if chull:
             return (html, FOOTER.format(chull_json=chull))
         return html, ''  # pragma: no cover
 
 
-def make_figure_and_tables(references: list[dict]) -> tuple[str, str]:
+def make_figure_and_tables(references: list[dict],
+                           verbose: bool = True) -> tuple[str, str]:
     """Make convex-hull figure and tables.
 
     >>> refs = [
@@ -73,7 +74,7 @@ def make_figure_and_tables(references: list[dict]) -> tuple[str, str]:
     ...     {'title': 'OQMD', 'hform': -0.5, 'formula': 'BN', 'uid': 'u2'},
     ...     {'title': 'OQMD', 'hform': 0.0, 'formula': 'N', 'uid': 'u3'},
     ...     {'title': 'C2DB', 'hform': -0.2, 'formula': 'BN', 'uid': 'a1'}]
-    >>> chullhtml, tableshtml = make_figure_and_tables(refs)
+    >>> chull_html, tables_html = make_figure_and_tables(refs)
     Species: B, N
     References: 4
     0    B              0.000
@@ -103,7 +104,7 @@ def make_figure_and_tables(references: list[dict]) -> tuple[str, str]:
         labels.append(f'{source}({uid})')
 
     try:
-        pd = PhaseDiagram(pdrefs)
+        pd = PhaseDiagram(pdrefs, verbose=verbose)
     except ValueError:
         chull = ''  # only one species
     else:
