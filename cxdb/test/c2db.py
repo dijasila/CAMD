@@ -1,4 +1,5 @@
 import copy
+import gzip
 import json
 from pathlib import Path
 
@@ -99,7 +100,8 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     soc['energies'] = np.zeros((4, 5))
     soc['sz_mk'] = np.zeros((4, 5))
     dct = Result.fromdata(bs_soc=soc, bs_nosoc=nosoc).todict()
-    (dir / 'results-asr.bandstructure.json').write_text(encode(dct))
+    with gzip.open(dir / 'results-asr.bandstructure.json', 'wt') as fd:
+        fd.write(encode(dct))
 
     # Phonons:
     dct = {'minhessianeig': 0.001,

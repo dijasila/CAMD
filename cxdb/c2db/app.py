@@ -81,7 +81,7 @@ def main(argv: list[str] | None = None) -> CXDBApp:
                            ConvexHullPanel()]
     for name in ['stiffness',
                  'phonons',
-                 # 'deformationpotentials',
+                 'deformationpotentials',
                  'bandstructure',
                  'pdos',
                  'effective_masses',

@@ -50,7 +50,7 @@ def update_chull_data(root: Path) -> None:
         for uid in uids:
             if uid in c2db_uids:
                 count, hform, source = data[uid]
-                if len(count) == len(symbols):
+                if len(count) == len(symbols):  # pragma: no branch
                     ehull = hform - pd.decompose(**count)[0]
                     ehull_energies[uid] = ehull
 

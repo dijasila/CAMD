@@ -105,7 +105,7 @@ class ASRPanel(Panel):
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
             for thing in column:
-                if thing is not None:  # pragma: no cover
+                if thing is not None:  # pragma: no branch
                     html = thing2html(thing, material.folder)
                     columns[i].append(html)
 
