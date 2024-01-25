@@ -24,8 +24,9 @@ HTML = """
 
 
 def read_result_file(path: Path) -> dict:
-    if path.name.endswith('gz'):
-        with gzip.open(path, 'rt') as fd:
+    gz = path.with_stem('.json.gz')
+    if gz.is_file():
+        with gzip.open(gz, 'rt') as fd:
             txt = fd.read()
     else:
         txt = path.read_text()
@@ -61,7 +62,7 @@ class Data:
 
     def get(self, name, default=None):
         try:
-            dct = decode((self.folder / name).read_text())
+            dct = read_result_file(self.folder / name)
         except FileNotFoundError:
             return None
         if 'kwargs' in dct:
@@ -95,6 +96,7 @@ class ASRPanel(Panel):
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
+        print('**********', self.name)
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
             return ('', '')
