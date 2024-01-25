@@ -33,7 +33,7 @@ RESULT_FILES = [
     'convex_hull',
     'stiffness',
     'phonons',
-    'deformationpotentials',
+    # 'deformationpotentials',
     'bandstructure',
     'pdos',
     'effective_masses',

@@ -60,7 +60,10 @@ class Data:
         self.folder = folder
 
     def get(self, name, default=None):
-        dct = decode((self.folder / name).read_text())
+        try:
+            dct = decode((self.folder / name).read_text())
+        except FileNotFoundError:
+            return None
         if 'kwargs' in dct:
             return dct['kwargs']['data']
         return dct
@@ -93,6 +96,7 @@ class ASRPanel(Panel):
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         try:
+            print(self.name)
             dct = row.data.get(f'results-asr.{self.name}.json')
         except FileNotFoundError:
             return ('', '')
