@@ -185,13 +185,31 @@ def plot_3d(pd: PhaseDiagram,
     return fig
 
 
-def update(energies: list[tuple[dict[str, int], float, str]]):
-    index = defaultdict(set)
-    for count, e, uid in energies:
-        for symbol in count:
-            index[symbol].add(uid)
-    for count, e, uid in energies:
+def update(references: dict[str, tuple[str]], uids: list[str]):
+    """
 
+    >>> update({'1': ('A',),
+                '2': ('B',),
+                '3': ('A', 'B'),
+                'u1': ('A',),
+                'u2': ('A', 'B')}, ['u1', 'u2'])
+    """
+    index = defaultdict(set)
+    for uid, symbols in references.items():
+        for symbol in symbols:
+            index[symbol].add(uid)
+    chulls = {}
+    for uid in uids:
+        symbols = references[uid]
+        if symbols in chulls:
+            continue
+        chull = set()
+        for symbol in symbols:
+            for uid2 in index[symbol]:
+                if all(s in symbols for s in references[uid2]):
+                    chull.add(uid2)
+        chulls[symbols] = chull
+    return chulls
 
 
 if __name__ == '__main__':
