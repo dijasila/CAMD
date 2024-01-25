@@ -95,10 +95,8 @@ class ASRPanel(Panel):
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
-        try:
-            print(self.name)
-            dct = row.data.get(f'results-asr.{self.name}.json')
-        except FileNotFoundError:
+        dct = row.data.get(f'results-asr.{self.name}.json')
+        if dct is None:
             return ('', '')
         result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
