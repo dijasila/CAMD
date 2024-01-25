@@ -23,8 +23,7 @@ def test_3d():
 
 @pytest.mark.parametrize('n', [1, 2, 3, 4])
 def test_1234(n):
-    refs = [{'title': 'OQMD', 'hform': 0.0, 'formula': s, 'uid': 'x'}
-            for s in 'ABCD'[:n]] + [
-        {'title': 'C2DB', 'hform': -0.5, 'formula': 'ABCD'[:n], 'uid': 'x'}]
-    chull, tables = make_figure_and_tables(refs)
-    assert '-0.50' in tables
+    refs = {s: ({s: 1}, 0.0, 'OQMD') for s in 'ABCD'[:n]}
+    refs['x'] = ({X: 1 for X in 'ABCD'[:n]}, -0.5 * n, 'C2DB')
+    chull, oqmd, c2db = make_figure_and_tables(refs)
+    assert '-0.50' in c2db

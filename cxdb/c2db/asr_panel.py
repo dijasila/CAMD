@@ -25,7 +25,7 @@ HTML = """
 
 def read_result_file(path: Path) -> dict:
     if path.name.endswith('gz'):
-        with gzip.open(path, 'r') as fd:
+        with gzip.open(path, 'rt') as fd:
             txt = fd.read()
     else:
         txt = path.read_text()

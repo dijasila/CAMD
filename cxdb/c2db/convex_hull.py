@@ -26,7 +26,7 @@ def update_chull_data(root: Path) -> None:
         c2db_uids.add(uid)
     print('Materials:', len(c2db_uids))
 
-    tmp = {}
+    tmp: dict[str, tuple[str, ...]] = {}
     for uid, (count, hform) in refs.items():
         tmp[uid] = tuple(sorted(count))
     assert len(tmp) == len(refs)

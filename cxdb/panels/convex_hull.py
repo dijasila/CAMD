@@ -16,7 +16,7 @@ r"""
 import json
 import sys
 from collections import defaultdict
-
+from typing import Iterable
 
 import plotly
 import plotly.graph_objs as go
@@ -31,10 +31,12 @@ from cxdb.panels.panel import Panel
 HTML = """
 <div class="row">
   <div class="col-6">
+    {tbl0}
     <div id='chull' class='chull'></div>
   </div>
   <div class="col-6">
-    {tables}
+    {tbl1}
+    {tbl2}
   </div>
 </div>
 """
@@ -55,14 +57,13 @@ class ConvexHullPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
+        tbl0 = table(None, materials.table(material, ['hform', 'ehull']))
         root = material.folder.parent.parent.parent
         name = ''.join(sorted(material._count))
         ch_file = root / f'convex-hulls/{name}.json'
-        if not ch_file.is_file():
-            return '', ''
         refs = read_result_file(ch_file)
-        chull, tbls = make_figure_and_tables(refs, verbose=False)
-        html = HTML.format(tables=tbls)
+        chull, tbl1, tbl2 = make_figure_and_tables(refs, verbose=False)
+        html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
         if chull:
             return (html, FOOTER.format(chull_json=chull))
         return html, ''  # pragma: no cover
@@ -71,21 +72,20 @@ class ConvexHullPanel(Panel):
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
                                                  float,
                                                  str]],
-                           verbose: bool = True) -> tuple[str, str]:
+                           verbose: bool = True) -> tuple[str, str, str]:
     """Make convex-hull figure and tables.
 
-    >>> refs = [
-    ...     {'title': 'OQMD', 'hform': 0.0, 'formula': 'B', 'uid': 'u1'},
-    ...     {'title': 'OQMD', 'hform': -0.5, 'formula': 'BN', 'uid': 'u2'},
-    ...     {'title': 'OQMD', 'hform': 0.0, 'formula': 'N', 'uid': 'u3'},
-    ...     {'title': 'C2DB', 'hform': -0.2, 'formula': 'BN', 'uid': 'a1'}]
-    >>> chull_html, tables_html = make_figure_and_tables(refs)
+    >>> refs = {'u1': ({'B': 1}, 0.0, 'OQMD'),
+    ...         'u2': ({'B': 1, 'N': 1}, -0.5, 'OQMD'),
+    ...         'u3': ({'N': 1}, 0.0, 'OQMD'),
+    ...         '11': ({'B': 1, 'N': 1}, -0.2, 'C2DB')}
+    >>> ch, tbl1, tbl2 = make_figure_and_tables(refs)
     Species: B, N
     References: 4
     0    B              0.000
-    1    BN            -1.000
+    1    BN            -0.500
     2    N              0.000
-    3    BN            -0.400
+    3    BN            -0.200
     Simplices: 2
     """
     tbl1 = []
@@ -116,13 +116,12 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         else:
             chull = ''
 
-    tbls = (
-        table(['Bulk crystals from OQMD123', ''],
-              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl1)]) +
-        table(['Monolayers from C2DB', ''],
-              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl2)]))
+    html1 = table(['Bulk crystals from OQMD123', ''],
+                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl1)])
+    html2 = table(['Monolayers from C2DB', ''],
+                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl2)])
 
-    return chull, tbls
+    return chull, html1, html2
 
 
 def plot_2d(pd: PhaseDiagram,
@@ -183,17 +182,18 @@ def plot_3d(pd: PhaseDiagram,
     return fig
 
 
-def group_references(references: dict[str, tuple[str]],
-                     uids: list[str],
-                     check=True) -> dict[tuple[str], set[str]]:
+def group_references(references: dict[str, tuple[str, ...]],
+                     uids: Iterable[str],
+                     check=True) -> dict[tuple[str, ...], list[str]]:
     """Group references into sets of convex hull candidates.
 
-    >>> update({'1': ('A',),
+    >>> refs = {'1': ('A',),
     ...         '2': ('B',),
     ...         '3': ('A', 'B'),
     ...         'u1': ('A',),
-    ...         'u2': ('A', 'B')}, ['u1', 'u2'])
-    {('A',): {'1', 'u1'}, ('A', 'B'): {'1', 'u2', '3', '2', 'u1'}}
+    ...         'u2': ('A', 'B')}
+    >>> group_references(refs, ['u1', 'u2'])
+    {('A',): ['1', 'u1'], ('A', 'B'): ['1', '2', '3', 'u1', 'u2']}
     """
     index = defaultdict(set)
     for uid, symbols in references.items():
@@ -212,7 +212,7 @@ def group_references(references: dict[str, tuple[str]],
             for uid2 in index[symbol]:
                 if all(s in symbols for s in references[uid2]):
                     chull.add(uid2)
-        chulls[symbols] = chull
+        chulls[symbols] = sorted(chull)
     return chulls
 
 

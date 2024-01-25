@@ -7,9 +7,10 @@ The OQMD123 database file can be obtained here:
   https://cmr.fysik.dtu.dk/_downloads/oqmd123.db
 """
 
+import gzip
 import json
 import sys
-import gzip
+from pathlib import Path
 
 from ase.db import connect
 
@@ -19,13 +20,14 @@ def read_oqmd123_data() -> tuple[dict[str, float],
     with gzip.open('oqmd.json.gz', 'rt') as fd:
         data = json.load(fd)
     return (data['atomic_energies'],
-            {uid: tuple(x) for uid, x in data['formation_energies'].items()})
+            {uid: tuple(x)  # type: ignore
+             for uid, x in data['formation_energies'].items()})
 
 
-def main():
+def main(oqmd_db_file: Path):
     hform = {}
     atomic_energies = {}
-    for row in connect(sys.argv[1]).select():
+    for row in connect(oqmd_db_file).select():
         count = row.count_atoms()
         if len(count) == 1:
             symb = row.symbols[0]
@@ -39,4 +41,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(Path(sys.argv[1]))
