@@ -47,6 +47,8 @@ def test_everything(tmp_path):
 
     app.index()
 
+    with gzip.open('...'):
+
     html = app.material('1MoS2-1')
     assert '1.24' in html  # Bader charge
 
