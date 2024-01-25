@@ -92,11 +92,12 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     m = names[name] + 1
     names[name] = m
     folder = Path(name) / str(m)
+    uid = f'{n}{xy}-{m}'
 
     def rrf(name: str) -> dict:
         return read_result_file(dir / f'results-asr.{name}.json')
 
-    data = {}
+    data = {'uid': uid}
     try:
         data['magstate'] = rrf('magstate')['magstate']
         data['has_inversion_symmetry'] = rrf(
@@ -104,7 +105,6 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         gs = rrf('gs')
         data['gap'] = gs['gap']
         data['evac'] = gs['evac']
-        data['hform'] = rrf('convex_hull')['hform']
         data['uid0'] = rrf('database.material_fingerprint')['uid']
     except FileNotFoundError:  # pragma: no cover
         return

@@ -55,18 +55,22 @@ class ConvexHullPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> tuple[str, str]:
-        result_file = material.folder / 'results-asr.convex_hull.json'
-        if not result_file.is_file():
+        root = material.folder.parent.parent.parent
+        name = ''.join(sorted(material._count))
+        ch_file = root / f'convex-hulls/{name}.json'
+        if not ch_file.is_file():
             return '', ''
-        data = read_result_file(result_file)
-        chull, tbls = make_figure_and_tables(data['references'], verbose=False)
+        refs = read_result_file(ch_file)
+        chull, tbls = make_figure_and_tables(refs, verbose=False)
         html = HTML.format(tables=tbls)
         if chull:
             return (html, FOOTER.format(chull_json=chull))
         return html, ''  # pragma: no cover
 
 
-def make_figure_and_tables(references: list[dict],
+def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
+                                                 float,
+                                                 str]],
                            verbose: bool = True) -> tuple[str, str]:
     """Make convex-hull figure and tables.
 
@@ -86,26 +90,20 @@ def make_figure_and_tables(references: list[dict],
     """
     tbl1 = []
     tbl2 = []
-    pdrefs = []
     labels = []
-    for ref in references:
-        e = ref['hform']
-        f = Formula(ref['formula'])
-        uid = ref['uid']
-        if 'natoms' in ref:
-            assert ref['natoms'] == len(f)
-        pdrefs.append((f.count(), e * len(f)))
-        if 'OQMD' in ref['title']:
-            source = 'OQMD'
-            tbl1.append((e, f'<a href={OQMD}/{uid}>{f:html}</a>'))
+    for uid, (count, e, source) in refs.items():
+        f = Formula.from_dict(count)
+        hform = e / len(f)
+        if source == 'OQMD':
+            tbl1.append((hform, f'<a href={OQMD}/{uid}>{f:html}</a>'))
         else:
-            assert 'C2DB' in ref['title']
-            source = 'C2DB'
-            tbl2.append((e, f'<a href={uid}>{f:html}</a>'))
+            assert source == 'C2DB'
+            tbl2.append((hform, f'<a href={uid}>{f:html}</a>'))
         labels.append(f'{source}({uid})')
 
     try:
-        pd = PhaseDiagram(pdrefs, verbose=verbose)
+        pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
+                          verbose=verbose)
     except ValueError:
         chull = ''  # only one species
     else:
@@ -120,9 +118,9 @@ def make_figure_and_tables(references: list[dict],
 
     tbls = (
         table(['Bulk crystals from OQMD123', ''],
-              [[link, f'{e:.2f} eV/atom'] for e, link in sorted(tbl1)]) +
+              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl1)]) +
         table(['Monolayers from C2DB', ''],
-              [[link, f'{e:.2f} eV/atom'] for e, link in sorted(tbl2)]))
+              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl2)]))
 
     return chull, tbls
 
@@ -185,17 +183,23 @@ def plot_3d(pd: PhaseDiagram,
     return fig
 
 
-def update(references: dict[str, tuple[str]], uids: list[str]):
-    """
+def group_references(references: dict[str, tuple[str]],
+                     uids: list[str],
+                     check=True) -> dict[tuple[str], set[str]]:
+    """Group references into sets of convex hull candidates.
 
     >>> update({'1': ('A',),
-                '2': ('B',),
-                '3': ('A', 'B'),
-                'u1': ('A',),
-                'u2': ('A', 'B')}, ['u1', 'u2'])
+    ...         '2': ('B',),
+    ...         '3': ('A', 'B'),
+    ...         'u1': ('A',),
+    ...         'u2': ('A', 'B')}, ['u1', 'u2'])
+    {('A',): {'1', 'u1'}, ('A', 'B'): {'1', 'u2', '3', '2', 'u1'}}
     """
     index = defaultdict(set)
     for uid, symbols in references.items():
+        if check and sorted(symbols) != list(symbols):
+            print(symbols)
+            raise ValueError
         for symbol in symbols:
             index[symbol].add(uid)
     chulls = {}
