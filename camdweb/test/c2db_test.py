@@ -9,7 +9,6 @@ from ase.db import connect
 from camdweb.c2db.app import main
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.copy_files import copy_materials
-from camdweb.c2db.oqmd123 import main as create_oqmd_json_gz_file
 from camdweb.test.c2db import create_tree
 
 
@@ -36,7 +35,6 @@ def test_everything(tmp_path):
     os.chdir(tmp_path)
     copy_materials(tmp_path, ['MoS2*'])
     create_oqmd_db_file(tmp_path)
-    create_oqmd_json_gz_file(tmp_path / 'oqmd123.db')
     update_chull_data(tmp_path)
 
     app = main(['AB2'])

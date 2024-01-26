@@ -109,7 +109,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('2MoS2-2')
+    app.material('1MoS2-1')
 
 
 if __name__ == '__main__':

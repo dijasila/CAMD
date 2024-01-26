@@ -4,12 +4,21 @@ from pathlib import Path
 from ase.formula import Formula
 from ase.phasediagram import PhaseDiagram
 
-from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb.c2db.oqmd123 import read_oqmd123_data, db2json
 from camdweb.panels.convex_hull import group_references
 
 
 def update_chull_data(root: Path) -> None:
-    atomic_energies, refs = read_oqmd123_data()
+    oqmd = root / 'oqmd123.json.gz'
+    if not oqmd.is_file():
+        db = root / 'oqmd123.db'
+        if db.is_file():
+            db2json(db, oqmd)
+        else:
+            raise FileNotFoundError(
+                'Please download oqmd123.db file:\n\n'
+                '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n')
+    atomic_energies, refs = read_oqmd123_data(oqmd)
     print('References:', len(refs))
 
     paths = {}

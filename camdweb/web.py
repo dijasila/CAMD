@@ -117,13 +117,26 @@ class CAMDApp:
         if uid == 'stop':  # pragma: no cover
             sys.stderr.close()
         material = self.materials[uid]
+
+        results = []
+        for panel in self.materials.panels:
+            print(getattr(panel, 'name', 12341234))
+            result = panel.get_html(material, self.materials)
+            results.append(result)
+            if not isinstance(result, tuple):
+                print(result)
+                next(result)
+
         panels = []
         footer = ''
-        for panel in self.materials.panels:
-            html1, html2 = panel.get_html(material, self.materials)
+        for panel, result in zip(self.materials.panels, results):
+            if not isinstance(result, tuple):
+                result = next(result)
+            html1, html2 = result
             if html1:
                 panels.append((panel.title, html1))
                 footer += html2
+
         return template('material.html',
                         title=uid,
                         panels=panels,

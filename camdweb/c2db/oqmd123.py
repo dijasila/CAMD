@@ -15,16 +15,17 @@ from pathlib import Path
 from ase.db import connect
 
 
-def read_oqmd123_data() -> tuple[dict[str, float],
-                                 dict[str, tuple[dict[str, int], float]]]:
-    with gzip.open('oqmd.json.gz', 'rt') as fd:
+def read_oqmd123_data(path: Path) -> tuple[dict[str, float],
+                                           dict[str, tuple[dict[str, int],
+                                                           float]]]:
+    with gzip.open(path, 'rt') as fd:
         data = json.load(fd)
     return (data['atomic_energies'],
             {uid: tuple(x)  # type: ignore
              for uid, x in data['formation_energies'].items()})
 
 
-def main(oqmd_db_file: Path):
+def db2json(oqmd_db_file: Path, jsonfile: Path):
     hform = {}
     atomic_energies = {}
     for row in connect(oqmd_db_file).select():
@@ -34,11 +35,11 @@ def main(oqmd_db_file: Path):
             assert symb not in atomic_energies
             atomic_energies[symb] = row.energy / row.natoms
         hform[row.uid] = (count, row.hform * row.natoms)
-    with gzip.open('oqmd.json.gz', 'wt') as fd:
+    with gzip.open(jsonfile, 'wt') as fd:
         json.dump({'atomic_energies': atomic_energies,
                    'formation_energies': hform},
                   fd, indent=0)
 
 
 if __name__ == '__main__':
-    main(Path(sys.argv[1]))
+    db2json(Path(sys.argv[1]), Path('oqmd123.json.gz'))

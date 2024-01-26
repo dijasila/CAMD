@@ -1,18 +1,19 @@
 from __future__ import annotations
 
+import multiprocessing
 from collections.abc import Container
+from functools import cached_property
 from math import nan
 from pathlib import Path
-from typing import Sequence, Generator
+from typing import Generator, Sequence
 
 from ase import Atoms
 from ase.io import read
-
-from camdweb.filter import Index, parse, ColVal
+from camdweb.filter import ColVal, Index, parse
 from camdweb.paging import get_pages
 from camdweb.panels.panel import Panel
 from camdweb.session import Session
-from camdweb.utils import formula_dict_to_strings, fft
+from camdweb.utils import fft, formula_dict_to_strings
 
 
 class Material:
@@ -205,3 +206,7 @@ class Materials:
                 pages,
                 [(name, value) for name, value in self.column_names.items()
                  if name not in session.columns])
+
+    @cached_property
+    def process_pool(self):
+        return multiprocessing.get_context('spawn').Pool()
