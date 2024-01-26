@@ -1,6 +1,7 @@
 % rebase('base', plotly=False, callback=False)
 <body>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
 <script>
     // Function to store scroll position in sessionStorage when the anchor is clicked
     function storeScrollPosition(event, qualifier) {
@@ -20,8 +21,6 @@
         document.documentElement.style.scrollBehavior = 'auto';
         // Set the scroll position without animating
         window.scrollTo(0, scrollPosition);
-        // Re-enable smooth scroll behavior after setting the scroll position
-        document.documentElement.style.scrollBehavior = 'smooth';
         sessionStorage.removeItem('scrollPosition');
       }
     }
@@ -31,6 +30,9 @@
 
     // Call the restoreScrollPosition function on page load
     document.addEventListener('DOMContentLoaded', restoreScrollPosition);
+
+    // Re-enable smooth scroll behavior after page refresh
+    document.documentElement.style.scrollBehavior = 'smooth';
 </script>
 
 <!--  Top Navigation Banner/Bar  -->

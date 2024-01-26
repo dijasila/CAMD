@@ -18,35 +18,48 @@
 
 <div class="container-fluid">
   <div class="row">
-    <div class="sticky-top col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+
+    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
+      <!--  Sidebar  -->
       <div class="sticky-top d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-10">
+        <!--  Sidebar Content  -->
         <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
           <span class="fs-5 d-none d-sm-inline">Home</span>
         </a>
+
+        <!--  Sidebar Collapse Buttons  -->
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
           <li class="nav-item">
             % for p, (panel_title, html) in enumerate(panels):
-              <button class="nav-link px-0 align-middle" type="button"
-                data-bs-toggle="collapse" data-bs-target="#collapse{{ p }}"
+              <a class="nav-link px-0 text-start" type="button" role="button"
+                data-bs-toggle="collapse" href="#collapse{{ p }}"
                 aria-expanded="false" aria-controls="collapseExample">
                 <span class="d-none d-sm-inline">{{ panel_title }}</span>
-              </button>
+              </a>
             % end
           </li>
         </ul>
+
         <hr>
       </div>
     </div>
 
+    <!--  Panel Area  -->
     <div class="col py-3">
       % for p, (panel_title, html) in enumerate(panels):
-        <div  class="{{'collapse show' if panel_title=='Atoms' else 'collapse'}}" id="collapse{{ p }}">
+        <!--  Link Each Panel with Button Anchor  -->
+        <div class="{{'collapse show' if panel_title=='Atoms' else 'collapse'}}"
+             aria-labelledby="heading{{ p }}"
+             id="collapse{{ p }}">
+
+          <!--  Each Panel's Content  -->
           <div class="card card-body">
             {{ !html }}
           </div>
         </div>
       % end
     </div>
+
   </div>
 </div>
 
