@@ -16,7 +16,7 @@ r"""
 import json
 import sys
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Generator
 
 import plotly
 import plotly.graph_objs as go
@@ -56,7 +56,7 @@ class ConvexHullPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         tbl0 = table(None, materials.table(material, ['hform', 'ehull']))
         root = material.folder.parent.parent.parent
         name = ''.join(sorted(material._count))

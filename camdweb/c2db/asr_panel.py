@@ -91,9 +91,7 @@ class ASRPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> (
-            tuple[str, str] |
-            Generator[tuple[str, str], None, None]):
+                 materials: Materials) -> Generator[str, None, None]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         dct = row.data.get(f'results-asr.{self.name}.json')
@@ -128,7 +126,7 @@ class ASRPanel(Panel):
                         desc['function'](row, *paths)
                     break
 
-        yield
+        yield ''
 
         for result in async_results:
             result.wait()

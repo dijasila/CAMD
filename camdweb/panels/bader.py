@@ -1,4 +1,5 @@
 import json
+from typing import Generator
 
 from camdweb.panels.panel import Panel
 from camdweb.material import Material, Materials
@@ -17,7 +18,7 @@ class BaderPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         path = material.folder / 'bader.json'
         if not path.is_file():
             return

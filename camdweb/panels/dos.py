@@ -1,5 +1,7 @@
-from camdweb.panels.panel import Panel
+from typing import Generator
+
 from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
 
 HTML = """
 <div class="row">
@@ -13,5 +15,5 @@ class DOSPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> str:
+                 materials: Materials) -> Generator[str, None, None]:
         yield HTML.format(uid=material.uid)

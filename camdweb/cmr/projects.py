@@ -11,13 +11,15 @@ TODO:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Generator
 
 import matplotlib.pyplot as plt
 from ase.db import connect
+
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
+from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
-from camdweb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -148,7 +150,7 @@ class ABS3BandStructurePanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         uid = material.uid
         path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -492,7 +494,7 @@ class Imp2DProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         return '\n'.join(
             table([header, ''],
                   materials.table(material, names))
@@ -574,7 +576,7 @@ class BiDBProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         def tab(names):
             return materials.table(material, names)
 
@@ -698,7 +700,7 @@ class LowDimProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         rows = materials.table(material, keysfortable0)
         doi = material.get('doi')
         if doi:
@@ -716,7 +718,7 @@ class LowDimProjectDescription(ProjectDescription):
 
     def create_column_two(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         if material.source == 'ICSD':
             return 'not allowed to show atoms'
         return ''  # use default AtomsPanel behavior

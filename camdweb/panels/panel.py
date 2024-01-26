@@ -1,7 +1,7 @@
 """Panel base class."""
 from __future__ import annotations
 import abc
-from typing import Callable, TYPE_CHECKING
+from typing import Callable, TYPE_CHECKING, Generator
 if TYPE_CHECKING:
     from camdweb.material import Material, Materials
 
@@ -15,7 +15,7 @@ class Panel(abc.ABC):
     @abc.abstractmethod
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         raise NotImplementedError
 
     def update_data(self, material: Material) -> None:
