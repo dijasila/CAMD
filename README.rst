@@ -1,5 +1,5 @@
 =============
-CxDB web-apps
+CAMd web-apps
 =============
 
 Web-apps for:
@@ -45,7 +45,7 @@ Link                                             port
 Installation
 ============
 
-CxDB-web needs Python_ version 3.9 or later.
+CAMd-web needs Python_ version 3.9 or later.
 
 .. code:: bash
 
@@ -53,8 +53,8 @@ CxDB-web needs Python_ version 3.9 or later.
     $ source venv/bin/activate
     $ git clone git@gitlab.com:ase/ase
     $ git clone git@gitlab.com:asr-dev/asr
-    $ git clone git@gitlab.com:jensj/cxdb-web
-    $ pip install -e cxdb-web[test]
+    $ git clone git@gitlab.com:camd/camd-web
+    $ pip install -e camd-web[test]
 
 
 .. _Python: https://python.org/
@@ -63,7 +63,7 @@ CxDB-web needs Python_ version 3.9 or later.
 Command-line interface
 ======================
 
-usage: cxdb [-h] filename [filename ...]
+usage: camd-web [-h] filename [filename ...]
 
 positional arguments:
   filename    Filename of atomic structure file.
@@ -77,7 +77,7 @@ CMR-app for old projects
 
 ::
 
-    $ python -m cxdb.cmr.app *.db
+    $ python -m camdweb.cmr.app *.db
 
 
 C2DB-app
@@ -85,8 +85,8 @@ C2DB-app
 
 ::
 
-    $ python -m cxdb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
-    $ python -m cxdb.c2db.app A*/
+    $ python -m camdweb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
+    $ python -m camdweb.c2db.app A*/
 
 
 Testing
@@ -104,5 +104,5 @@ to your local machine::
 Then you can play with those files like this::
 
     $ cd C2DB-test
-    $ python -m cxdb.c2db.copy_files . "MoS2*/"
-    $ python -m cxdb.c2db.app AB2
+    $ python -m camdweb.c2db.copy_files . "MoS2*/"
+    $ python -m camdweb.c2db.app AB2

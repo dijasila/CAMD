@@ -9,7 +9,7 @@ tests:
     - coverage report -i --precision=2 --fail-under=99.5
     - coverage html
     - mypy
-    - flake8 cxdb
+    - flake8 camdweb
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
