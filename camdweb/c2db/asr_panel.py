@@ -52,8 +52,9 @@ class Row:
     def get(self, name: str, default=None):
         if hasattr(self, name):
             return getattr(self, name)
-        print('MISSING:', name, default)
-        return default
+        else:  # pragma: no cover
+            print('MISSING:', name, default)
+            return default
 
 
 class Data:
@@ -67,8 +68,8 @@ class Data:
             return None
         return dct
 
-    def __contains__(self, name):
-        return False
+    # def __contains__(self, name):
+    #     return False
 
     def __getitem__(self, name):
         return self.get(name)

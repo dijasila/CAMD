@@ -21,6 +21,7 @@ from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
+from camdweb.panels.bader import BaderPanel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.web import CAMDApp
@@ -77,27 +78,26 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                 keys.add(key)
             pb.advance(pid)
 
-    panels: list[Panel] = [C2DBAtomsPanel(),
-                           ConvexHullPanel()]
-    for name in ['stiffness',
-                 'phonons',
-                 'deformationpotentials',
-                 'bandstructure',
-                 'pdos',
-                 'effective_masses',
-                 'hse',
-                 'gw',
-                 'borncharges',
-                 'shg',
-                 'polarizability',
-                 'infraredpolarizability',
-                 'raman',
-                 # 'bse',
-                 'bader',
-                 'piezoelectrictensor']:
-        print(name)
-        panels.append(ASRPanel(name, keys))
-    panels.append(ShiftCurrentPanel())
+    panels: list[Panel] = [
+        C2DBAtomsPanel(),
+        ConvexHullPanel(),
+        ASRPanel('stiffness', keys),
+        ASRPanel('phonons', keys),
+        ASRPanel('deformationpotentials', keys),
+        ASRPanel('bandstructure', keys),
+        ASRPanel('pdos', keys),
+        ASRPanel('effective_masses', keys),
+        ASRPanel('hse', keys),
+        ASRPanel('gw', keys),
+        ASRPanel('borncharges', keys),
+        ASRPanel('shg', keys),
+        ASRPanel('polarizability', keys),
+        ASRPanel('infraredpolarizability', keys),
+        ASRPanel('raman', keys),
+        # ASRPanel('bse', keys),
+        BaderPanel(),
+        ASRPanel('piezoelectrictensor', keys),
+        ShiftCurrentPanel()]
 
     materials = Materials(mlist, panels)
 

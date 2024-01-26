@@ -8,7 +8,9 @@ from camdweb.c2db.oqmd123 import read_oqmd123_data, db2json
 from camdweb.panels.convex_hull import group_references
 
 
-def update_chull_data(root: Path) -> None:
+def read_chull_data(root: Path) -> tuple[dict[str, float],
+                                         dict[str, tuple[dict[str, int],
+                                                         float]]]:
     oqmd = root / 'oqmd123.json.gz'
     if not oqmd.is_file():
         db = root / 'oqmd123.db'
@@ -19,6 +21,12 @@ def update_chull_data(root: Path) -> None:
                 'Please download oqmd123.db file:\n\n'
                 '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n')
     atomic_energies, refs = read_oqmd123_data(oqmd)
+    return atomic_energies, refs
+
+
+def update_chull_data(atomic_energies: dict[str, float],
+                      refs: dict[str, tuple[dict[str, int], float]],
+                      root: Path) -> None:
     print('References:', len(refs))
 
     paths = {}

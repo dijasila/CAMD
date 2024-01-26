@@ -23,8 +23,9 @@ class BaderPanel(Panel):
         if not path.is_file():
             return
         charges = json.loads(path.read_text())['charges']
-        yield HTML.format(
+        html = HTML.format(
             table=table(['#', 'Chemical symbol', 'Charges [|e|]'],
                         [(n, s, f'{c:.2f}') for n, (s, c)
                          in enumerate(zip(material.atoms.symbols,
                                           charges))]))
+        yield html
