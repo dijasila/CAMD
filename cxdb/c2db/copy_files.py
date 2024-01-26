@@ -27,8 +27,7 @@ from pathlib import Path
 import rich.progress as progress
 from ase import Atoms
 from ase.io import read
-
-from cxdb.panels.asr_panel import read_result_file
+from cxdb.c2db.asr_panel import read_result_file
 
 RESULT_FILES = [
     'convex_hull',
@@ -71,6 +70,7 @@ def copy_materials(root: Path, patterns: list[str]) -> None:
             for dir in root.glob(pattern)
             if dir.name[0] != '.']
     names: defaultdict[str, int] = defaultdict(int)
+    print(len(dirs), 'folders')
     with progress.Progress() as pb:
         pid = pb.add_task('Copying materials:', total=len(dirs))
         for dir in dirs:
@@ -92,11 +92,12 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     m = names[name] + 1
     names[name] = m
     folder = Path(name) / str(m)
+    uid = f'{n}{xy}-{m}'
 
     def rrf(name: str) -> dict:
         return read_result_file(dir / f'results-asr.{name}.json')
 
-    data = {}
+    data = {'uid': uid}
     try:
         data['magstate'] = rrf('magstate')['magstate']
         data['has_inversion_symmetry'] = rrf(
@@ -104,7 +105,6 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         gs = rrf('gs')
         data['gap'] = gs['gap']
         data['evac'] = gs['evac']
-        data['hform'] = rrf('convex_hull')['hform']
         data['uid0'] = rrf('database.material_fingerprint')['uid']
     except FileNotFoundError:  # pragma: no cover
         return
@@ -125,7 +125,6 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
             shutil.copyfile(result, folder / result.name)
-
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
 

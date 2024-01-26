@@ -1,4 +1,5 @@
 """Hack to use webpanel() functions from ASR."""
+import gzip
 import importlib
 from pathlib import Path
 
@@ -23,7 +24,13 @@ HTML = """
 
 
 def read_result_file(path: Path) -> dict:
-    dct = decode(path.read_text())
+    gz = path.with_suffix('.json.gz')
+    if gz.is_file():
+        with gzip.open(gz, 'rt') as fd:
+            txt = fd.read()
+    else:
+        txt = path.read_text()
+    dct = decode(txt)
     if 'kwargs' in dct:
         dct = dct['kwargs']['data']
     return dct
@@ -54,9 +61,10 @@ class Data:
         self.folder = folder
 
     def get(self, name, default=None):
-        dct = decode((self.folder / name).read_text())
-        if 'kwargs' in dct:
-            return dct['kwargs']['data']
+        try:
+            dct = read_result_file(self.folder / name)
+        except FileNotFoundError:
+            return None
         return dct
 
     def __contains__(self, name):
@@ -86,9 +94,8 @@ class ASRPanel(Panel):
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
-        try:
-            dct = row.data.get(f'results-asr.{self.name}.json')
-        except FileNotFoundError:
+        dct = row.data.get(f'results-asr.{self.name}.json')
+        if dct is None:
             return ('', '')
         result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
@@ -97,7 +104,7 @@ class ASRPanel(Panel):
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
             for thing in column:
-                if thing is not None:  # pragma: no cover
+                if thing is not None:  # pragma: no branch
                     html = thing2html(thing, material.folder)
                     columns[i].append(html)
 

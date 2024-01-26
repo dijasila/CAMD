@@ -1,12 +1,14 @@
 """C2DB web-app.
 
-This module has code to convert ~cmr/C2DB/tree/ folders and friends
-(see PATTERNS variable below) to canonical tree layout.
+The cxdb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
+folders and friends (see PATTERNS variable below) to a canonical tree
+layout.
 
 Also contains simple web-app that can run off the tree of folders.
 
-Goal is to have the code decoupled from ASE, GPAW and ASR.
-Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
+The goal is to have the code decoupled from ASE, GPAW, CMR and ASR.
+Right now ASR webpanel() functions are still used
+(see cxdb.c2db.asr_panel module).
 """
 from __future__ import annotations
 
@@ -16,7 +18,7 @@ from pathlib import Path
 
 import rich.progress as progress
 from cxdb.material import Material, Materials
-from cxdb.panels.asr_panel import ASRPanel
+from cxdb.c2db.asr_panel import ASRPanel
 from cxdb.panels.atoms import AtomsPanel
 from cxdb.panels.panel import Panel
 from cxdb.panels.shift_current import ShiftCurrentPanel
@@ -68,6 +70,9 @@ def main(argv: list[str] | None = None) -> CXDBApp:
             mlist.append(material)
             data = json.loads((f / 'data.json').read_text())
             for key, value in data.items():
+                if key == 'uid':
+                    assert value == uid
+                    continue  # already added
                 material.add_column(key, value)
                 keys.add(key)
             pb.advance(pid)
