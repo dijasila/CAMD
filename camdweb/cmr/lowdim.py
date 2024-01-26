@@ -123,4 +123,4 @@ class LowDimPanel(Panel):
                      materials.table(material, keysfortable2))
         col2 = (f'<img alt="Dim. analysis for {uid}" '
                 f'src="/png/lowdim/{uid}.png" />')
-        return HTML.format(col1, col2), ''
+        yield HTML.format(col1, col2)

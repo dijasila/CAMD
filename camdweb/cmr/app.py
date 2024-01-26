@@ -99,16 +99,16 @@ class CMRAtomsPanel(AtomsPanel):
         self._create_column_two = create_column_two
 
     def create_column_one(self, material, materials):
-        col1, foot = self._create_column_one(material, materials)
+        col1 = self._create_column_one(material, materials)
         if not col1:
             return super().create_column_one(material, materials)
-        return col1, foot
+        return col1
 
     def create_column_two(self, material, materials):
-        col2, foot = self._create_column_two(material, materials)
+        col2 = self._create_column_two(material, materials)
         if not col2:
             return super().create_column_two(material, materials)
-        return col2, foot
+        return col2
 
 
 def app_from_db(dbpath: Path,

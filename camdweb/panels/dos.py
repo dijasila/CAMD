@@ -13,5 +13,5 @@ class DOSPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
-        return (HTML.format(uid=material.uid), '')
+                 materials: Materials) -> str:
+        yield HTML.format(uid=material.uid)

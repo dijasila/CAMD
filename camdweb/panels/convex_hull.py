@@ -41,7 +41,7 @@ HTML = """
 </div>
 """
 
-FOOTER = """
+SCRIPT = """
 <script type='text/javascript'>
 var graphs = {chull_json};
 Plotly.newPlot('chull', graphs, {{}});
@@ -65,8 +65,8 @@ class ConvexHullPanel(Panel):
         chull, tbl1, tbl2 = make_figure_and_tables(refs, verbose=False)
         html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
         if chull:
-            return (html, FOOTER.format(chull_json=chull))
-        return html, ''  # pragma: no cover
+            yield html + SCRIPT.format(chull_json=chull)
+        yield html  # pragma: no cover
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],

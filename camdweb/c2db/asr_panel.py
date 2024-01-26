@@ -2,6 +2,7 @@
 import gzip
 import importlib
 from pathlib import Path
+from typing import Generator
 
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
@@ -90,13 +91,14 @@ class ASRPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> (
+            tuple[str, str] |
+            Generator[tuple[str, str], None, None]):
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
-            yield
-            yield ('', '')
+            return
         result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
         self.title = p['title']
@@ -134,9 +136,8 @@ class ASRPanel(Panel):
         html = HTML.format(title=p['title'],
                            col1='\n'.join(columns[0]),
                            col2='\n'.join(columns[1]))
-        foot = ''
 
-        yield html, foot
+        yield html
 
 
 def thing2html(thing: dict, path: Path) -> str:

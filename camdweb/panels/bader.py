@@ -20,12 +20,10 @@ class BaderPanel(Panel):
                  materials: Materials) -> tuple[str, str]:
         path = material.folder / 'bader.json'
         if not path.is_file():
-            return ('', '')
+            return
         charges = json.loads(path.read_text())['charges']
-        return (
-            HTML.format(
-                table=table(['#', 'Chemical symbol', 'Charges [|e|]'],
-                            [(n, s, f'{c:.2f}') for n, (s, c)
-                             in enumerate(zip(material.atoms.symbols,
-                                              charges))])),
-            '')
+        yield HTML.format(
+            table=table(['#', 'Chemical symbol', 'Charges [|e|]'],
+                        [(n, s, f'{c:.2f}') for n, (s, c)
+                         in enumerate(zip(material.atoms.symbols,
+                                          charges))]))

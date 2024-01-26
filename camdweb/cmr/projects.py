@@ -53,10 +53,10 @@ class ProjectDescription:
         pass
 
     def create_column_one(self, material: Material, materials: Materials):
-        return '', ''
+        return ''
 
     def create_column_two(self, material: Material, materials: Materials):
-        return '', ''
+        return ''
 
 
 @project('solar')
@@ -157,9 +157,8 @@ class ABS3BandStructurePanel(Panel):
             dct = connect(dbpath).get(id=uid).data
             ok = abs3_bs(dct, path)
             if not ok:
-                return ('', '')
-        return (
-            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />', '')
+                return
+        yield f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />'
 
 
 def abs3_bs(d: dict, path: Path) -> bool:
@@ -514,7 +513,7 @@ class Imp2DProjectDescription(ProjectDescription):
                   'en2',
                   'eform',
                   'dopant_chemical_potential',
-                  'conv2'])]), ''
+                  'conv2'])])
 
 
 @project('ads1d')
@@ -615,7 +614,7 @@ class BiDBProjectDescription(ProjectDescription):
                 ('Monolayer in C2DB',
                  f'<a href=https://cmrdb.fysik.dtu.dk/c2db/row/{mid}>'
                  f'{mid}</a>'))
-        return '\n'.join(table(header, rows) for header, rows in tables), ''
+        return '\n'.join(table(header, rows) for header, rows in tables)
 
 
 @project('lowdim')
@@ -713,14 +712,14 @@ class LowDimProjectDescription(ProjectDescription):
         else:
             assert material.source == 'ICSD'
             rows.insert(0, ('ICSD Number', material.dbid))
-        return table(['Basic properties', ''], rows), ''
+        return table(['Basic properties', ''], rows)
 
     def create_column_two(self,
                           material: Material,
                           materials: Materials) -> tuple[str, str]:
         if material.source == 'ICSD':
-            return ('not allowed to show atoms', '')
-        return ('', '')  # use default AtomsPanel behavior
+            return 'not allowed to show atoms'
+        return ''  # use default AtomsPanel behavior
 
 
 COD = 'https://www.crystallography.net/cod/'
@@ -788,7 +787,7 @@ class C1DBProjectDescription(ProjectDescription):
             if uid:
                 rows.append(
                     [text, f'<a href={uid}>{uid}</a>'])
-        return table(['XXX', ''], rows), ''
+        return table(['XXX', ''], rows)
 
 
 if __name__ == '__main__':
