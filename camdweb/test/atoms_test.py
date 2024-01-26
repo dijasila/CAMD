@@ -3,8 +3,8 @@ from pathlib import Path
 from ase import Atoms
 from ase.build import bulk, molecule
 
-from cxdb.material import Material
-from cxdb.panels.atoms import AtomsPanel, plot_atoms, get_bonds
+from camdweb.material import Material
+from camdweb.panels.atoms import AtomsPanel, plot_atoms, get_bonds
 
 
 def test_1d():

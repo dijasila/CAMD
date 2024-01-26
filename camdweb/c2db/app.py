@@ -1,6 +1,6 @@
 """C2DB web-app.
 
-The cxdb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
+The camdweb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
 folders and friends (see PATTERNS variable below) to a canonical tree
 layout.
 
@@ -8,7 +8,7 @@ Also contains simple web-app that can run off the tree of folders.
 
 The goal is to have the code decoupled from ASE, GPAW, CMR and ASR.
 Right now ASR webpanel() functions are still used
-(see cxdb.c2db.asr_panel module).
+(see camdweb.c2db.asr_panel module).
 """
 from __future__ import annotations
 
@@ -17,13 +17,13 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-from cxdb.material import Material, Materials
-from cxdb.c2db.asr_panel import ASRPanel
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.panel import Panel
-from cxdb.panels.shift_current import ShiftCurrentPanel
-from cxdb.panels.convex_hull import ConvexHullPanel
-from cxdb.web import CXDBApp
+from camdweb.material import Material, Materials
+from camdweb.c2db.asr_panel import ASRPanel
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.panel import Panel
+from camdweb.panels.shift_current import ShiftCurrentPanel
+from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.web import CAMDApp
 
 
 class C2DBAtomsPanel(AtomsPanel):
@@ -41,7 +41,7 @@ class C2DBAtomsPanel(AtomsPanel):
         self.columns = list(self.column_names)
 
 
-def main(argv: list[str] | None = None) -> CXDBApp:
+def main(argv: list[str] | None = None) -> CAMDApp:
     """Create C2DB app."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -104,7 +104,7 @@ def main(argv: list[str] | None = None) -> CXDBApp:
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 
     root = folders[0].parent.parent.parent
-    return CXDBApp(materials, initial_columns, root)
+    return CAMDApp(materials, initial_columns, root)
 
 
 def test():  # pragma: no cover

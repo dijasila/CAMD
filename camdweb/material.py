@@ -8,11 +8,11 @@ from typing import Sequence, Generator
 from ase import Atoms
 from ase.io import read
 
-from cxdb.filter import Index, parse, ColVal
-from cxdb.paging import get_pages
-from cxdb.panels.panel import Panel
-from cxdb.session import Session
-from cxdb.utils import formula_dict_to_strings, fft
+from camdweb.filter import Index, parse, ColVal
+from camdweb.paging import get_pages
+from camdweb.panels.panel import Panel
+from camdweb.session import Session
+from camdweb.utils import formula_dict_to_strings, fft
 
 
 class Material:

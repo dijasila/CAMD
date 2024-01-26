@@ -3,11 +3,11 @@ import pytest
 from ase import Atoms
 from ase.calculators.emt import EMT
 
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.bader import BaderPanel
-from cxdb.panels.dos import DOSPanel
-from cxdb.material import Material, Materials
-from cxdb.web import CXDBApp
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.bader import BaderPanel
+from camdweb.panels.dos import DOSPanel
+from camdweb.material import Material, Materials
+from camdweb.web import CAMDApp
 from boddle import boddle
 
 
@@ -23,7 +23,7 @@ def c2db(tmp_path_factory):
     atoms.write(path / 'structure.xyz')
     (path / 'dos.png').write_text('DOS')
     (path / 'bader.json').write_text('{"charges": [1.23, 0.0]}')
-    c2db = CXDBApp(
+    c2db = CAMDApp(
         Materials([Material.from_file(path / 'structure.xyz', 'h2')],
                   [AtomsPanel(), DOSPanel(), BaderPanel()]),
         {'uid', 'volume', 'formula'},

@@ -6,9 +6,9 @@ from typing import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 
-from cxdb.html import table
-from cxdb.panels.panel import Panel
-from cxdb.material import Material, Materials
+from camdweb.html import table
+from camdweb.panels.panel import Panel
+from camdweb.material import Material, Materials
 
 
 Desc = namedtuple('Desc', ['short', 'long', 'unit'])

@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from typing import Callable, TYPE_CHECKING
 if TYPE_CHECKING:
-    from cxdb.material import Material, Materials
+    from camdweb.material import Material, Materials
 
 
 class Panel(abc.ABC):

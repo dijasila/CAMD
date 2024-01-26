@@ -1,9 +1,9 @@
 import pytest
 from ase import Atoms
-from cxdb.c2db.asr_panel import thing2html
-from cxdb.panels.bader import BaderPanel
-from cxdb.filter import str2obj
-from cxdb.material import Material
+from camdweb.c2db.asr_panel import thing2html
+from camdweb.panels.bader import BaderPanel
+from camdweb.filter import str2obj
+from camdweb.material import Material
 
 
 def test_str2obj():

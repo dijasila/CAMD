@@ -1,4 +1,4 @@
-from cxdb.session import Sessions, Session
+from camdweb.session import Sessions, Session
 
 
 def test_sessions():

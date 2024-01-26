@@ -14,10 +14,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from ase.db import connect
-from cxdb.cmr.lowdim import LowDimPanel, keysfortable0
-from cxdb.material import Material, Materials
-from cxdb.panels.panel import Panel
-from cxdb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
+from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
+from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
+from camdweb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}

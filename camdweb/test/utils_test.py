@@ -1,4 +1,4 @@
-from cxdb.html import Range, RangeX, RangeS
+from camdweb.html import Range, RangeX, RangeS
 import pytest
 
 

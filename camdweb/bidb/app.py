@@ -7,11 +7,11 @@ from pathlib import Path
 from ase.db import connect
 from ase.formula import Formula
 
-from cxdb.material import Material, Materials
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.panel import Panel
-from cxdb.html import table
-from cxdb.web import CXDBApp
+from camdweb.material import Material, Materials
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.panel import Panel
+from camdweb.html import table
+from camdweb.web import CAMDApp
 
 
 def expand(db_file: str) -> None:
@@ -100,7 +100,7 @@ class StackingsPanel(Panel):
             material.add_column('nstackings', n)
 
 
-def main(root: Path) -> CXDBApp:
+def main(root: Path) -> CAMDApp:
     mlist: list[Material] = []
     for f in root.glob('*/*/*/'):
         if f.name == 'monolayer':
@@ -119,7 +119,7 @@ def main(root: Path) -> CXDBApp:
 
     initial_columns = ['uid', 'area', 'formula']
 
-    return CXDBApp(materials, initial_columns, root)
+    return CAMDApp(materials, initial_columns, root)
 
 
 if __name__ == '__main__':

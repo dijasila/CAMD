@@ -9,15 +9,15 @@ from pathlib import Path
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
-from cxdb.html import FormPart, Select
-from cxdb.material import Materials
-from cxdb.session import Sessions
+from camdweb.html import FormPart, Select
+from camdweb.material import Materials
+from camdweb.session import Sessions
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
-class CXDBApp:
-    title = 'CXDB'
+class CAMDApp:
+    title = 'CAMD'
 
     def __init__(self,
                  materials: Materials,

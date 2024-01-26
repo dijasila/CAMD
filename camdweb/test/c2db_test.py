@@ -6,11 +6,11 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
 
-from cxdb.c2db.app import main
-from cxdb.c2db.convex_hull import update_chull_data
-from cxdb.c2db.copy_files import copy_materials
-from cxdb.c2db.oqmd123 import main as create_oqmd_json_gz_file
-from cxdb.test.c2db import create_tree
+from camdweb.c2db.app import main
+from camdweb.c2db.convex_hull import update_chull_data
+from camdweb.c2db.copy_files import copy_materials
+from camdweb.c2db.oqmd123 import main as create_oqmd_json_gz_file
+from camdweb.test.c2db import create_tree
 
 
 def create_oqmd_db_file(dir: Path):

@@ -15,7 +15,7 @@ Build tree like this::
     $ cd /tmp
     $ mkdir tree
     $ cd tree
-    $ python -m cxdb.c2db.copy_files <root-dir> <pattern> <pattern> ...
+    $ python -m camdweb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
     """
 import json
@@ -27,7 +27,7 @@ from pathlib import Path
 import rich.progress as progress
 from ase import Atoms
 from ase.io import read
-from cxdb.c2db.asr_panel import read_result_file
+from camdweb.c2db.asr_panel import read_result_file
 
 RESULT_FILES = [
     'convex_hull',

@@ -4,8 +4,8 @@ from pathlib import Path
 from ase.formula import Formula
 from ase.phasediagram import PhaseDiagram
 
-from cxdb.c2db.oqmd123 import read_oqmd123_data
-from cxdb.panels.convex_hull import group_references
+from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb.panels.convex_hull import group_references
 
 
 def update_chull_data(root: Path) -> None:

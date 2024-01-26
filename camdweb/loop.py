@@ -7,7 +7,7 @@ from time import time
 def main(folder: Path) -> None:  # pragma: no cover
     while True:
         t = time()
-        subprocess.run(f'python3 -m cxdb.web {folder}/*/', shell=True)
+        subprocess.run(f'python3 -m camdweb.web {folder}/*/', shell=True)
         t = time() - t
         if t < 20:
             return

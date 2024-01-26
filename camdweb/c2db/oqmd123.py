@@ -1,6 +1,6 @@
 """Get convex-hull data from OQMD123.
 
-python -m cxdb.c2db.oqmd123 <path-to-oqmd123.db-file>
+python -m camdweb.c2db.oqmd123 <path-to-oqmd123.db-file>
 
 The OQMD123 database file can be obtained here:
 

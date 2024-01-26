@@ -31,9 +31,9 @@ from ase.io import read
 from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
-from cxdb.material import Material, Materials
-from cxdb.panels.panel import Panel
-from cxdb.html import table
+from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
+from camdweb.html import table
 
 HTML = """
 <h4>{formula}</h4>

@@ -1,5 +1,5 @@
 import pytest
-from cxdb.filter import parse, Index
+from camdweb.filter import parse, Index
 
 
 @pytest.fixture(scope='module')

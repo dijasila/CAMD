@@ -6,7 +6,7 @@ import numpy as np
 from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
-from cxdb.cmr.projects import projects, ProjectDescription
+from camdweb.cmr.projects import projects, ProjectDescription
 
 
 def create_db_file(projects_name: str,

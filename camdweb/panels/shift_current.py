@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from pathlib import Path
 
-from cxdb.material import Material, Materials
-from cxdb.panels.panel import Panel
-from cxdb.c2db.asr_panel import read_result_file
+from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
+from camdweb.c2db.asr_panel import read_result_file
 
 HTML = """
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />

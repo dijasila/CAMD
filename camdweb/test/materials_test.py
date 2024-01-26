@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 from ase import Atoms
-from cxdb.material import Material, Materials
-from cxdb.c2db.asr_panel import Row
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.panel import Panel
-from cxdb.session import Session
+from camdweb.material import Material, Materials
+from camdweb.c2db.asr_panel import Row
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.panel import Panel
+from camdweb.session import Session
 
 
 @pytest.fixture(scope='module')

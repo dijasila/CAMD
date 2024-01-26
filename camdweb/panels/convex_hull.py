@@ -23,10 +23,10 @@ import plotly.graph_objs as go
 from ase.formula import Formula
 from ase.phasediagram import PhaseDiagram
 
-from cxdb.html import table
-from cxdb.material import Material, Materials
-from cxdb.c2db.asr_panel import read_result_file
-from cxdb.panels.panel import Panel
+from camdweb.html import table
+from camdweb.material import Material, Materials
+from camdweb.c2db.asr_panel import read_result_file
+from camdweb.panels.panel import Panel
 
 HTML = """
 <div class="row">
@@ -218,7 +218,7 @@ def group_references(references: dict[str, tuple[str, ...]],
 
 if __name__ == '__main__':
     # Example:
-    # pyhton -m cxdb.panels.convex_hull A:0 B:0 AB:-0.5
+    # pyhton -m camdweb.panels.convex_hull A:0 B:0 AB:-0.5
     refs = []
     for arg in sys.argv[1:]:
         formula, energy = arg.split(':')

@@ -1,8 +1,8 @@
 import json
 
-from cxdb.panels.panel import Panel
-from cxdb.material import Material, Materials
-from cxdb.html import table
+from camdweb.panels.panel import Panel
+from camdweb.material import Material, Materials
+from camdweb.html import table
 
 
 HTML = """

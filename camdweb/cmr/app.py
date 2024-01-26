@@ -12,12 +12,12 @@ from ase.db import connect
 from ase.db.row import AtomsRow
 from bottle import Bottle, static_file, template
 
-from cxdb.cmr.projects import ProjectDescription, create_project_description
-from cxdb.html import FormPart, table
-from cxdb.material import Material, Materials
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.panel import Panel
-from cxdb.web import CXDBApp
+from camdweb.cmr.projects import ProjectDescription, create_project_description
+from camdweb.html import FormPart, table
+from camdweb.material import Material, Materials
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.panel import Panel
+from camdweb.web import CAMDApp
 
 CMR = 'https://cmr.fysik.dtu.dk'
 
@@ -56,7 +56,7 @@ class CMRProjectsApp:
         return static_file(path.name, path.parent)
 
 
-class CMRProjectApp(CXDBApp):
+class CMRProjectApp(CAMDApp):
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],

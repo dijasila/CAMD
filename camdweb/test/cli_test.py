@@ -2,7 +2,7 @@ from ase import Atoms
 from ase.calculators.emt import EMT
 from ase.calculators.singlepoint import SinglePointCalculator
 
-from cxdb.cli import main
+from camdweb.cli import main
 
 
 def test_cli(tmp_path):

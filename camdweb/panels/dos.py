@@ -1,5 +1,5 @@
-from cxdb.panels.panel import Panel
-from cxdb.material import Material, Materials
+from camdweb.panels.panel import Panel
+from camdweb.material import Material, Materials
 
 HTML = """
 <div class="row">

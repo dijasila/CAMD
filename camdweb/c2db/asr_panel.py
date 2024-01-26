@@ -6,9 +6,9 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
-from cxdb.html import table
-from cxdb.material import Material, Materials
-from cxdb.panels.panel import Panel
+from camdweb.html import table
+from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
 
 HTML = """
 <h4>{title}</h4>

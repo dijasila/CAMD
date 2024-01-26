@@ -3,9 +3,9 @@ from pathlib import Path
 
 import pytest
 from boddle import boddle
-from cxdb.cmr.app import main
-from cxdb.cmr.projects import abs3_bs, create_project_description, projects
-from cxdb.test.cmr import create_db_file
+from camdweb.cmr.app import main
+from camdweb.cmr.projects import abs3_bs, create_project_description, projects
+from camdweb.test.cmr import create_db_file
 
 
 @pytest.fixture

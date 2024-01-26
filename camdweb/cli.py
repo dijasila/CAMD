@@ -4,9 +4,9 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
-from cxdb.material import Material, Materials
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.web import CXDBApp
+from camdweb.material import Material, Materials
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.web import CAMDApp
 
 
 class MyAtomsPanel(AtomsPanel):
@@ -41,7 +41,7 @@ class MyAtomsPanel(AtomsPanel):
 
 
 def main(argv: list[str] | None = None,
-         run=True) -> CXDBApp:
+         run=True) -> CAMDApp:
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', nargs='+',
                         help='Filename of atomic structure file.')
@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None,
 
     root = Path.cwd()
 
-    app = CXDBApp(materials, initial_columns, root)
+    app = CAMDApp(materials, initial_columns, root)
     if run:  # pragma: no cover
         app.app.run(host='0.0.0.0', port=8080, debug=True)
     return app

@@ -3,7 +3,7 @@ import os
 from ase import Atoms
 from ase.db import connect
 
-from cxdb.bidb.app import expand, main
+from camdweb.bidb.app import expand, main
 
 
 def test_bidb(tmp_path):

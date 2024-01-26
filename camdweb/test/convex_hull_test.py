@@ -1,7 +1,7 @@
 import pytest
 from ase.phasediagram import PhaseDiagram
 
-from cxdb.panels.convex_hull import (group_references, make_figure_and_tables,
+from camdweb.panels.convex_hull import (group_references, make_figure_and_tables,
                                      plot_2d, plot_3d)
 
 
