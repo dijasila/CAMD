@@ -1,3 +1,4 @@
+import gzip
 import os
 from pathlib import Path
 
@@ -8,8 +9,8 @@ from ase.db import connect
 from cxdb.c2db.app import main
 from cxdb.c2db.convex_hull import update_chull_data
 from cxdb.c2db.copy_files import copy_materials
-from cxdb.test.c2db import create_tree
 from cxdb.c2db.oqmd123 import main as create_oqmd_json_gz_file
+from cxdb.test.c2db import create_tree
 
 
 def create_oqmd_db_file(dir: Path):
@@ -47,7 +48,11 @@ def test_everything(tmp_path):
 
     app.index()
 
-    with gzip.open('...'):
+    # Compress one of the result files:
+    bs = tmp_path / 'AB2/1MoS2/1/results-asr.bandstructure.json'
+    with gzip.open(bs.with_suffix('.json.gz'), 'wt') as fd:
+        fd.write(bs.read_text())
+    bs.unlink()
 
     html = app.material('1MoS2-1')
     assert '1.24' in html  # Bader charge

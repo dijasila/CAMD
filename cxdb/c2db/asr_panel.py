@@ -24,7 +24,7 @@ HTML = """
 
 
 def read_result_file(path: Path) -> dict:
-    gz = path.with_stem('.json.gz')
+    gz = path.with_suffix('.json.gz')
     if gz.is_file():
         with gzip.open(gz, 'rt') as fd:
             txt = fd.read()
@@ -65,8 +65,6 @@ class Data:
             dct = read_result_file(self.folder / name)
         except FileNotFoundError:
             return None
-        if 'kwargs' in dct:
-            return dct['kwargs']['data']
         return dct
 
     def __contains__(self, name):
@@ -96,7 +94,6 @@ class ASRPanel(Panel):
                  materials: Materials) -> tuple[str, str]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
-        print('**********', self.name)
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
             return ('', '')

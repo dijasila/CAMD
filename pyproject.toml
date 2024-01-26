@@ -23,6 +23,7 @@ classifiers = [
 
 [project.scripts]
 cxdb = "cxdb.cli:main"
+camd-web-coverage = "cxdb.tools:coverage"
 
 [project.optional-dependencies]
 test = [
