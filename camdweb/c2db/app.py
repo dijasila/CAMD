@@ -77,27 +77,26 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                 keys.add(key)
             pb.advance(pid)
 
-    panels: list[Panel] = [C2DBAtomsPanel(),
-                           ConvexHullPanel()]
-    for name in ['stiffness',
-                 'phonons',
-                 'deformationpotentials',
-                 'bandstructure',
-                 'pdos',
-                 'effective_masses',
-                 'hse',
-                 'gw',
-                 'borncharges',
-                 'shg',
-                 'polarizability',
-                 'infraredpolarizability',
-                 'raman',
-                 # 'bse',
-                 'bader',
-                 'piezoelectrictensor']:
-        print(name)
-        panels.append(ASRPanel(name, keys))
-    panels.append(ShiftCurrentPanel())
+    panels: list[Panel] = [
+        C2DBAtomsPanel(),
+        ConvexHullPanel(),
+        ASRPanel('stiffness', keys),
+        ASRPanel('phonons', keys),
+        ASRPanel('deformationpotentials', keys),
+        ASRPanel('bandstructure', keys),
+        # ASRPanel('pdos', keys),
+        ASRPanel('effective_masses', keys),
+        ASRPanel('hse', keys),
+        ASRPanel('gw', keys),
+        ASRPanel('borncharges', keys),
+        ASRPanel('shg', keys),
+        ASRPanel('polarizability', keys),
+        ASRPanel('infraredpolarizability', keys),
+        ASRPanel('raman', keys),
+        # ASRPanel('bse', keys),
+        BaderPanel(),
+        ASRPanel('piezoelectrictensor', keys),
+        ShiftCurrentPanel()]
 
     materials = Materials(mlist, panels)
 
@@ -113,4 +112,4 @@ def test():  # pragma: no cover
 
 
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8081, debug=True)
+    main().app.run(host='0.0.0.0', port=8081, debug=True, server='waitress')
