@@ -96,7 +96,7 @@ def parse1(q: str) -> str:
 
         # Find key=value, key>value, ...
         matches = reversed(
-            list(re.finditer(fr'([A-Za-z][a-z0-9_]+{x}[-A-Za-z0-9.+_]+)', q)))
+            list(re.finditer(fr'([A-Za-z][a-z0-9_]*{x}[-A-Za-z0-9.+_]+)', q)))
         for m in matches:
             i, j = m.span()
             k, v = m[1].split(x)
@@ -121,6 +121,7 @@ def parse1(q: str) -> str:
         q = q.replace(f'#{i}', v)
 
     if n1 != n:
+        print(q)
         raise SyntaxError(f'Bad filter string: {q0!r}')
 
     return q
