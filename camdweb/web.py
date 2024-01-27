@@ -1,10 +1,12 @@
 """Base web-app class."""
 from __future__ import annotations
 
+import re
 import sys
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
+from typing import Iterator
 
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
@@ -117,17 +119,33 @@ class CAMDApp:
         if uid == 'stop':  # pragma: no cover
             sys.stderr.close()
         material = self.materials[uid]
-        panels = []
-        footer = ''
+
+        titles = []
+        generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
-            html1, html2 = panel.get_html(material, self.materials)
-            if html1:
-                panels.append((panel.title, html1))
-                footer += html2
+            generator = panel.get_html(material, self.materials)
+            try:
+                html = next(generator)
+            except StopIteration:
+                continue
+            if html == '':  # result will come next time
+                generators.append(generator)
+            else:
+                generators.append(iter([html]))
+            titles.append(panel.title)
+
+        panels = []
+        scripts = []
+        for gen, title in zip(generators, titles):
+            html = next(gen)
+            html, script = cut_out_script(html)
+            panels.append((title, html))
+            scripts.append(script)
+
         return template('material.html',
                         title=uid,
                         panels=panels,
-                        footer=footer)
+                        footer='\n'.join(scripts))
 
     def callback(self) -> str:
         query = request.query
@@ -141,3 +159,20 @@ class CAMDApp:
 
     def png(self, path: str) -> bytes:
         return static_file(path, self.root)
+
+
+def cut_out_script(html: str) -> tuple[str, str]:
+    r"""XXX.
+
+    >>> cut_out_script('''Hello
+    ... <script>
+    ...   ...
+    ... </script>
+    ... CAMd''')
+    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
+    """
+    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
+    if m:
+        i, j = m.span()
+        return html[:i] + html[j:], html[i:j]
+    return html, ''

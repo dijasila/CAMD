@@ -3,14 +3,15 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from pathlib import Path
+from typing import Generator
 
 from ase.db import connect
 from ase.formula import Formula
 
+from camdweb.html import table
 from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
-from camdweb.html import table
 from camdweb.web import CAMDApp
 
 
@@ -77,9 +78,9 @@ class StackingsPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         if material.number_of_layers == 2:
-            return ('', '')
+            return
         rows = []
         for f in self.bilayer_folders(material):
             uid = f'{material.uid}-{f.name}'
@@ -87,7 +88,7 @@ class StackingsPanel(Panel):
             rows.append([f'<a href="{uid}">{uid}</a>',
                          bilayer['binding_energy_zscan']])
         tbl = table(['Stacking', 'Binding energy'], rows)
-        return tbl, ''
+        yield tbl
 
     def bilayer_folders(self, material) -> list[Path]:
         return [f for f in material.folder.glob('../*/')

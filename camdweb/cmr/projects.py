@@ -11,13 +11,15 @@ TODO:
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Generator
 
 import matplotlib.pyplot as plt
 from ase.db import connect
+
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
+from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
-from camdweb.html import FormPart, Input, Range, Select, table, RangeX, RangeS
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -53,10 +55,10 @@ class ProjectDescription:
         pass
 
     def create_column_one(self, material: Material, materials: Materials):
-        return '', ''
+        return ''
 
     def create_column_two(self, material: Material, materials: Materials):
-        return '', ''
+        return ''
 
 
 @project('solar')
@@ -148,7 +150,7 @@ class ABS3BandStructurePanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         uid = material.uid
         path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -157,9 +159,8 @@ class ABS3BandStructurePanel(Panel):
             dct = connect(dbpath).get(id=uid).data
             ok = abs3_bs(dct, path)
             if not ok:
-                return ('', '')
-        return (
-            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />', '')
+                return
+        yield f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />'
 
 
 def abs3_bs(d: dict, path: Path) -> bool:
@@ -493,7 +494,7 @@ class Imp2DProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         return '\n'.join(
             table([header, ''],
                   materials.table(material, names))
@@ -514,7 +515,7 @@ class Imp2DProjectDescription(ProjectDescription):
                   'en2',
                   'eform',
                   'dopant_chemical_potential',
-                  'conv2'])]), ''
+                  'conv2'])])
 
 
 @project('ads1d')
@@ -575,7 +576,7 @@ class BiDBProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         def tab(names):
             return materials.table(material, names)
 
@@ -615,7 +616,7 @@ class BiDBProjectDescription(ProjectDescription):
                 ('Monolayer in C2DB',
                  f'<a href=https://cmrdb.fysik.dtu.dk/c2db/row/{mid}>'
                  f'{mid}</a>'))
-        return '\n'.join(table(header, rows) for header, rows in tables), ''
+        return '\n'.join(table(header, rows) for header, rows in tables)
 
 
 @project('lowdim')
@@ -699,7 +700,7 @@ class LowDimProjectDescription(ProjectDescription):
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         rows = materials.table(material, keysfortable0)
         doi = material.get('doi')
         if doi:
@@ -713,14 +714,14 @@ class LowDimProjectDescription(ProjectDescription):
         else:
             assert material.source == 'ICSD'
             rows.insert(0, ('ICSD Number', material.dbid))
-        return table(['Basic properties', ''], rows), ''
+        return table(['Basic properties', ''], rows)
 
     def create_column_two(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         if material.source == 'ICSD':
-            return ('not allowed to show atoms', '')
-        return ('', '')  # use default AtomsPanel behavior
+            return 'not allowed to show atoms'
+        return ''  # use default AtomsPanel behavior
 
 
 COD = 'https://www.crystallography.net/cod/'
@@ -788,7 +789,7 @@ class C1DBProjectDescription(ProjectDescription):
             if uid:
                 rows.append(
                     [text, f'<a href={uid}>{uid}</a>'])
-        return table(['XXX', ''], rows), ''
+        return table(['XXX', ''], rows)
 
 
 if __name__ == '__main__':

@@ -56,7 +56,7 @@ def test_collision():
         column_names = {'formula': '...'}
 
         def get_html(self, material, materials):
-            return '', ''
+            return
 
     with pytest.raises(ValueError):
         panel = MyPanel()

@@ -2,8 +2,8 @@
 import gzip
 import importlib
 from pathlib import Path
+from typing import Generator
 
-import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
 from camdweb.html import table
@@ -52,8 +52,9 @@ class Row:
     def get(self, name: str, default=None):
         if hasattr(self, name):
             return getattr(self, name)
-        print('MISSING:', name, default)
-        return default
+        else:  # pragma: no cover
+            print('MISSING:', name, default)
+            return default
 
 
 class Data:
@@ -67,8 +68,8 @@ class Data:
             return None
         return dct
 
-    def __contains__(self, name):
-        return False
+    # def __contains__(self, name):
+    #     return False
 
     def __getitem__(self, name):
         return self.get(name)
@@ -91,15 +92,15 @@ class ASRPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
-            return ('', '')
+            return
         result = self.result_class(dct)
         (p,) = self.webpanel(result, row, self.key_descriptions)
-        plt.close()
+        self.title = p['title']
 
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
@@ -108,20 +109,34 @@ class ASRPanel(Panel):
                     html = thing2html(thing, material.folder)
                     columns[i].append(html)
 
+        async_results = []
         for desc in p.get('plot_descriptions', []):
+            if desc['filenames'] == ['bs.html']:
+                continue
             paths = [material.folder / filename
                      for filename in desc['filenames']]
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    desc['function'](row, *paths)
+                    if 1:
+                        pool = materials.process_pool
+                        result = pool.apply_async(
+                            desc['function'], (row, *paths))
+                        async_results.append(result)
+                    else:
+                        desc['function'](row, *paths)
                     break
 
-        self.title = p['title']
-        return (HTML.format(title=p['title'],
-                            col1='\n'.join(columns[0]),
-                            col2='\n'.join(columns[1])),
-                '')
+        yield ''
+
+        for result in async_results:
+            result.wait()
+
+        html = HTML.format(title=p['title'],
+                           col1='\n'.join(columns[0]),
+                           col2='\n'.join(columns[1]))
+
+        yield html
 
 
 def thing2html(thing: dict, path: Path) -> str:
