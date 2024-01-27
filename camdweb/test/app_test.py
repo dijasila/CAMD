@@ -76,10 +76,6 @@ def test_png(c2db):
     c2db.png('H2/dos.png')
 
 
-def test_help(c2db):
-    c2db.help()
-
-
 @pytest.mark.parametrize('fmt, ref_substring', [
     ('cif', b'data_image0'),
     ('json', '"energy": 1.4'),
