@@ -55,7 +55,6 @@ class CAMDApp:
         self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
-        self.app.route('/help')(self.help)
 
         for fmt in ['xyz', 'cif', 'json']:
             self.app.route(f'/material/<uid>/download/{fmt}')(
@@ -153,9 +152,6 @@ class CAMDApp:
         uid = query['uid']
         material = self.materials[uid]
         return self.callbacks[name](material, int(query['data']))
-
-    def help(self):
-        return template('help.html')
 
     def png(self, path: str) -> bytes:
         return static_file(path, self.root)
