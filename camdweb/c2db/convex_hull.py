@@ -82,4 +82,6 @@ def update_chull_data(atomic_energies: dict[str, float],
 
 
 if __name__ == '__main__':
-    update_chull_data(Path())
+    root = Path()
+    atomic_energies, refs = read_chull_data(root)
+    update_chull_data(atomic_energies, refs, root)
