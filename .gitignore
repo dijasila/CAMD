@@ -5,4 +5,4 @@ dist/
 .coverage
 htmlcov/
 venv/
-cxdb.egg-info/
+camdweb.egg-info/

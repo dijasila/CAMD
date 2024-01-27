@@ -1,7 +1,7 @@
 from collections import namedtuple
 from itertools import combinations
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, Generator
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -112,7 +112,7 @@ class LowDimPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         uid = material.uid
         path = material.folder / f'lowdim/{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -123,4 +123,4 @@ class LowDimPanel(Panel):
                      materials.table(material, keysfortable2))
         col2 = (f'<img alt="Dim. analysis for {uid}" '
                 f'src="/png/lowdim/{uid}.png" />')
-        return HTML.format(col1, col2), ''
+        yield HTML.format(col1, col2)

@@ -16,10 +16,12 @@ Content::
   +-----------+-------------------------------+
 """
 from __future__ import annotations
+
 import json
 import sys
 from functools import cache
 from math import nan
+from typing import Generator
 
 import numpy as np
 import plotly
@@ -31,9 +33,9 @@ from ase.io import read
 from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
+from camdweb.html import table
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
-from camdweb.html import table
 
 HTML = """
 <h4>{formula}</h4>
@@ -82,10 +84,7 @@ COLUMN2 = """
 
     <div id='atoms' class='atoms'></div>
     {axes}
-"""
 
-
-FOOTER = """
 <script type='text/javascript'>
 var graphs = {atoms_json};
 Plotly.newPlot('atoms', graphs, {{}});
@@ -120,29 +119,27 @@ class AtomsPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
-        col1, foot1 = self.create_column_one(material, materials)
-        col2, foot2 = self.create_column_two(material, materials)
-        return (HTML.format(column1=col1,
-                            column2=col2,
-                            formula=material['formula']),
-                foot1 + foot2)
+                 materials: Materials) -> Generator[str, None, None]:
+        col1 = self.create_column_one(material, materials)
+        col2 = self.create_column_two(material, materials)
+        yield HTML.format(column1=col1,
+                          column2=col2,
+                          formula=material['formula'])
 
     def create_column_one(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
-        return (table(None, materials.table(material, self.columns)), '')
+                          materials: Materials) -> str:
+        return table(None, materials.table(material, self.columns))
 
     def create_column_two(self,
                           material: Material,
-                          materials: Materials) -> tuple[str, str]:
+                          materials: Materials) -> str:
         defrep = default_repeat(material)
-        return (
-            COLUMN2.format(
-                axes=self.axes(material),
-                options=repeat_options(defrep, 4),
-                uid=material.uid),
-            FOOTER.format(atoms_json=self.plot(material, defrep)))
+        return COLUMN2.format(
+            axes=self.axes(material),
+            options=repeat_options(defrep, 4),
+            uid=material.uid,
+            atoms_json=self.plot(material, defrep))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms

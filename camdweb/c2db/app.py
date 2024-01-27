@@ -21,6 +21,7 @@ from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
+from camdweb.panels.bader import BaderPanel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.web import CAMDApp
@@ -108,7 +109,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('2MoS2-2')
+    app.material('1MoS2-1')
 
 
 if __name__ == '__main__':

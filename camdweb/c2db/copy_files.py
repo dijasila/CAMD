@@ -45,7 +45,6 @@ RESULT_FILES = [
     'infraredpolarizability',
     'raman',
     'bse',
-    'bader',
     'piezoelectrictensor',
     'gs',
     'gs@calculate',
@@ -119,6 +118,14 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     folder.mkdir(exist_ok=False, parents=True)
 
     atoms.write(folder / 'structure.xyz')
+
+    try:
+        bc = rrf('bader')['bader_charges']
+    except FileNotFoundError:
+        pass
+    else:
+        (folder / 'bader.json').write_text(
+            json.dumps({'charges': bc.tolist()}))
 
     # Copy result json-files:
     for name in RESULT_FILES:

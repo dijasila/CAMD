@@ -1,5 +1,4 @@
 import copy
-import json
 from pathlib import Path
 
 import ase.io.ulm as ulm
@@ -10,59 +9,6 @@ from ase.io.jsonio import encode
 from ase.io.trajectory import write_atoms
 from ase.spectrum.band_structure import BandStructure
 from asr.bandstructure import Result
-
-# Convex-hull example data:
-CHULL = {
-    'hform': -0.920927544752896,
-    'references': [
-        {
-            'hform': 0.0,
-            'formula': 'S48',
-            'uid': 'S48',
-            'natoms': 48,
-            'title': 'Bulk crystals (from OQMD123)',
-            'legend': 'Bulk crystals',
-            'name': 'S48',
-            'label': 'S48',
-            'link': 'https://cmrdb.fysik.dtu.dk/oqmd123/row/S48',
-            'method': 'DFT',
-        },
-        {
-            'hform': 0.0,
-            'formula': 'Mo',
-            'uid': 'Mo',
-            'natoms': 1,
-            'title': 'Bulk crystals (from OQMD123)',
-            'legend': 'Bulk crystals',
-            'name': 'Mo',
-            'label': 'Mo',
-            'link': 'https://cmrdb.fysik.dtu.dk/oqmd123/row/Mo',
-            'method': 'DFT',
-        },
-        {
-            'hform': -0.18018421551178587,
-            'formula': 'Mo2S2',
-            'uid': 'Mo2S2-925d20f42e31',
-            'natoms': 4,
-            'title': 'Monolayers (from C2DB)',
-            'legend': 'Monolayers',
-            'name': 'Mo2S2 (AB-187-hi)',
-            'label': 'Mo2S2 (AB-187-hi)',
-            'link': '/c2db/row/Mo2S2-925d20f42e31',
-            'method': 'DFT',
-        },
-        {
-            'hform': -0.920927544752896,
-            'formula': 'MoS2',
-            'uid': 'MoS2-b3b4685fb6e1',
-            'natoms': 3,
-            'title': 'Monolayers (from C2DB)',
-            'legend': 'Monolayers',
-            'name': 'MoS2 (AB2-187-bi)',
-            'label': 'MoS2 (AB2-187-bi)',
-            'link': '/c2db/row/MoS2-b3b4685fb6e1',
-            'method': 'DFT',
-        }]}
 
 
 def create_data(dir: Path, atoms: Atoms) -> None:
@@ -84,8 +30,6 @@ def create_data(dir: Path, atoms: Atoms) -> None:
         '{"kwargs": {"data": {"gap": 1.8, "evac":4.5}}}')
     (dir / 'results-asr.gs@calculate.json').write_text(
         '{}')
-    (dir / 'results-asr.convex_hull.json').write_text(
-        json.dumps({'kwargs': {'data': CHULL}}))
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
         '{"kwargs": {"data": {"uid": "MoS2-b3b4685fb6e1"}}}')
 

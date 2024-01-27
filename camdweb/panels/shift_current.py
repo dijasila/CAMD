@@ -1,12 +1,13 @@
+from pathlib import Path
 from textwrap import wrap
+from typing import Generator
 
 import matplotlib.pyplot as plt
 import numpy as np
-from pathlib import Path
 
+from camdweb.c2db.asr_panel import read_result_file
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
-from camdweb.c2db.asr_panel import read_result_file
 
 HTML = """
 <img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
@@ -18,12 +19,12 @@ class ShiftCurrentPanel(Panel):
 
     def get_html(self,
                  material: Material,
-                 materials: Materials) -> tuple[str, str]:
+                 materials: Materials) -> Generator[str, None, None]:
         result_file = material.folder / 'results-asr.shift.json'
         if not result_file.is_file():
-            return ('', '')
+            return
         self.make_figures(result_file)
-        return (HTML.format(uid=material.uid), '')
+        yield HTML.format(uid=material.uid)
 
     def make_figures(self, result_file: Path):
         data = read_result_file(result_file)
