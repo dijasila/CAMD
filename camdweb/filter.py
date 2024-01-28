@@ -43,7 +43,6 @@ def parse(q: str) -> Callable[[Index], set[int]]:
     {0}
     """
     q = parse1(q)
-    print(q)
     return eval(f'lambda i: {q}')
 
 
@@ -121,7 +120,6 @@ def parse1(q: str) -> str:
         q = q.replace(f'#{i}', v)
 
     if n1 != n:
-        print(q)
         raise SyntaxError(f'Bad filter string: {q0!r}')
 
     return q
@@ -263,7 +261,6 @@ class Index:
                 return result
             raise ValueError
 
-        print(name, op, value)
         return set()
 
     def float_key(self, name: str, op: str, value: float) -> set[int]:

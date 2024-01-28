@@ -159,7 +159,8 @@ class Materials:
                  session: Session) -> tuple[list[tuple[str, list[str]]],
                                             list[tuple[str, str]],
                                             list[tuple[int, str]],
-                                            list[tuple[str, str]]]:
+                                            list[tuple[str, str]],
+                                            str]:
         """Filter rows for table.
 
         Example::
@@ -181,6 +182,9 @@ class Materials:
         new_columns:
             list of (column name, columns HTML-string) tuples for columns not
             shown.
+
+        error:
+            Error message.
         """
         filter = session.filter
         try:

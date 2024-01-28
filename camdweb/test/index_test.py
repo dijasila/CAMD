@@ -34,14 +34,17 @@ def index():
      ('i1>=42', {0}),
      ('b1=False', {0}),
      ('b1=0', {0}),
-     ('Source=COD', {0}),
-     ('b1235=0', {0}),
-     pytest.param('Source=COD', set(), marks=[pytest.mark.xfail])] +
+     ('Source=COD', SyntaxError),
+     ('b1235=0', set())] +
     [(f, set()) for f in ['N', 'N=1', 'N!=0', 'N>0', 'N>=1', 'N<0']] +
     [(f, {0, 1, 2}) for f in ['N=0', 'N!=1', 'N<1', 'N<=0', 'N<=1']])
 def test_index(index: Index, filter: str, result: set[int]):
-    func = parse(filter)
-    assert func(index) == result
+    if isinstance(result, set):
+        func = parse(filter)
+        assert func(index) == result
+    else:
+        with pytest.raises(result):
+            func = parse(filter)
 
 
 @pytest.fixture(scope='module')

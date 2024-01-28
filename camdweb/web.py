@@ -82,7 +82,8 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(filter_string, query)
         search = '\n'.join(fp.render(query) for fp in self.form_parts)
-        rows, header, pages, new_columns, error = self.materials.get_rows(session)
+        rows, header, pages, new_columns, error = self.materials.get_rows(
+            session)
 
         return template('index.html',
                         title=self.title,

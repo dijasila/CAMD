@@ -41,6 +41,10 @@ def test_materials(material):
     s.update('stoichiometry=AB', {})
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 0
+    s.update('Ha>100', {})
+    rows, _, _, _, error = materials.get_rows(s)
+    assert len(rows) == 0
+    assert error == 'Unknown chemical symbol "Ha"'
 
 
 def test_attribute_error(material):
