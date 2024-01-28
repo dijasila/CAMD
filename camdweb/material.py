@@ -159,7 +159,8 @@ class Materials:
                  session: Session) -> tuple[list[tuple[str, list[str]]],
                                             list[tuple[str, str]],
                                             list[tuple[int, str]],
-                                            list[tuple[str, str]]]:
+                                            list[tuple[str, str]],
+                                            str]:
         """Filter rows for table.
 
         Example::
@@ -181,10 +182,19 @@ class Materials:
         new_columns:
             list of (column name, columns HTML-string) tuples for columns not
             shown.
+
+        error:
+            Error message.
         """
         filter = session.filter
-        func = parse(filter)
-        rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
+        try:
+            func = parse(filter)
+        except SyntaxError as ex:
+            error = ex.args[0]
+            rows = []
+        else:
+            rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
+            error = ''
 
         if rows and session.sort:
             missing = '' if session.sort in self.index.strings else nan
@@ -205,7 +215,8 @@ class Materials:
                 [(name, self.column_names[name]) for name in session.columns],
                 pages,
                 [(name, value) for name, value in self.column_names.items()
-                 if name not in session.columns])
+                 if name not in session.columns],
+                error)
 
     @cached_property
     def process_pool(self):

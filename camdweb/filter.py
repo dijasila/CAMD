@@ -88,15 +88,19 @@ def parse1(q: str) -> str:
         for m in matches:
             i, j = m.span()
             k, v = m[1].split(x)
+            if k not in chemical_symbols:
+                raise SyntaxError(f'Unknown chemical symbol "{k}"')
             q = q[:i] + f'(i.key({k!r}, {x!r}, {v}))' + q[j:]
             n += j - i
 
         # Find key=value, key>value, ...
         matches = reversed(
-            list(re.finditer(fr'([a-z][a-z0-9_]+{x}[-A-Za-z0-9.+_]+)', q)))
+            list(re.finditer(fr'([A-Za-z][a-z0-9_]*{x}[-A-Za-z0-9.+_]+)', q)))
         for m in matches:
             i, j = m.span()
             k, v = m[1].split(x)
+            if not k.islower():
+                raise SyntaxError(f'Illegal key: "{k}"')
             v = repr(str2obj(v))
             q = q[:i] + f'(i.key({k!r}, {x!r}, #{len(h)}))' + q[j:]
             h.append(v)

@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         ASRPanel('phonons', keys),
         ASRPanel('deformationpotentials', keys),
         ASRPanel('bandstructure', keys),
-        ASRPanel('pdos', keys),
+        # ASRPanel('pdos', keys),
         ASRPanel('effective_masses', keys),
         ASRPanel('hse', keys),
         ASRPanel('gw', keys),
@@ -113,4 +113,4 @@ def test():  # pragma: no cover
 
 
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8081, debug=True)
+    main().app.run(host='0.0.0.0', port=8081, debug=True, server='waitress')

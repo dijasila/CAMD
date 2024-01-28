@@ -29,10 +29,9 @@ class CMRProjectsApp:
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
 
-        # Pick random project app to use for png and help endpoints:
+        # Pick random project app to use for png endpoint:
         project_app = next(iter(project_apps.values()))
         self.app.route('/png/<path:path>')(project_app.png)
-        self.app.route('/help')(project_app.help)
 
         for name, app in project_apps.items():
             self.app.mount(f'/{name}', app.app)

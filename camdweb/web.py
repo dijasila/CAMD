@@ -55,7 +55,6 @@ class CAMDApp:
         self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
-        self.app.route('/help')(self.help)
 
         for fmt in ['xyz', 'cif', 'json']:
             self.app.route(f'/material/<uid>/download/{fmt}')(
@@ -83,7 +82,8 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(filter_string, query)
         search = '\n'.join(fp.render(query) for fp in self.form_parts)
-        rows, header, pages, new_columns = self.materials.get_rows(session)
+        rows, header, pages, new_columns, error = self.materials.get_rows(
+            session)
 
         return template('index.html',
                         title=self.title,
@@ -93,7 +93,7 @@ class CAMDApp:
                         pages=pages,
                         rows=rows,
                         header=header,
-                        new_columns=new_columns)
+                        new_columns=new_columns, error=error)
 
     def get_filter_string(self, query: dict) -> str:
         """Generate filter string from URL query.
@@ -153,9 +153,6 @@ class CAMDApp:
         uid = query['uid']
         material = self.materials[uid]
         return self.callbacks[name](material, int(query['data']))
-
-    def help(self):
-        return template('help.html')
 
     def png(self, path: str) -> bytes:
         return static_file(path, self.root)

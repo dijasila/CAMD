@@ -21,8 +21,8 @@ def material():
 def test_materials(material):
     materials = Materials([material], [AtomsPanel()])
     s = Session(1, ['uid'])
-    rows, header, pages, new_columns = materials.get_rows(s)
-    assert (rows, header, pages, new_columns) == (
+    rows, header, pages, new_columns, error = materials.get_rows(s)
+    assert (rows, header, pages, new_columns, error) == (
         [('x', ['x'])],
         [('uid', 'Unique ID')],
         [(0, 'previous'), (0, 'next'), (0, '1-1')],
@@ -30,16 +30,21 @@ def test_materials(material):
          ('reduced_formula', 'Reduced formula'),
          ('stoichiometry', 'Stoichiometry'),
          ('nspecies', 'Number of species'),
-         ('volume', 'Volume [Å<sup>3</sup>]')])
+         ('volume', 'Volume [Å<sup>3</sup>]')],
+        '')
     s.update('volume>1,stoichiometry=A', {})
-    rows, _, _, _ = materials.get_rows(s)
+    rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
     s.update('stoichiometry=A', {})
-    rows, _, _, _ = materials.get_rows(s)
+    rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
     s.update('stoichiometry=AB', {})
-    rows, _, _, _ = materials.get_rows(s)
+    rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 0
+    s.update('Ha>100', {})
+    rows, _, _, _, error = materials.get_rows(s)
+    assert len(rows) == 0
+    assert error == 'Unknown chemical symbol "Ha"'
 
 
 def test_attribute_error(material):
