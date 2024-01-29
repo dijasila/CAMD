@@ -3,16 +3,8 @@ from pathlib import Path
 
 from ase.formula import Formula
 
-from camdweb.c2db.oqmd123 import db2json, read_oqmd123_data
 from camdweb.panels.convex_hull import (calculate_ehull_energies,
                                         group_references)
-
-
-def read_chull_data(oqmd_path: Path) -> tuple[dict[str, float],
-                                              dict[str, tuple[dict[str, int],
-                                                              float]]]:
-    atomic_energies, refs = read_oqmd123_data(oqmd_path)
-    return atomic_energies, refs
 
 
 def update_chull_data(atomic_energies: dict[str, float],

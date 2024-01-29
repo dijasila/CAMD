@@ -28,7 +28,8 @@ import rich.progress as progress
 from ase import Atoms
 from ase.io import read
 from camdweb.c2db.asr_panel import read_result_file
-from camdweb.c2db.convex_hull import read_chull_data, update_chull_data
+from camdweb.c2db.convex_hull import update_chull_data
+from camdweb.c2db.oqmd123 import read_oqmd123_data
 
 RESULT_FILES = [
     'convex_hull',
@@ -83,7 +84,7 @@ def copy_materials(root: Path, patterns: list[str],
         # Calculate hform, ehull, ...
         try:
             oqmd_path = Path('oqmd123.json.gz')
-            atomic_energies, refs = read_chull_data(oqmd_path)
+            atomic_energies, refs = read_oqmd123_data(oqmd_path)
         except FileNotFoundError:
             raise FileNotFoundError(
                 f'Could not find {oqmd_path}.\n'
