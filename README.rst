@@ -88,9 +88,31 @@ C2DB-app
     $ python -m camdweb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
     $ python -m camdweb.c2db.app A*/
 
+Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
 
-Testing
--------
+  AB2
+  └── 1MoS2
+      ├── 1
+      │   ├── data.json
+      │   ├── structure.xyz
+      │   ├── results-asr.<property1>.json
+      │   ├── results-asr.<property2>.json
+      │   ├── ...
+      │   └── ...
+      └── 2
+          ├── data.json
+          ├── structure.xyz
+          └── ...
+  ...
+  └── ...
+  oqmd123.json.gz
+  convex-hulls
+  ├── MoS.json
+  └── ...
+
+
+Testing the C2DB-app
+--------------------
 
 For development work, just copy one or a few meterial folders from Niflheim
 to your local machine::

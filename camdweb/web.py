@@ -93,7 +93,8 @@ class CAMDApp:
                         pages=pages,
                         rows=rows,
                         header=header,
-                        new_columns=new_columns, error=error)
+                        new_columns=new_columns,
+                        error=error)
 
     def get_filter_string(self, query: dict) -> str:
         """Generate filter string from URL query.

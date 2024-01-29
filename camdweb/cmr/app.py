@@ -128,13 +128,15 @@ def app_from_db(dbpath: Path,
                 pb.advance(pid)
 
         panels: list[Panel] = [
-            CMRAtomsPanel(pd.column_names,
-                          pd.create_column_one,
-                          pd.create_column_two)]
+            CMRAtomsPanel(
+                {name.lower(): desc
+                 for name, desc in pd.column_names.items()},
+                pd.create_column_one,
+                pd.create_column_two)]
         panels += pd.panels
         materials = Materials(rows, panels)
 
-    initial_columns = [name for name in pd.initial_columns
+    initial_columns = [name.lower() for name in pd.initial_columns
                        if name in materials.column_names]
     return CMRProjectApp(
         materials, initial_columns,
@@ -172,7 +174,7 @@ def row2material(row: AtomsRow,
                 value = float(value)
             elif isinstance(value, float) and not isfinite(value):
                 continue
-            material.add_column(name, value)
+            material.add_column(name.lower(), value)
     pd.postprocess(material)
     return material
 

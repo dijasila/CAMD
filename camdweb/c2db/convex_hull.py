@@ -61,14 +61,22 @@ def update_chull_data(atomic_energies: dict[str, float],
         (folder / (''.join(symbols) + '.json')).write_text(
             json.dumps(data, indent=2))
 
-        pd = PhaseDiagram(
-            [(count, hform) for (count, hform, source) in data.values()],
-            verbose=False)
+        if len(symbols) > 1:
+            pd = PhaseDiagram(
+                [(count, hform) for (count, hform, source) in data.values()],
+                verbose=False)
+        else:
+            # PhaseDiagram can't handle 1D-case!
+            pd = None
         for uid in uids:
             if uid in c2db_uids:
                 count, hform, source = data[uid]
                 if len(count) == len(symbols):  # pragma: no branch
-                    ehull = hform - pd.decompose(**count)[0]
+                    if pd is not None:
+                        ehull = hform - pd.decompose(**count)[0]
+                    else:
+                        symb = symbols[0]
+                        ehull = hform - atomic_energies[symb] * count[symb]
                     ehull_energies[uid] = ehull
 
     for uid, path in paths.items():
