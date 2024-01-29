@@ -12,7 +12,7 @@ r"""
 |          1-x x      |           |
 +---------------------+-----------+
 """
-
+from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
