@@ -128,3 +128,14 @@ Then you can play with those files like this::
     $ cd C2DB-test
     $ python -m camdweb.c2db.copy_files . "MoS2*/"
     $ python -m camdweb.c2db.app AB2
+
+
+Development
+===========
+
+Please run the following checks on your code::
+
+    $ cd <root-of-repo>
+    $ mypy
+    $ flake8 camdweb
+    $ camd-web-coverage

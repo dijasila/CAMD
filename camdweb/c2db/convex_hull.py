@@ -2,10 +2,10 @@ import json
 from pathlib import Path
 
 from ase.formula import Formula
-from ase.phasediagram import PhaseDiagram
 
-from camdweb.c2db.oqmd123 import read_oqmd123_data, db2json
-from camdweb.panels.convex_hull import group_references
+from camdweb.c2db.oqmd123 import db2json, read_oqmd123_data
+from camdweb.panels.convex_hull import (calculate_ehull_energies,
+                                        group_references)
 
 
 def read_chull_data(root: Path) -> tuple[dict[str, float],
@@ -27,9 +27,9 @@ def read_chull_data(root: Path) -> tuple[dict[str, float],
 def update_chull_data(atomic_energies: dict[str, float],
                       refs: dict[str, tuple[dict[str, int], float]],
                       root: Path) -> None:
-    """Update ehull, hform values.
+    """Update ehull and hform values.
 
-    Will calculate ehull anf hform energies and insert into::
+    Will calculate ehull and hform energies and insert into::
 
       A*/*/*/data.json
 
@@ -92,27 +92,6 @@ def update_chull_data(atomic_energies: dict[str, float],
         data['ehull'] = ehull_energies[uid] / natoms
         data['hform'] = hform / natoms
         path.write_text(json.dumps(data, indent=2))
-
-
-def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
-                             uids: set[str]) -> None:
-    try:
-        pd = PhaseDiagram([ref for ref in refs.values()], verbose=False)
-    except SyntaxError:
-        # PhaseDiagram can't handle 1D-case!
-        pd = None
-    ehull_energies = {}
-    for uid in refs:
-        if uid in uids:
-            count, hform = refs[uid]
-            if len(count) == len(pd.symbols):
-                if pd is not None:
-                    ehull = hform - pd.decompose(**count)[0]
-                else:
-                    symb = pd.symbols[0]
-                    ehull = hform - atomic_energies[symb] * count[symb]
-                ehull_energies[uid] = ehull
-    return ehull_energies
 
 
 if __name__ == '__main__':
