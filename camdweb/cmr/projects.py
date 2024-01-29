@@ -763,7 +763,7 @@ class C1DBProjectDescription(ProjectDescription):
 
     def create_column_one(self, material, materials):
         rows = materials.table(material, self.column_names)
-        source = material.Source
+        source = material.source
         df = material.get('derived_from')
         if source == 'COD':
             rows.append(
@@ -782,9 +782,9 @@ class C1DBProjectDescription(ProjectDescription):
                 ['Derived form',
                  f'<a href={df}>{df}</a>']]
 
-        for key, text in [('PBED3_1D', '1D (PBE-D3)'),
-                          ('PBE_1D', '1D (PBE)'),
-                          ('PBED3_3D', '3D (PBE-D3)')]:
+        for key, text in [('pbed3_1d', '1D (PBE-D3)'),
+                          ('pbe_1d', '1D (PBE)'),
+                          ('pbed3_3d', '3D (PBE-D3)')]:
             uid = getattr(material, key, '')
             if uid:
                 rows.append(

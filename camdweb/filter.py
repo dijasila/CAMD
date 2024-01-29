@@ -145,12 +145,30 @@ def str2obj(s: str) -> bool | int | float | str:
 
 
 class Index:
-    """Indices for speeding up row filtering."""
     def __init__(self,
                  rows: list[tuple[str,
                                   dict[str, int],
                                   dict[str, ColVal]]],
                  max_int_range: int = 350):
+        """Indices for speeding up row filtering.
+
+        The *rows* argument is a list of three element tuples:
+
+        1) Reduced formula string with elements sorted by abundance followed by
+           alphabetic sorting.  Examples: water: 'OH2', rocksalt: 'ClNa'.
+
+        2) Atom count as a dict: {'H': 2, 'O': 1}.
+
+        3) Key-value pairs: {'ok': True, 'gap': 1.1, ...}.
+
+        >>> rows = [('BN', {'B': 2, 'N': 2}, {'gap': 3.6}),
+        ...         ('C', {'C': 2}, {'gap': 0.0})]
+        >>> i = Index(rows)
+        Rows: 2 | Strings: 0 | Integers: 3 | Floats: 1 | Int-floats: 0
+        >>> i.float_key('gap', '>', 0.0)
+        {0}
+        """
+
         integers = defaultdict(list)
         floats = defaultdict(list)
         self.strings: defaultdict[str, dict[str, set[int]]] = defaultdict(dict)
@@ -165,6 +183,7 @@ class Index:
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
             for name, value in keys.items():
+                assert name.islower(), name
                 if isinstance(value, str):
                     dct = self.strings[name]
                     if value not in dct:

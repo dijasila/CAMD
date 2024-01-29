@@ -12,7 +12,7 @@ r"""
 |          1-x x      |           |
 +---------------------+-----------+
 """
-
+from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
@@ -214,6 +214,41 @@ def group_references(references: dict[str, tuple[str, ...]],
                     chull.add(uid2)
         chulls[symbols] = sorted(chull)
     return chulls
+
+
+def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
+                             uids: set[str]) -> dict[str, float]:
+    """Calculate energies above hull.
+
+    >>> calculate_ehull_energies(
+    ...     {'i1': ({'A': 1}, 0.0),
+    ...      'i2': ({'B': 1}, 0.0),
+    ...      'i3': ({'A': 1, 'B': 1}, 1.0)},
+    ...     {'i3'})
+    {'i3': 1.0}
+    """
+    pd: PhaseDiagram | PhaseDiagram1D
+    try:
+        pd = PhaseDiagram([ref for ref in refs.values()], verbose=False)
+    except ValueError:
+        # PhaseDiagram can't handle 1D-case!  Should be fixed in ASE
+        e0 = min(hform / sum(count.values())
+                 for count, hform in refs.values())
+        pd = PhaseDiagram1D(e0)
+    ehull_energies = {}
+    for uid in refs:
+        if uid in uids:
+            count, hform = refs[uid]
+            ehull_energies[uid] = hform - pd.decompose(**count)[0]
+    return ehull_energies
+
+
+class PhaseDiagram1D:
+    def __init__(self, e0: float):
+        self.e0 = e0
+
+    def decompose(self, **count):
+        return [self.e0 * sum(count.values())]
 
 
 if __name__ == '__main__':
