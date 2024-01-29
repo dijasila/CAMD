@@ -239,15 +239,13 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     for uid in refs:
         if uid in uids:
             count, hform = refs[uid]
-            if len(count) == len(pd.symbols):
-                ehull_energies[uid] = hform - pd.decompose(**count)[0]
+            ehull_energies[uid] = hform - pd.decompose(**count)[0]
     return ehull_energies
 
 
 class PhaseDiagram1D:
     def __init__(self, e0: float):
         self.e0 = e0
-        self.symbols = ['X']
 
     def decompose(self, **count):
         return [self.e0 * sum(count.values())]
