@@ -8,25 +8,15 @@ from camdweb.panels.convex_hull import (calculate_ehull_energies,
                                         group_references)
 
 
-def read_chull_data(root: Path) -> tuple[dict[str, float],
-                                         dict[str, tuple[dict[str, int],
-                                                         float]]]:
-    oqmd = root / 'oqmd123.json.gz'
-    if not oqmd.is_file():
-        db = root / 'oqmd123.db'
-        if db.is_file():
-            db2json(db, oqmd)
-        else:
-            raise FileNotFoundError(
-                'Please download oqmd123.db file:\n\n'
-                '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n')
-    atomic_energies, refs = read_oqmd123_data(oqmd)
+def read_chull_data(oqmd_path: Path) -> tuple[dict[str, float],
+                                              dict[str, tuple[dict[str, int],
+                                                              float]]]:
+    atomic_energies, refs = read_oqmd123_data(oqmd_path)
     return atomic_energies, refs
 
 
 def update_chull_data(atomic_energies: dict[str, float],
-                      refs: dict[str, tuple[dict[str, int], float]],
-                      root: Path) -> None:
+                      refs: dict[str, tuple[dict[str, int], float]]) -> None:
     """Update ehull and hform values.
 
     Will calculate ehull and hform energies and insert into::
@@ -44,6 +34,7 @@ def update_chull_data(atomic_energies: dict[str, float],
     print('References:', len(refs))
     paths = {}
     c2db_uids = set()
+    root = Path()
     for path in root.glob('A*/*/*/'):
         data = json.loads((path / 'data.json').read_text())
         uid = data['uid']
@@ -92,9 +83,3 @@ def update_chull_data(atomic_energies: dict[str, float],
         data['ehull'] = ehull_energies[uid] / natoms
         data['hform'] = hform / natoms
         path.write_text(json.dumps(data, indent=2))
-
-
-if __name__ == '__main__':
-    root = Path()
-    atomic_energies, refs = read_chull_data(root)
-    update_chull_data(atomic_energies, refs, root)

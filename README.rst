@@ -52,7 +52,9 @@ CAMd-web needs Python_ version 3.9 or later.
     $ python -m venv venv
     $ source venv/bin/activate
     $ git clone git@gitlab.com:ase/ase
+    $ pip install -e ase
     $ git clone git@gitlab.com:asr-dev/asr
+    $ pip install -e asr
     $ git clone git@gitlab.com:camd/camd-web
     $ pip install -e camd-web[test]
 
@@ -139,3 +141,6 @@ Please run the following checks on your code::
     $ mypy
     $ flake8 camdweb
     $ camd-web-coverage
+
+If 100 % coverage is not possible then you can make CI pass by adding
+``# pragma: no cover`` or ``# pragma: no branch`` comments.

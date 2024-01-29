@@ -28,6 +28,7 @@ import rich.progress as progress
 from ase import Atoms
 from ase.io import read
 from camdweb.c2db.asr_panel import read_result_file
+from camdweb.c2db.convex_hull import read_chull_data, update_chull_data
 
 RESULT_FILES = [
     'convex_hull',
@@ -63,18 +64,34 @@ PATTERNS = [
 # '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
-def copy_materials(root: Path, patterns: list[str]) -> None:
+def copy_materials(root: Path, patterns: list[str],
+                   update_chull: bool = True) -> None:
     dirs = [dir
             for pattern in patterns
             for dir in root.glob(pattern)
             if dir.name[0] != '.']
-    names: defaultdict[str, int] = defaultdict(int)
     print(len(dirs), 'folders')
+
+    names: defaultdict[str, int] = defaultdict(int)
     with progress.Progress() as pb:
         pid = pb.add_task('Copying materials:', total=len(dirs))
         for dir in dirs:
             copy_material(dir, names)
             pb.advance(pid)
+
+    if update_chull:
+        # Calculate hform, ehull, ...
+        try:
+            oqmd_path = Path('oqmd123.json.gz')
+            atomic_energies, refs = read_chull_data(oqmd_path)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f'Could not find {oqmd_path}.\n'
+                'Please download the oqmd123.db file:\n\n'
+                '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n'
+                'and convert to json with:\n\n'
+                '   python -m camdweb.c2db.oqmd123 <path-to-oqmd123.db>\n')
+        update_chull_data(atomic_energies, refs)
 
 
 def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
