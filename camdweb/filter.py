@@ -161,9 +161,10 @@ class Index:
 
         3) Key-value pairs: {'ok': True, 'gap': 1.1}.
 
-        >>> rows = [('BN', {'B': 2, 'N': 2'}, {'gap': 3.6}),
+        >>> rows = [('BN', {'B': 2, 'N': 2}, {'gap': 3.6}),
         ...         ('C', {'C': 2}, {'gap': 0.0})]
         >>> i = Index(rows)
+        Rows: 2 | Strings: 0 | Integers: 3 | Floats: 1 | Int-floats: 0
         >>> i.float_key('gap', '>', 0.0)
         {0}
         """

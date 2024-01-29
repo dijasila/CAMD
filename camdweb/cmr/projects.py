@@ -763,7 +763,7 @@ class C1DBProjectDescription(ProjectDescription):
 
     def create_column_one(self, material, materials):
         rows = materials.table(material, self.column_names)
-        source = material.Source
+        source = material.source
         df = material.get('derived_from')
         if source == 'COD':
             rows.append(
