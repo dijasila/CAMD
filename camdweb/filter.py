@@ -159,7 +159,7 @@ class Index:
 
         2) Atom count as a dict: {'H': 2, 'O': 1}.
 
-        3) Key-value pairs: {'ok': True, 'gap': 1.1}.
+        3) Key-value pairs: {'ok': True, 'gap': 1.1, ...}.
 
         >>> rows = [('BN', {'B': 2, 'N': 2}, {'gap': 3.6}),
         ...         ('C', {'C': 2}, {'gap': 0.0})]

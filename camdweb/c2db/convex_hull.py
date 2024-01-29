@@ -27,8 +27,21 @@ def read_chull_data(root: Path) -> tuple[dict[str, float],
 def update_chull_data(atomic_energies: dict[str, float],
                       refs: dict[str, tuple[dict[str, int], float]],
                       root: Path) -> None:
-    print('References:', len(refs))
+    """Update ehull, hform values.
 
+    Will calculate ehull anf hform energies and insert into::
+
+      A*/*/*/data.json
+
+    Also write json files containing all
+    reference data for each convex-hull plot::
+
+      convex_hulls/MoS.json
+                  /Mo.json
+                  /S.json
+                  /...
+    """
+    print('References:', len(refs))
     paths = {}
     c2db_uids = set()
     for path in root.glob('A*/*/*/'):
@@ -43,6 +56,8 @@ def update_chull_data(atomic_energies: dict[str, float],
         c2db_uids.add(uid)
     print('Materials:', len(c2db_uids))
 
+    # Find all convex-hulls:
+    # Create map from uid to sorted tuple of symbols:
     tmp: dict[str, tuple[str, ...]] = {}
     for uid, (count, hform) in refs.items():
         tmp[uid] = tuple(sorted(count))
@@ -50,9 +65,9 @@ def update_chull_data(atomic_energies: dict[str, float],
     groups = group_references(tmp, c2db_uids)
     print('Convex hulls:', len(groups))
 
+    # Write all hull files:
     folder = root / 'convex-hulls'
     folder.mkdir(exist_ok=True)
-    ehull_energies = {}
     for symbols, uids in groups.items():
         data = {}
         for uid in uids:
@@ -61,24 +76,14 @@ def update_chull_data(atomic_energies: dict[str, float],
         (folder / (''.join(symbols) + '.json')).write_text(
             json.dumps(data, indent=2))
 
-        if len(symbols) > 1:
-            pd = PhaseDiagram(
-                [(count, hform) for (count, hform, source) in data.values()],
-                verbose=False)
-        else:
-            # PhaseDiagram can't handle 1D-case!
-            pd = None
-        for uid in uids:
-            if uid in c2db_uids:
-                count, hform, source = data[uid]
-                if len(count) == len(symbols):  # pragma: no branch
-                    if pd is not None:
-                        ehull = hform - pd.decompose(**count)[0]
-                    else:
-                        symb = symbols[0]
-                        ehull = hform - atomic_energies[symb] * count[symb]
-                    ehull_energies[uid] = ehull
+    # Calculate ehull:
+    ehull_energies = {}
+    for symbols, uids in groups.items():
+        ehull_energies.update(
+            calculate_ehull_energies({uid: refs[uid] for uid in uids},
+                                     c2db_uids))
 
+    # Update data.json files:
     for uid, path in paths.items():
         path /= 'data.json'
         data = json.loads(path.read_text())
@@ -87,6 +92,27 @@ def update_chull_data(atomic_energies: dict[str, float],
         data['ehull'] = ehull_energies[uid] / natoms
         data['hform'] = hform / natoms
         path.write_text(json.dumps(data, indent=2))
+
+
+def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
+                             uids: set[str]) -> None:
+    try:
+        pd = PhaseDiagram([ref for ref in refs.values()], verbose=False)
+    except SyntaxError:
+        # PhaseDiagram can't handle 1D-case!
+        pd = None
+    ehull_energies = {}
+    for uid in refs:
+        if uid in uids:
+            count, hform = refs[uid]
+            if len(count) == len(pd.symbols):
+                if pd is not None:
+                    ehull = hform - pd.decompose(**count)[0]
+                else:
+                    symb = pd.symbols[0]
+                    ehull = hform - atomic_energies[symb] * count[symb]
+                ehull_energies[uid] = ehull
+    return ehull_energies
 
 
 if __name__ == '__main__':
