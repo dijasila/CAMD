@@ -129,9 +129,22 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         return
 
     try:
-        data['minhessianeig'] = rrf('phonons')['minhessianeig']
+        ph = rrf('phonons')
     except FileNotFoundError:
-        pass
+        dyn_stab_phonons = 'unknown'
+    else:
+        data['minhessianeig'] = ph['minhessianeig']
+        dyn_stab_phonons = ph['dynamic_stability_phonons']
+
+    try:
+        ph = rrf('stiffness')
+    except FileNotFoundError:
+        dyn_stab_stiffness = 'unknown'
+    else:
+        dyn_stab_stiffness = ph['dynamic_stability_stiffness']
+
+    data['dyn_stab'] = (dyn_stab_phonons == 'high' and
+                        dyn_stab_stiffness == 'high')
 
     try:
         hse = rrf('hse')

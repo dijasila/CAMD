@@ -25,6 +25,7 @@ from camdweb.panels.bader import BaderPanel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.web import CAMDApp
+from camdweb.html import Select, Range, RangeX
 
 
 class C2DBAtomsPanel(AtomsPanel):
@@ -40,7 +41,8 @@ class C2DBAtomsPanel(AtomsPanel):
             ehull='Energy above convex hull [eV/atom]',
             energy='Energy [eV]',
             spin_axis='...',
-            efermi='...')
+            efermi='...',
+            dyn_stab='Dynamically stable')
         self.columns = list(self.column_names)
 
 
@@ -106,7 +108,15 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 
     root = folders[0].parent.parent.parent
-    return CAMDApp(materials, initial_columns, root)
+    app = CAMDApp(materials, initial_columns, root)
+    app.form_parts += [
+        Select('Dynamically stable', 'dyn_stab',
+               ['', 'True', 'False'], ['', 'Yes', 'No']),
+        Range('Energy above convex hull [eV/atom]', 'ehull'),
+        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['', 'No', 'Yes']),
+        RangeX('Band gap range [eV]', 'bg',
+               ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
+    return app
 
 
 def test():  # pragma: no cover
