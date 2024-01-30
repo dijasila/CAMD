@@ -6,9 +6,9 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
 from camdweb.c2db.app import main
-from camdweb.c2db.convex_hull import update_chull_data, read_chull_data
 from camdweb.c2db.copy_files import copy_materials
 from camdweb.test.c2db import create_tree
+from camdweb.c2db.oqmd123 import db2json
 
 
 @pytest.fixture
@@ -23,7 +23,9 @@ def oqmd_db_file(tmp_path_factory):
         atoms = Atoms(formula)
         atoms.calc = SinglePointCalculator(atoms, energy=energy)
         db.write(atoms, hform=hform, uid=formula)
-    return path
+    gz = tmp_path / 'oqmd123.json.gz'
+    db2json(path, gz)
+    return gz
 
 
 def test_c2db_missing_phonons(tmp_path):
@@ -31,17 +33,9 @@ def test_c2db_missing_phonons(tmp_path):
     os.chdir(tmp_path)
     (tmp_path / 'MoS2/results-asr.phonons.json').unlink()
     (tmp_path / 'MoS2/results-asr.bader.json').unlink()
-    copy_materials(tmp_path, ['MoS2*'])
-
-
-def test_reading(oqmd_db_file):
-    root = oqmd_db_file.parent
-    read_chull_data(root)
-    oqmd_db_file.unlink()
-    read_chull_data(root)
-    oqmd_db_file.with_name('oqmd123.json.gz').unlink()
+    copy_materials(tmp_path, ['MoS2*'], update_chull=False)
     with pytest.raises(FileNotFoundError):
-        read_chull_data(root)
+        copy_materials(tmp_path, [])
 
 
 def test_everything(oqmd_db_file):
@@ -49,8 +43,7 @@ def test_everything(oqmd_db_file):
     create_tree(root)
     os.chdir(root)
     copy_materials(root, ['MoS2*'])
-    atomic_energies, refs = read_chull_data(root)
-    update_chull_data(atomic_energies, refs, root)
+
     app = main(['AB2'])
     assert len(app.materials) == 1
     app = main(['AB2/1MoS2'])
