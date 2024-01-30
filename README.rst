@@ -16,6 +16,7 @@ Important links
 ===============
 
 * `Bottle <https://bottlepy.org/docs/dev/index.html>`__
+* `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/index.html>`__
 * `Plotly <https://plotly.com/python/>`__
 * `Bootstrap
   <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
@@ -144,3 +145,13 @@ Please run the following checks on your code::
 
 If 100 % coverage is not possible then you can make CI pass by adding
 ``# pragma: no cover`` or ``# pragma: no branch`` comments.
+
+
+Deployment
+==========
+
+On the ``fysik-cmr02`` server run uWSGI like this::
+
+    $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
+    $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
+    $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log

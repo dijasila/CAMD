@@ -112,5 +112,9 @@ def test():  # pragma: no cover
     app.material('1MoS2-1')
 
 
+def create_app():  # pragma: no cover
+    return main([path.name for path in Path().glob('A*/')]).app
+
+
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8081, debug=True, server='waitress')
+    main().app.run(host='0.0.0.0', port=8081, debug=True)
