@@ -220,4 +220,4 @@ class Materials:
 
     @cached_property
     def process_pool(self):
-        return multiprocessing.get_context('spawn').Pool()
+        return multiprocessing.get_context('fork').Pool()

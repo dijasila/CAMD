@@ -17,3 +17,16 @@ tests:
     paths:
       - htmlcov
     expire_in: 1 week
+
+oldtests:
+  image: python:3.9
+  script:
+    - python -m venv venv
+    - . venv/bin/activate
+    - pip install -U pip
+    - pip install git+https://gitlab.com/ase/ase
+    - pip install git+https://gitlab.com/asr-dev/asr
+    - pip install pytest boddle
+    - pip install .
+    - pytest -v --color=yes
+  when: manual

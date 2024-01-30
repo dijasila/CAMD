@@ -3,7 +3,7 @@ from ase.phasediagram import PhaseDiagram
 
 from camdweb.panels.convex_hull import (group_references,
                                         make_figure_and_tables, plot_2d,
-                                        plot_3d)
+                                        plot_3d, calculate_ehull_energies)
 
 
 def test_2d():
@@ -45,3 +45,11 @@ def test_group():
             'u2': ('A', 'B')}
     g = group_references(refs, ['u1', 'u2'])
     assert g == {('A', 'B'): ['1', '2', '3', 'u1', 'u2']}
+
+
+def test_ehull_1d():
+    eh = calculate_ehull_energies(
+        {'i1': ({'A': 1}, 0.0),
+         'i2': ({'A': 2}, 1.0)},
+        {'i2'})
+    assert eh == {'i2': 1.0}

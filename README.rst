@@ -16,6 +16,7 @@ Important links
 ===============
 
 * `Bottle <https://bottlepy.org/docs/dev/index.html>`__
+* `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/index.html>`__
 * `Plotly <https://plotly.com/python/>`__
 * `Bootstrap
   <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
@@ -52,7 +53,9 @@ CAMd-web needs Python_ version 3.9 or later.
     $ python -m venv venv
     $ source venv/bin/activate
     $ git clone git@gitlab.com:ase/ase
+    $ pip install -e ase
     $ git clone git@gitlab.com:asr-dev/asr
+    $ pip install -e asr
     $ git clone git@gitlab.com:camd/camd-web
     $ pip install -e camd-web[test]
 
@@ -88,9 +91,31 @@ C2DB-app
     $ python -m camdweb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
     $ python -m camdweb.c2db.app A*/
 
+Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
 
-Testing
--------
+  AB2
+  └── 1MoS2
+      ├── 1
+      │   ├── data.json
+      │   ├── structure.xyz
+      │   ├── results-asr.<property1>.json
+      │   ├── results-asr.<property2>.json
+      │   ├── ...
+      │   └── ...
+      └── 2
+          ├── data.json
+          ├── structure.xyz
+          └── ...
+  ...
+  └── ...
+  oqmd123.json.gz
+  convex-hulls
+  ├── MoS.json
+  └── ...
+
+
+Testing the C2DB-app
+--------------------
 
 For development work, just copy one or a few meterial folders from Niflheim
 to your local machine::
@@ -106,3 +131,27 @@ Then you can play with those files like this::
     $ cd C2DB-test
     $ python -m camdweb.c2db.copy_files . "MoS2*/"
     $ python -m camdweb.c2db.app AB2
+
+
+Development
+===========
+
+Please run the following checks on your code::
+
+    $ cd <root-of-repo>
+    $ mypy
+    $ flake8 camdweb
+    $ camd-web-coverage
+
+If 100 % coverage is not possible then you can make CI pass by adding
+``# pragma: no cover`` or ``# pragma: no branch`` comments.
+
+
+Deployment
+==========
+
+On the ``fysik-cmr02`` server run uWSGI like this::
+
+    $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
+    $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
+    $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log
