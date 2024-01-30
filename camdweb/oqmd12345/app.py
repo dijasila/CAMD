@@ -55,7 +55,7 @@ def main(root: Path) -> CAMDApp:
 
     materials = Materials(mlist, panels)
     initial_columns = ['formula', 'gap', 'gap_dir',
-                       'magstate', 'energy', 'volume']
+                       'magstate', 'etot', 'volume']
 
     return CAMDApp(materials, initial_columns, root)
 

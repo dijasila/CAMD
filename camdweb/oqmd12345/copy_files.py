@@ -10,15 +10,16 @@ python -m camdweb.oqmd12345.copy_files
 from __future__ import annotations
 
 import json
-import sys
 import shutil
-import numpy as np
+import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
+import numpy as np
 from ase.io import read
 
-from taskblaster.repository import Repository
-from taskblaster.state import State
+if TYPE_CHECKING:
+    from taskblaster.repository import Repository
 
 RESULT_FILES = [
     'output.json',
@@ -32,7 +33,10 @@ PATTERNS = [
 ROOT = Path('/home/tara/webpage/tree-crysp')
 
 
-def copy_materials(root: Path = ROOT, patterns: list = PATTERNS) -> None:
+def copy_materials(root: Path = ROOT,
+                   patterns: list = PATTERNS) -> None:  # pragma: no cover
+    from taskblaster.repository import Repository
+    from taskblaster.state import State
     # glob over root to find patterns
     with Repository.find(root.as_posix()) as repo:
         for node in repo.tree([root.as_posix()]).nodes():
@@ -45,7 +49,7 @@ def copy_materials(root: Path = ROOT, patterns: list = PATTERNS) -> None:
                 copy_material(record)
 
 
-def copy_material(record: Repository) -> None:
+def copy_material(record: Repository) -> None:  # pragma: no cover
     """
     This is the function we use to convert TaskBlaster trees into an easy
     webpage displayable layout. From dir path, read the output/input.json.
