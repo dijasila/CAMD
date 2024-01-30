@@ -204,6 +204,10 @@ def main(argv: list[str] | None = None) -> CMRProjectsApp:
     return CMRProjectsApp(project_apps)
 
 
+def create_app():
+    return main([path.name for path in Path().glob('*.db')]).app
+
+
 if __name__ == '__main__':
     app = main(sys.argv[1:])
     app.app.run(host='0.0.0.0', port=8082, debug=True)
