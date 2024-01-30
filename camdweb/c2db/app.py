@@ -38,7 +38,9 @@ class C2DBAtomsPanel(AtomsPanel):
             uid0='Old uid',
             magstate='Magnetic state',
             ehull='Energy above convex hull [eV/atom]',
-            energy='Energy [eV]')
+            energy='Energy [eV]',
+            spin_axis='...',
+            efermi='...')
         self.columns = list(self.column_names)
 
 
@@ -109,7 +111,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('1MoS2-1')
+    app.material('1MoS2-2')
 
 
 def create_app():  # pragma: no cover

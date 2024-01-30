@@ -93,25 +93,19 @@ C2DB-app
 
 Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
 
-  AB2
-  └── 1MoS2
-      ├── 1
-      │   ├── data.json
-      │   ├── structure.xyz
-      │   ├── results-asr.<property1>.json
-      │   ├── results-asr.<property2>.json
-      │   ├── ...
-      │   └── ...
-      └── 2
-          ├── data.json
-          ├── structure.xyz
-          └── ...
+  AB2/1MoS2/1/data.json
+              structure.xyz
+              results-asr.<property1>.json
+              results-asr.<property2>.json
+              ...
+              ...
+            2/data.json
+              structure.xyz
+              ...
   ...
-  └── ...
   oqmd123.json.gz
-  convex-hulls
-  ├── MoS.json
-  └── ...
+  convex-hulls/MoS.json
+               ...
 
 
 Testing the C2DB-app
