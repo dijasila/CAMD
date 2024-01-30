@@ -3,7 +3,9 @@
 This module has code to convert ~crysp*/tree/ folders and friends
 (see PATTERNS variable below) to canonical tree layout.
 
-python camd-web/camdweb/oqmd12345/app.py A*/
+::
+
+    python -m camdweb.oqmd12345.app
 """
 from __future__ import annotations
 
@@ -52,11 +54,11 @@ def main(root: Path) -> CAMDApp:
     panels: list[Panel] = [OQMDAtomsPanel()]
 
     materials = Materials(mlist, panels)
-    initial_columns = ['gap', 'formula']
+    initial_columns = ['formula', 'gap', 'gap_dir',
+                       'magstate', 'energy', 'volume']
 
     return CAMDApp(materials, initial_columns, root)
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True,
-                         server='waitress')
+    main(Path()).app.run(host='0.0.0.0', port=8086, debug=True)

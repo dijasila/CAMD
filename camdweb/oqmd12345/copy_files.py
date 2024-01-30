@@ -14,7 +14,6 @@ import sys
 import shutil
 import numpy as np
 from pathlib import Path
-from collections import defaultdict
 
 from ase.io import read
 
@@ -28,15 +27,13 @@ RESULT_FILES = [
 # the directory name you want to gather data from
 PATTERNS = [
     'material', 'gsresults',
-    'relax3d_magnetic', 'postprocess',
-    ]
+    'relax3d_magnetic', 'postprocess']
 
 ROOT = Path('/home/tara/webpage/tree-crysp')
 
 
 def copy_materials(root: Path = ROOT, patterns: list = PATTERNS) -> None:
     # glob over root to find patterns
-    names: defaultdict[str, int] = defaultdict(int)
     with Repository.find(root.as_posix()) as repo:
         for node in repo.tree([root.as_posix()]).nodes():
             # collect only done calculations
@@ -45,10 +42,10 @@ def copy_materials(root: Path = ROOT, patterns: list = PATTERNS) -> None:
             future = repo.cache[node.name]
             record = future.value()
             if Path(record.node.name).name in patterns:
-                copy_material(record, names)
+                copy_material(record)
 
 
-def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
+def copy_material(record: Repository) -> None:
     """
     This is the function we use to convert TaskBlaster trees into an easy
     webpage displayable layout. From dir path, read the output/input.json.
@@ -102,7 +99,6 @@ def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
 
     name = get_name(atoms=atoms)
     folder = Path(name) / str(oqmd)
-    names[name] = oqmd
 
     folder.mkdir(exist_ok=True, parents=True)
 
@@ -111,15 +107,11 @@ def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
         filename, filepath = file
         shutil.copyfile(filepath, folder / filename)
     if write_structure:
-        atoms.write(folder / f'structure.xyz')
+        atoms.write(folder / 'structure.xyz')
 
-    try:
-        with open((folder / 'data.json'), 'r') as file:
-            existing_data = json.load(file)
-        data.update(existing_data)
-    except:
-        ...
-
+    with open((folder / 'data.json'), 'r') as fd:
+        existing_data = json.load(fd)
+    data.update(existing_data)
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
 
