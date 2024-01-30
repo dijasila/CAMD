@@ -61,7 +61,7 @@ def main(root: Path) -> CAMDApp:
 
 
 def create_app():  # pragma: no cover
-    return main([path.name for path in Path().glob('*.db')]).app
+    return main(Path()).app
 
 
 if __name__ == '__main__':
