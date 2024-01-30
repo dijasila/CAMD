@@ -60,5 +60,9 @@ def main(root: Path) -> CAMDApp:
     return CAMDApp(materials, initial_columns, root)
 
 
+def create_app():  # pragma: no cover
+    return main([path.name for path in Path().glob('*.db')]).app
+
+
 if __name__ == '__main__':
     main(Path()).app.run(host='0.0.0.0', port=8086, debug=True)
