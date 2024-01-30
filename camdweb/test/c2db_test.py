@@ -8,7 +8,7 @@ from ase.db import connect
 from camdweb.c2db.app import main
 from camdweb.c2db.copy_files import copy_materials
 from camdweb.test.c2db import create_tree
-from camdweb.c2db.oqmd123 import read_oqmd123_data, db2json
+from camdweb.c2db.oqmd123 import db2json
 
 
 @pytest.fixture
@@ -34,6 +34,8 @@ def test_c2db_missing_phonons(tmp_path):
     (tmp_path / 'MoS2/results-asr.phonons.json').unlink()
     (tmp_path / 'MoS2/results-asr.bader.json').unlink()
     copy_materials(tmp_path, ['MoS2*'], update_chull=False)
+    with pytest.raises(FileNotFoundError):
+        copy_materials(tmp_path, [])
 
 
 def test_everything(oqmd_db_file):
