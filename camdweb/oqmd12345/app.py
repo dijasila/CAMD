@@ -1,12 +1,9 @@
-"""CRYSP web-app.
+"""OQMD12345 web-app.
 
 This module has code to convert ~crysp*/tree/ folders and friends
 (see PATTERNS variable below) to canonical tree layout.
 
-Also contains simple web-app that can run off the tree of folders.
-
-Goal is to have the code decoupled from ASE, GPAW and ASR.
-Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
+python camd-web/camdweb/oqmd12345/app.py A*/
 """
 from __future__ import annotations
 
@@ -21,7 +18,7 @@ from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
 
 
-class CRYSPAtomsPanel(AtomsPanel):
+class OQMDAtomsPanel(AtomsPanel):
     def __init__(self):
         super().__init__()
         self.column_names.update(
@@ -52,13 +49,8 @@ def main(root: Path) -> CAMDApp:
             mlist.append(Material.from_file(f / 'structure.xyz', uid))
             pb.advance(pid)
 
-    panels: list[Panel] = [CRYSPAtomsPanel()]
-    # for name in ['bandstructure',
-    #              'phonons',
-    #              'bader']:
-    #     panels.append(ASRPanel(name))
+    panels: list[Panel] = [OQMDAtomsPanel()]
 
-    # breakpoint()
     materials = Materials(mlist, panels)
     initial_columns = ['gap', 'formula']
 
@@ -66,4 +58,5 @@ def main(root: Path) -> CAMDApp:
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True, server='waitress')
+    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True,
+                         server='waitress')

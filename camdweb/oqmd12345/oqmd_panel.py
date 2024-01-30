@@ -1,9 +1,9 @@
 import importlib
 from pathlib import Path
 
-from cxdb.material import Material, Materials
-from cxdb.panel import Panel
-from cxdb.asr_panel import thing2html
+from camdweb.material import Material, Materials
+from camdweb.panels.panel import Panel
+from camdweb.c2db.asr_panel import thing2html
 
 HTML = """
 <h4>{title}</h4>
@@ -52,9 +52,8 @@ class Row:
         return default
 
 
-
-class CryspPanel(Panel):
-    """Generic CRYSP panel."""
+class OQMDPanel(Panel):
+    """Generic OQMD panel."""
     def __init__(self, name: str):
         self.name = name
         mod = importlib.import_module(f'asr.{name}')
@@ -94,4 +93,3 @@ class CryspPanel(Panel):
                             col1='\n'.join(columns[0]),
                             col2='\n'.join(columns[1])),
                 '')
-

@@ -1,21 +1,19 @@
-"""CRYSP web-app.
+"""OQMD12345 web-app.
 
-This module has code to convert ~crysp*/tree/ folders and friends
+This module has code to convert ~oqmd*/tree/ folders and friends
 (see PATTERNS variable below) to canonical tree layout.
 
-Also contains simple web-app that can run off the tree of folders.
+Also contains a simple web-app that can run off the tree of folders.
 
-Goal is to have the code decoupled from ASE, GPAW and ASR.
-Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
+python -m camdweb.oqmd12345.copy_files
 """
 from __future__ import annotations
 
 import json
 import sys
 import shutil
-from pathlib import Path
 import numpy as np
-from monty.json import jsanitize
+from pathlib import Path
 from collections import defaultdict
 
 from ase.io import read
@@ -29,15 +27,14 @@ RESULT_FILES = [
 
 # the directory name you want to gather data from
 PATTERNS = [
-    'material',
-    'groundstate', 'gsresults',
+    'material', 'gsresults',
     'relax3d_magnetic', 'postprocess',
     ]
 
 ROOT = Path('/home/tara/webpage/tree-crysp')
 
 
-def copy_materials(root: Path) -> None:
+def copy_materials(root: Path = ROOT, patterns: list = PATTERNS) -> None:
     # glob over root to find patterns
     names: defaultdict[str, int] = defaultdict(int)
     with Repository.find(root.as_posix()) as repo:
@@ -47,7 +44,7 @@ def copy_materials(root: Path) -> None:
                 continue
             future = repo.cache[node.name]
             record = future.value()
-            if Path(record.node.name).name in PATTERNS:
+            if Path(record.node.name).name in patterns:
                 copy_material(record, names)
 
 
@@ -79,7 +76,7 @@ def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
     if Path(node.name).name == 'relax3d_magnetic':
         atoms, traj = output['atoms'], output['traj_path']
         oqmd, write_structure = Path(node.name).parts[1], True
-        shutil_files.append([traj.name, traj])
+        # shutil_files.append([traj.name, traj])
         if traj.name == 'relax.traj':
             data = {'magstate': 'Mag'}
         else:
@@ -116,7 +113,6 @@ def copy_material(record: Repository, names: defaultdict[str, int]) -> None:
     if write_structure:
         atoms.write(folder / f'structure.xyz')
 
-    data = jsanitize(data)
     try:
         with open((folder / 'data.json'), 'r') as file:
             existing_data = json.load(file)
