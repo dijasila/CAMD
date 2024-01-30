@@ -204,7 +204,7 @@ def main(argv: list[str] | None = None) -> CMRProjectsApp:
     return CMRProjectsApp(project_apps)
 
 
-def create_app():
+def create_app():  # pragma: no cover
     return main([path.name for path in Path().glob('*.db')]).app
 
 

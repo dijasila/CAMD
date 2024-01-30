@@ -112,7 +112,7 @@ def test():  # pragma: no cover
     app.material('1MoS2-1')
 
 
-def create_app():
+def create_app():  # pragma: no cover
     return main([path.name for path in Path().glob('A*/')]).app
 
 

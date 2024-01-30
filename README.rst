@@ -154,3 +154,4 @@ On the ``fysik-cmr02`` server run uWSGI like this::
 
     $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
     $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
+    $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log
