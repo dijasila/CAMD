@@ -30,14 +30,10 @@ class BandStructurePanel(Panel):
     def get_html(self, material, materials):
         from camdweb.c2db.asr_panel import Row
         row = Row(material)
-        #dct = row.data.get('results-asr.bandstructure.json')
-        #print(list(dct))
-
-        #from camdweb.c2db.asr_panel import ASRPanel
-        #keys = set()  # XXX
-        #panel = ASRPanel('bandstructure', keys)
-        print('MATERIAL', material)
-        yield HTML.format(plot_data=plot_bs_html(row),
+        fig = plot_bs_html(row)
+        bandstructure_json = json.dumps(
+            fig, cls=plotly.utils.PlotlyJSONEncoder)
+        yield HTML.format(plot_data=bandstructure_json,
                           plot_name='bandstructure')
 
 
@@ -219,7 +215,4 @@ def plot_bs_html(row):  # , filename=bs_html):
         ),
     )
 
-    fig = go.Figure(data=traces, layout=bandlayout)
-    bandstructure_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return bandstructure_json
-
+    return go.Figure(data=traces, layout=bandlayout)
