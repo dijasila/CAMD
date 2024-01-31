@@ -7,7 +7,7 @@ tests:
     - pip install git+https://gitlab.com/ase/ase
     - pip install git+https://gitlab.com/asr-dev/asr
     - pip install .[test]
-    - coverage run --branch -m pytest -v --color=yes
+    - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --fail-under=99.5
     - coverage html
     - coverage xml --data-file .coverage
@@ -21,7 +21,7 @@ tests:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
-      junit: report.xml
+      junit: junit.xml
     expire_in: 1 week
 
 oldtests:
