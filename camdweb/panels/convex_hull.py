@@ -15,11 +15,13 @@ r"""
 from __future__ import annotations
 import json
 import sys
+import re
 from collections import defaultdict
 from typing import Iterable, Generator
 
 import plotly
 import plotly.graph_objs as go
+import numpy as np
 from ase.formula import Formula
 from ase.phasediagram import PhaseDiagram
 
@@ -138,16 +140,33 @@ def plot_2d(pd: PhaseDiagram,
         Y += [y[i], y[j], None]
     data = [go.Scatter(x=X, y=Y, mode='lines')]
 
-    data.append(go.Scatter(
-        x=x,
-        y=y,
-        text=labels,
-        hovertemplate='%{text}: %{y} eV/atom',
-        mode='markers'))
+    names = np.asarray([format(Formula(ref[2].split(' ')[0]).reduce()[0], 'html') 
+                        for ref in pd.references])
+
+    sources = set([label.split('(')[0] for label in labels])
+    labels = np.asarray(labels)
+
+    for source in sources:
+        mask = np.asarray([True if source in label else False for label in labels])
+        data.append(go.Scatter(
+            x=x[mask],
+            y=y[mask],
+            text=labels[mask],
+            name=source,
+            hovertemplate='%{text}: %{y} eV/atom',
+            mode='markers',))
 
     delta = y.ptp() / 30
     ymin = y.min() - 2.5 * delta
     fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
+
+    hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    for i in hull_idx:
+        fig.add_annotation(x=x[i], y=y[i],
+                           text=names[i],
+                           xanchor='left',
+                           showarrow=False,
+                           xshift=10,)
 
     A, B = pd.symbols
     fig.update_layout(
@@ -165,18 +184,43 @@ def plot_3d(pd: PhaseDiagram,
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
     data = [go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, opacity=0.5)]
-    data.append(
-        go.Scatter3d(
-            x=x, y=y, z=z,
-            text=labels,
-            hovertemplate='%{text}: %{z} eV/atom',
-            mode='markers'))
+
+    names = np.asarray([format(Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
+                        for ref in pd.references])
+
+    sources = set([label.split('(')[0] for label in labels])
+    labels = np.asarray(labels)
+
+    for source in sources:
+        mask = np.asarray([True if source in label else False for label in labels])
+        data.append(
+            go.Scatter3d(
+                x=x[mask], y=y[mask], z=z[mask],
+                text=labels[mask],
+                name=source,
+                hovertemplate='%{text}: %{z} eV/atom',
+                mode='markers'))
+
 
     fig = go.Figure(data=data)
+
+    hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    annotations = []
+    for i in hull_idx:
+        annotations.append(dict(showarrow=False,
+                                x=x[i],
+                                y=y[i],
+                                z=z[i],
+                                text=names[i],
+                                xanchor='left',
+                                xshift=10,
+                                opacity=0.7,))
+
     A, B, C = pd.symbols
     fig.update_layout(scene=dict(xaxis_title=B,
                                  yaxis_title=C,
-                                 zaxis_title='ΔH [eV/atom]'),
+                                 zaxis_title='ΔH [eV/atom]',
+                                 annotations=annotations),
                       template='simple_white')
 
     return fig
@@ -253,7 +297,7 @@ class PhaseDiagram1D:
 
 if __name__ == '__main__':
     # Example:
-    # pyhton -m camdweb.panels.convex_hull A:0 B:0 AB:-0.5
+    # python -m camdweb.panels.convex_hull A:0 B:0 AB:-0.5
     refs = []
     for arg in sys.argv[1:]:
         formula, energy = arg.split(':')
