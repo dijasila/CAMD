@@ -45,12 +45,9 @@ def plot_bs_html(row):
     kpts = path.kpts
     ef = d['bs_nosoc']['efermi']
 
-    if row.get('evac') is not None:
-        label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
-        reference = row.get('evac')
-    else:
-        label = '<i>E</i> - <i>E</i><sub>F</sub> [eV]'
-        reference = ef
+    reference = row.get('evac')
+    assert reference is not None
+    label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
 
     gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
     if gaps.get('vbm'):
@@ -61,6 +58,7 @@ def plot_bs_html(row):
         emax = gaps.get('cbm', ef) + 3
     else:
         emax = ef + 3
+
     e_skn = d['bs_nosoc']['energies']
     shape = e_skn.shape
     xcoords, label_xcoords, orig_labels = labels_from_kpts(
@@ -103,9 +101,8 @@ def plot_bs_html(row):
     xcoords = np.vstack([xcoords] * shape[0])
     xcoords = xcoords.ravel()[perm].reshape(shape)
 
-    # Unicode for <S_z>
     sdir = row.get('spin_axis', 'z')
-    cbtitle = '&#x3008; <i><b>S</b></i><sub>{}</sub> &#x3009;'.format(sdir)
+    cbtitle = f'〈<i><b>S</b></i><sub>{sdir}</sub>〉'
     trace = go.Scattergl(
         x=xcoords.ravel(),
         y=e_mk.ravel() - reference,
@@ -136,20 +133,7 @@ def plot_bs_html(row):
     )
     traces.append(linetrace)
 
-    def pretty(kpt):
-        if kpt == 'G':
-            kpt = '&#x393;'  # Gamma in unicode
-        elif len(kpt) == 2:
-            kpt = kpt[0] + '$_' + kpt[1] + '$'
-        return kpt
-
-    labels = [pretty(name) for name in orig_labels]
-    i = 1
-    while i < len(labels):
-        if label_xcoords[i - 1] == label_xcoords[i]:
-            labels[i - 1] = labels[i - 1][:-1] + ',' + labels[i][1:]
-            labels[i] = ''
-        i += 1
+    labels = prettify_labels(orig_labels, label_xcoords)
 
     axisargs = dict(
         showgrid=True,
@@ -201,3 +185,24 @@ def plot_bs_html(row):
     )
 
     return go.Figure(data=traces, layout=bandlayout)
+
+
+def prettify_labels(orig_labels, label_xcoords):
+
+    def pretty(kpt):
+        if kpt == 'G':
+            kpt = 'Γ'
+        elif len(kpt) == 2:
+            kpt = kpt[0] + '$_' + kpt[1] + '$'
+        return kpt
+
+    labels = [pretty(name) for name in orig_labels]
+
+    i = 1
+    while i < len(labels):
+        if label_xcoords[i - 1] == label_xcoords[i]:
+            labels[i - 1] = labels[i - 1][:-1] + ',' + labels[i][1:]
+            labels[i] = ''
+        i += 1
+
+    return labels
