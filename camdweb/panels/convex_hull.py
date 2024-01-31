@@ -156,15 +156,14 @@ def plot_2d(pd: PhaseDiagram,
         this_idx = np.where(uids == uid)
         names[this_idx] = '<b>' + names[this_idx].item() + '</b>'
 
-    labels = np.asarray(labels)
-
     for source in sources:
         mask = np.asarray([True if source in label else False
                            for label in labels])
+
         data.append(go.Scatter(
             x=x[mask],
             y=y[mask],
-            text=labels[mask],
+            text=[label for label in labels if source in label],
             name=source,
             hovertemplate='%{text}: %{y} eV/atom',
             mode='markers',))
@@ -208,7 +207,6 @@ def plot_3d(pd: PhaseDiagram,
                         for ref in pd.references], dtype='<U30')
 
     sources = set([label.split('(')[0] for label in labels])
-    labels = np.asarray(labels)
 
     # Highlight selected material:
     if uid is not None:
@@ -223,7 +221,7 @@ def plot_3d(pd: PhaseDiagram,
         data.append(
             go.Scatter3d(
                 x=x[mask], y=y[mask], z=z[mask],
-                text=labels[mask],
+                text=[label for label in labels if source in label],
                 name=source,
                 hovertemplate='%{text}: %{z} eV/atom',
                 mode='markers'))
