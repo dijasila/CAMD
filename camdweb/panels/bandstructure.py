@@ -41,41 +41,40 @@ def plot_bs_html(row):
 class PlotUtil:
     def __init__(self, row):
         self.row = row
+        self.dct = self.row.data.get('results-asr.bandstructure.json')
+        self.path = self.dct['bs_nosoc']['path']
+        self.kpts = self.path.kpts
+        self.evac = row.get('evac')
+        assert self.evac is not None
+        self.fermilevel_nosoc = self.dct['bs_nosoc']['efermi']
+        self.fermilevel_soc = self.dct['bs_soc']['efermi']
+        self.e_skn = self.dct['bs_nosoc']['energies']
+        self.xcname = 'PBE'
+
+        self.gaps = row.data.get(
+            'results-asr.gs.json', {}).get('gaps_nosoc', {})
+
+        self.emin = self.gaps.get('vbm', self.fermilevel_nosoc) - 3
+        self.emax = self.gaps.get('cbm', self.fermilevel_nosoc) + 3
+
+        assert np.allclose(self.dct['bs_soc']['path'].kpts,
+                           self.dct['bs_nosoc']['path'].kpts)
 
     def plot(self):
         from ase.dft.kpoints import labels_from_kpts
 
         row = self.row
         traces = []
-        d = row.data.get('results-asr.bandstructure.json')
-        xcname = 'PBE'
 
-        path = d['bs_nosoc']['path']
-        kpts = path.kpts
-        ef = d['bs_nosoc']['efermi']
-
-        reference = row.get('evac')
-        assert reference is not None
         label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
 
-        gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
-        if gaps.get('vbm'):
-            emin = gaps.get('vbm', ef) - 3
-        else:
-            emin = ef - 3
-        if gaps.get('cbm'):
-            emax = gaps.get('cbm', ef) + 3
-        else:
-            emax = ef + 3
-
-        e_skn = d['bs_nosoc']['energies']
-        shape = e_skn.shape
+        shape = self.e_skn.shape
         xcoords, label_xcoords, orig_labels = labels_from_kpts(
-            kpts, row.cell, special_points=path.special_points
+            self.kpts, row.cell, special_points=self.path.special_points
         )
         xcoords = np.vstack([xcoords] * shape[0] * shape[2])
         # colors_s = plt.get_cmap('viridis')([0, 1])  # color for sz = 0
-        e_kn = np.hstack([e_skn[x] for x in range(shape[0])])
+        e_kn = np.hstack([self.e_skn[x] for x in range(shape[0])])
 
         scatterargs = dict(
             mode='markers',
@@ -85,22 +84,19 @@ class PlotUtil:
 
         trace = go.Scattergl(
             x=xcoords.ravel(),
-            y=e_kn.T.ravel() - reference,
-            name=f'{xcname} no SOC',
+            y=e_kn.T.ravel() - self.evac,
+            name=f'{self.xcname} no SOC',
             marker=dict(size=4, color='#999999'),
             **scatterargs,
         )
 
         traces.append(trace)
 
-        e_mk = d['bs_soc']['energies']
-        path = d['bs_soc']['path']
-        kpts = path.kpts
-        ef = d['bs_soc']['efermi']
-        sz_mk = d['bs_soc']['sz_mk']
+        e_mk = self.dct['bs_soc']['energies']
+        sz_mk = self.dct['bs_soc']['sz_mk']
 
         xcoords, label_xcoords, orig_labels = labels_from_kpts(
-            kpts, row.cell, special_points=path.special_points
+            self.kpts, row.cell, special_points=self.path.special_points
         )
 
         shape = e_mk.shape
@@ -114,8 +110,8 @@ class PlotUtil:
         cbtitle = f'〈<i><b>S</b></i><sub>{sdir}</sub>〉'
         trace = go.Scattergl(
             x=xcoords.ravel(),
-            y=e_mk.ravel() - reference,
-            name=xcname,
+            y=e_mk.ravel() - self.evac,
+            name=self.xcname,
             marker=dict(
                 size=4,
                 color=sz_mk.ravel(),
@@ -133,9 +129,10 @@ class PlotUtil:
         )
         traces.append(trace)
 
+        line_position = self.fermilevel_soc - self.evac
         linetrace = go.Scatter(
             x=[np.min(xcoords), np.max(xcoords)],
-            y=[ef - reference, ef - reference],
+            y=[line_position, line_position],
             mode='lines',
             line=dict(color=('rgb(0, 0, 0)'), width=2, dash='dash'),
             name='Fermi level',
@@ -165,7 +162,7 @@ class PlotUtil:
 
         bandyaxis = go.layout.YAxis(
             title=label,
-            range=[emin - reference, emax - reference],
+            range=[self.emin - self.evac, self.emax - self.evac],
             zeroline=False,
             mirror='ticks',
             ticks='inside',
