@@ -30,6 +30,7 @@ from ase.io import read
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb import ColVal
 
 RESULT_FILES = [
     'convex_hull',
@@ -114,7 +115,8 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     def rrf(name: str) -> dict:
         return read_result_file(dir / f'results-asr.{name}.json')
 
-    data = {'uid': uid}
+    # None values will be fremoved later:
+    data: dict[str, ColVal | None] = {'uid': uid}
     try:
         data['magstate'] = rrf('magstate')['magstate']
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
