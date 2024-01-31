@@ -142,7 +142,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         ph = rrf('stiffness')
     except FileNotFoundError:
         dyn_stab_stiffness = 'unknown'
-    else:
+    else:  # pragma: no cover
         dyn_stab_stiffness = ph['dynamic_stability_stiffness']
 
     data['dyn_stab'] = (dyn_stab_phonons == 'high' and
@@ -152,7 +152,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         hse = rrf('hse')
     except FileNotFoundError:
         pass
-    else:
+    else:  # pragma: no cover
         data['gap_hse'] = hse.get('gap_hse', 0.0)
         data['vbm_hse'] = hse.get('vbm_hse')
         data['cbm_hse'] = hse.get('cbm_hse')
@@ -161,7 +161,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         pol = rrf('polarizability')
     except FileNotFoundError:
         pass
-    else:
+    else:  # pragma: no cover
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
             data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')

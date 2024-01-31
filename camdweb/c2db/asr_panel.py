@@ -68,7 +68,7 @@ class Data:
             return None
         return dct
 
-    def __contains__(self, name):
+    def __contains__(self, name):  # pragma: no cover
         assert name.startswith('results-asr.')
         p = self.folder / name
         return p.is_file() or p.with_suffix('.json.gz').is_file()
@@ -132,7 +132,7 @@ class ASRPanel(Panel):
                         result = pool.apply_async(
                             desc['function'], (row, *paths))
                         async_results.append(result)
-                    else:
+                    else:  # pragma: no cover
                         desc['function'](row, *paths)
                     break
 
