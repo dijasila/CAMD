@@ -37,17 +37,6 @@ class BandStructurePanel(Panel):
                           plot_name='bandstructure')
 
 
-def make_plot():
-    import numpy as np
-    x = np.linspace(-5, 5, 100)
-    y = np.sin(x)
-
-    data = [go.Scatter(x=x, y=y, mode='lines')]
-    fig = go.Figure(data=data)
-    bandstructure_json = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
-    return bandstructure_json
-
-
 def plot_bs_html(row):
     from ase.dft.kpoints import labels_from_kpts
 
