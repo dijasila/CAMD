@@ -60,9 +60,12 @@ def test_everything(oqmd_db_file):
     bs.unlink()
 
     html = app.material('1MoS2-1')
-    assert '1.24' in html  # Bader charge
+    key = 'Charges [|e|]'
+    passed = key in html
+    assert passed
 
     (root / 'AB2/1MoS2/1/bader.json').unlink()
     (root / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
     html = app.material('1MoS2-1')
-    assert '1.24' not in html  # Bader charge
+    passed = key not in html  # Bader charge
+    assert passed

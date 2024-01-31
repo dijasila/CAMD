@@ -436,7 +436,6 @@ SPHERE_POINTS_fine = np.array(
 @cache
 def triangulate_sphere(coarse: bool) -> np.ndarray:
     points = SPHERE_POINTS if coarse else SPHERE_POINTS_fine
-
     hull = ConvexHull(points)
     tri_tv = hull.simplices.copy()
 
