@@ -15,7 +15,6 @@ r"""
 from __future__ import annotations
 import json
 import sys
-import re
 from collections import defaultdict
 from typing import Iterable, Generator
 
@@ -64,7 +63,9 @@ class ConvexHullPanel(Panel):
         name = ''.join(sorted(material._count))
         ch_file = root / f'convex-hulls/{name}.json'
         refs = read_result_file(ch_file)
-        chull, tbl1, tbl2 = make_figure_and_tables(refs, verbose=False)
+        chull, tbl1, tbl2 = make_figure_and_tables(refs,
+                                                   higlight_uid=material.uid,
+                                                   verbose=False)
         html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
         if chull:
             yield html + SCRIPT.format(chull_json=chull)
@@ -74,6 +75,7 @@ class ConvexHullPanel(Panel):
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
                                                  float,
                                                  str]],
+                           higlight_uid: str | None = None,
                            verbose: bool = True) -> tuple[str, str, str]:
     """Make convex-hull figure and tables.
 
@@ -111,9 +113,9 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     else:
         if len(pd.symbols) < 4:
             if len(pd.symbols) == 2:
-                fig = plot_2d(pd, labels)
+                fig = plot_2d(pd, labels, uid=higlight_uid)
             else:
-                fig = plot_3d(pd, labels)
+                fig = plot_3d(pd, labels, uid=higlight_uid)
             chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
         else:
             chull = ''
@@ -127,7 +129,8 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
 
 
 def plot_2d(pd: PhaseDiagram,
-            labels: list[str] | None = None) -> go.Figure:
+            labels: list[str] | None = None,
+            uid: str | None = None,) -> go.Figure:
     if labels is None:
         labels = [r[2] for r in pd.references]
 
@@ -138,16 +141,26 @@ def plot_2d(pd: PhaseDiagram,
     for i, j in pd.simplices:
         X += [x[i], x[j], None]
         Y += [y[i], y[j], None]
-    data = [go.Scatter(x=X, y=Y, mode='lines')]
+    data = [go.Scatter(x=X, y=Y, mode='lines', showlegend=False)]
 
-    names = np.asarray([format(Formula(ref[2].split(' ')[0]).reduce()[0], 'html') 
-                        for ref in pd.references])
+    names = np.asarray([format(
+                        Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
+                        for ref in pd.references], dtype='<U30')
 
     sources = set([label.split('(')[0] for label in labels])
+
+    # Highlight selected material:
+    if uid is not None:
+        uids = np.asarray([label.split('(')[1].split(')')[0]
+                           for label in labels])
+        this_idx = np.where(uids == uid)
+        names[this_idx] = '<b>' + names[this_idx].item() + '</b>'
+
     labels = np.asarray(labels)
 
     for source in sources:
-        mask = np.asarray([True if source in label else False for label in labels])
+        mask = np.asarray([True if source in label else False
+                           for label in labels])
         data.append(go.Scatter(
             x=x[mask],
             y=y[mask],
@@ -161,6 +174,9 @@ def plot_2d(pd: PhaseDiagram,
     fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
 
     hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    if uid is not None:
+        if this_idx[0][0] not in hull_idx:
+            hull_idx.append(this_idx[0][0])
     for i in hull_idx:
         fig.add_annotation(x=x[i], y=y[i],
                            text=names[i],
@@ -178,21 +194,32 @@ def plot_2d(pd: PhaseDiagram,
 
 
 def plot_3d(pd: PhaseDiagram,
-            labels: list[str] | None = None) -> go.Figure:
+            labels: list[str] | None = None,
+            uid: str | None = None,) -> go.Figure:
     if labels is None:
         labels = [r[2] for r in pd.references]
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
-    data = [go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, opacity=0.5)]
+    data = [go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k,
+                      opacity=0.5, hoverinfo='skip')]
 
-    names = np.asarray([format(Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
-                        for ref in pd.references])
+    names = np.asarray([format(
+                        Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
+                        for ref in pd.references], dtype='<U30')
 
     sources = set([label.split('(')[0] for label in labels])
     labels = np.asarray(labels)
 
+    # Highlight selected material:
+    if uid is not None:
+        uids = np.asarray([label.split('(')[1].split(')')[0]
+                           for label in labels])
+        this_idx = np.where(uids == uid)
+        names[this_idx] = '<b>' + names[this_idx].item() + '</b>'
+
     for source in sources:
-        mask = np.asarray([True if source in label else False for label in labels])
+        mask = np.asarray([True if source in label else False
+                           for label in labels])
         data.append(
             go.Scatter3d(
                 x=x[mask], y=y[mask], z=z[mask],
@@ -201,10 +228,13 @@ def plot_3d(pd: PhaseDiagram,
                 hovertemplate='%{text}: %{z} eV/atom',
                 mode='markers'))
 
-
     fig = go.Figure(data=data)
 
     hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    if uid is not None:
+        if this_idx[0][0] not in hull_idx:
+            hull_idx.append(this_idx[0][0])
+
     annotations = []
     for i in hull_idx:
         annotations.append(dict(showarrow=False,
