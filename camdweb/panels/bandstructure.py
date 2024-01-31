@@ -21,9 +21,6 @@ Plotly.newPlot('{plot_name}', graphs, {{}});
 """
 
 
-OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
-
-
 class BandStructurePanel(Panel):
     title = 'Band structure'
 
