@@ -66,7 +66,8 @@ class ConvexHullPanel(Panel):
         html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
         if chull:
             yield html + SCRIPT.format(chull_json=chull)
-        yield html  # pragma: no cover
+        else:
+            yield html  # pragma: no cover
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
