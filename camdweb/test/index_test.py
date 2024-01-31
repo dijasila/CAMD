@@ -61,7 +61,8 @@ def mos_index():
     [('MoS2', {0, 1, 2}),
      ('MoS', {3}),
      ('MoS3', set()),
-     ('Mo2S4', {1, 2})])
+     ('Mo2S4', {1, 2}),
+     ('Mo', {0, 1, 2, 3})])
 def test_mos_index(mos_index: Index, filter: str, result: set[int]):
     func = parse(filter)
     assert func(mos_index) == result
