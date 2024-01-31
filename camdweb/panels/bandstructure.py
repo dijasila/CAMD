@@ -1,10 +1,13 @@
+from dataclasses import dataclass
 import json
 
 import numpy as np
 import plotly
 import plotly.graph_objs as go
+from ase.dft.kpoints import BandPath
 
 from camdweb.panels.panel import Panel
+from camdweb.c2db.asr_panel import Row
 
 
 HTML = """
@@ -25,7 +28,6 @@ class BandStructurePanel(Panel):
     title = 'Band structure'
 
     def get_html(self, material, materials):
-        from camdweb.c2db.asr_panel import Row
         row = Row(material)
         fig = plot_bs_html(row)
         bandstructure_json = json.dumps(
@@ -35,52 +37,74 @@ class BandStructurePanel(Panel):
 
 
 def plot_bs_html(row):
-    return PlotUtil(row).plot()
+    dct = row.data.get('results-asr.bandstructure.json')
+
+    assert np.allclose(dct['bs_soc']['path'].kpts,
+                       dct['bs_nosoc']['path'].kpts)
+
+    gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
+
+    fermilevel_nosoc = dct['bs_nosoc']['efermi']
+
+    return PlotUtil(
+        energy_soc_mk=dct['bs_soc']['energies'],
+        energy_nosoc_skn=dct['bs_nosoc']['energies'],
+        spin_zprojection_soc_mk=dct['bs_soc']['sz_mk'],
+        path=dct['bs_nosoc']['path'],
+        evac=row.get('evac'),
+        fermilevel_nosoc=fermilevel_nosoc,
+        fermilevel_soc=dct['bs_soc']['efermi'],
+        emin=gaps.get('vbm', fermilevel_nosoc) - 3,
+        emax=gaps.get('cbm', fermilevel_nosoc) + 3,
+        spin_axisname=row.get('spin_axis', 'z')  # XXX crazy to have a default
+    ).plot()
 
 
+@dataclass
 class PlotUtil:
-    def __init__(self, row):
-        self.row = row
-        self.dct = self.row.data.get('results-asr.bandstructure.json')
-        self.path = self.dct['bs_nosoc']['path']
-        self.kpts = self.path.kpts
-        self.evac = row.get('evac')
-        assert self.evac is not None
-        self.fermilevel_nosoc = self.dct['bs_nosoc']['efermi']
-        self.fermilevel_soc = self.dct['bs_soc']['efermi']
-        self.e_skn = self.dct['bs_nosoc']['energies']
-        self.xcname = 'PBE'
+    energy_nosoc_skn: np.ndarray
+    energy_soc_mk: np.ndarray
+    spin_zprojection_soc_mk: np.ndarray
+    path: BandPath
+    evac: float
+    fermilevel_nosoc: float
+    fermilevel_soc: float
+    emin: float
+    emax: float
 
-        self.gaps = row.data.get(
-            'results-asr.gs.json', {}).get('gaps_nosoc', {})
+    spin_axisname: str
+    xcname: str = 'PBE'  # XXX Should not take a default
 
-        self.emin = self.gaps.get('vbm', self.fermilevel_nosoc) - 3
-        self.emax = self.gaps.get('cbm', self.fermilevel_nosoc) + 3
+    def __post_init__(self):
+        xcoords, label_xcoords, labels = self.path.get_linear_kpoint_axis()
 
-        assert np.allclose(self.dct['bs_soc']['path'].kpts,
-                           self.dct['bs_nosoc']['path'].kpts)
-
-        (self.xcoords, self.label_xcoords,
-         self.orig_labels) = self.path.get_linear_kpoint_axis()
-
-        self.xmax = self.xcoords[-1]
-        assert all(self.xmax >= self.xcoords)
-
-        self.esoc_mk = self.dct['bs_soc']['energies']
-        self.zsoc_mk = self.dct['bs_soc']['sz_mk']
+        self.xcoords = xcoords
+        self.label_xcoords = label_xcoords
+        self.kpoint_labels = prettify_labels(labels, label_xcoords),
 
         self.axisargs = dict(
             showgrid=True,
             showline=True,
             linewidth=2,
             gridcolor='lightgrey',
-            linecolor='black',
-        )
-        self.boringmarker = dict(size=4, color='#999999')
+            linecolor='black')
+
+    def boringmarker(self):
+        return dict(size=4, color='#999999')
+
+    @property
+    def xmax(self):
+        return self.xcoords[-1]
+
+    def plot(self):
+        return go.Figure(
+            data=[self.plot_bands_boring(),
+                  self.plot_bands_fancy(),
+                  self.plot_reference_energy_as_line()],
+            layout=self.layout())
 
     def fancymarker_and_also_colorbar(self, color):
-        sdir = self.row.get('spin_axis', 'z')
-        cbtitle = f'〈<i><b>S</b></i><sub>{sdir}</sub>〉'
+        cbtitle = f'〈<i><b>S</b></i><sub>{self.spin_axisname}</sub>〉'
 
         return dict(
             size=4,
@@ -113,27 +137,20 @@ class PlotUtil:
 
     def plot_bands_boring(self):
         return self.plot_bands(
-            self.xcoords, self.e_skn.transpose(0, 2, 1),
+            self.xcoords, self.energy_nosoc_skn.transpose(0, 2, 1),
             name=f'{self.xcname} no SOC',
-            marker=self.boringmarker)
+            marker=self.boringmarker())
 
     def plot_bands_fancy(self):
-        perm = (-self.zsoc_mk).ravel().argsort()
-        esoc_mk = self.esoc_mk.ravel()[perm]
-        zsoc_mk = self.zsoc_mk.ravel()[perm]
+        perm = (-self.spin_zprojection_soc_mk).ravel().argsort()
+        esoc_mk = self.energy_soc_mk.ravel()[perm]
+        zsoc_mk = self.spin_zprojection_soc_mk.ravel()[perm]
         ndatasets = esoc_mk.size // len(self.xcoords)
         xcoords_mk = np.tile(self.xcoords, ndatasets)[perm]
 
         return self.plot_bands(
             xcoords_mk, esoc_mk, name=self.xcname,
             marker=self.fancymarker_and_also_colorbar(color=zsoc_mk))
-
-    def plot(self):
-        return go.Figure(
-            data=[self.plot_bands_boring(),
-                  self.plot_bands_fancy(),
-                  self.plot_reference_energy_as_line()],
-            layout=self.bandlayout())
 
     def plot_reference_energy_as_line(self):
         line_position = self.fermilevel_soc - self.evac
@@ -145,10 +162,10 @@ class PlotUtil:
             name='Fermi level',
         )
 
-    def bandlayout(self):
+    def layout(self):
         return go.Layout(
-            xaxis=self.bandxaxis(),
-            yaxis=self.bandyaxis(),
+            xaxis=self.xaxis(),
+            yaxis=self.yaxis(),
             plot_bgcolor='white',
             hovermode='closest',
             margin=dict(t=20, r=20),
@@ -165,18 +182,18 @@ class PlotUtil:
             ),
         )
 
-    def bandxaxis(self):
+    def xaxis(self):
         return go.layout.XAxis(
             title='k-points',
             range=[0, self.xmax],
             ticks='',
             showticklabels=True,
             mirror=True,
-            ticktext=prettify_labels(self.orig_labels, self.label_xcoords),
+            ticktext=self.kpoint_labels,
             tickvals=self.label_xcoords,
             **self.axisargs)
 
-    def bandyaxis(self):
+    def yaxis(self):
         return go.layout.YAxis(
             title='<i>E</i> - <i>E</i><sub>vac</sub> [eV]',
             range=[self.emin - self.evac, self.emax - self.evac],
