@@ -48,17 +48,12 @@ def make_plot():
     return bandstructure_json
 
 
-
-def plot_bs_html(row):  # , filename=bs_html):
-    import plotly
-    import plotly.graph_objs as go
-
+def plot_bs_html(row):
     from ase.dft.kpoints import labels_from_kpts
 
     traces = []
     d = row.data.get('results-asr.bandstructure.json')
     xcname = 'PBE'
-    # xcname = gs_xcname_from_row(row)
 
     path = d['bs_nosoc']['path']
     kpts = path.kpts
