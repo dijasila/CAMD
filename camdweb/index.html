@@ -1,32 +1,34 @@
 % rebase('base', plotly=False, callback=False)
 <body>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://kit.fontawesome.com/20e621d973.js" crossorigin="anonymous"></script>
 
 <script>
-    // Function to store scroll position in sessionStorage when the anchor is clicked
-    function storeScrollPosition(event, qualifier) {
-      if (event.target.tagName === 'A' &&  qualifier === 'load') {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-      }
-      if (event.target.tagName === 'BUTTON' &&  qualifier === 'load') {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-      }
+    // Store scroll position in sessionStorage when save-scroll class is present
+    function storeScrollPosition(event) {
+        const target = event.target;
+        const isSaveScrollState = target.classList.contains('save-scroll');
+
+        if ((isSaveScrollState)) {
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+        }
     }
 
     // Function to retrieve scroll position from sessionStorage
     function restoreScrollPosition() {
-      const scrollPosition = sessionStorage.getItem('scrollPosition');
-      if (scrollPosition !== null) {
-        // Temporarily disable smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'auto';
-        // Set the scroll position without animating
-        window.scrollTo(0, scrollPosition);
-        sessionStorage.removeItem('scrollPosition');
-      }
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            // Temporarily disable smooth scroll behavior
+            document.documentElement.style.scrollBehavior = 'auto';
+            // Set the scroll position without animating
+            window.scrollTo(0, scrollPosition);
+            sessionStorage.removeItem('scrollPosition');
+        }
     }
 
-    // Attach the storeScrollPosition function to the click event of your anchor
-    document.addEventListener('click', storeScrollPosition);
+    // Attach the storeScrollPosition function to the click event
+    document.addEventListener('click', function(event) {
+        storeScrollPosition(event);
+    });
 
     // Call the restoreScrollPosition function on page load
     document.addEventListener('DOMContentLoaded', restoreScrollPosition);
@@ -112,7 +114,7 @@
             <option value="{{ name }}">{{ !value }}</option>
           % end
         </select>
-        <button type="submit" onclick="storeScrollPosition(event, 'load')">Add column</button>
+        <button class="save-scroll" type="submit" onclick="storeScrollPosition(event)">Add column</button>
       </form>
     </div>
   </div>
@@ -127,8 +129,8 @@
           % for name, column in header:
             <th>
               <a href="?sid={{ session.sid }}&sort={{ name }}"
-                 onclick="storeScrollPosition(event, 'load')"
-                 class="sticky-top">
+                 onclick="storeScrollPosition(event)"
+                 class="sticky-top save-scroll">
                 {{ !column }}
                 % if name != session.sort:
 
@@ -141,10 +143,11 @@
                 % end
               </a>
               <a href="?sid={{ session.sid }}&toggle={{ name }}"
-                 onclick="storeScrollPosition(event, 'load')"
-                 class="text-decoration-none font-size-sm"
-                 style="color:#ea8888;font-size: 10px;">
-                <i class="fa fa-trash-o" style="font-size:18px"></i>
+                 onclick="storeScrollPosition(event)"
+                 class="text-decoration-none font-size-sm save-scroll"
+                 style="color:#36454F;font-size: 10px;">
+                  <i class="fa-regular fa-square-minus save-scroll"
+                     style="font-size:18px" onclick="storeScrollPosition(event)"></i>
               </a>
             </th>
           % end
