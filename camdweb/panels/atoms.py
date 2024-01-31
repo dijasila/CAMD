@@ -159,12 +159,13 @@ class AtomsPanel(Panel):
         atoms = material.atoms
         unitcell = atoms.cell.copy()
         atoms2 = atoms.copy()
+        show_magmoms = True
         try:
             atoms2.set_initial_magnetic_moments(atoms.calc.results['magmoms'])
-        except AttributeError, KeyError:
-            pass
+        except (AttributeError, KeyError):
+            show_magmoms = False
         atoms2 = atoms2.repeat([repeat if p else 1 for p in atoms.pbc])
-        fig = plot_atoms(atoms2, unitcell)
+        fig = plot_atoms(atoms2, unitcell, show_magmoms=show_magmoms)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
@@ -192,7 +193,8 @@ def get_bonds(atoms):
 
 
 def plot_atoms(atoms: Atoms,
-               unitcell: np.ndarray | None = None) -> go.Figure:
+               unitcell: np.ndarray | None = None,
+               show_magmoms: bool = False) -> go.Figure:
     """Ball and stick plotly figure."""
     data = []
     # Atoms:
@@ -204,17 +206,17 @@ def plot_atoms(atoms: Atoms,
                                       atoms.positions,
                                       atoms.get_initial_magnetic_moments()):
         x, y, z = (points * covalent_radii[Z] * 0.5 + xyz).T
+        magmoms = f'<i>Magmom</i> {magmom:.2f}' if show_magmoms else ''
+        hovertemplate = (
+            f'<b>{symbol}</b><br><i>Coord.</i>'
+            f'{xyz[0]:.2f} {xyz[1]:.2f} {xyz[2]:.2f}<br>{magmoms}')
+
         mesh = go.Mesh3d(x=x, y=y, z=z,
                          i=i, j=j, k=k, opacity=1,
                          color=color(Z),
                          text=symbol,
                          name='',
-                         hovertemplate=f'<b>{symbol}</b><br>'
-                                       f'<i>Coord.</i>'
-                                       f'{xyz[0]:.2f}'
-                                       f'{xyz[1]:.2f}'
-                                       f'{xyz[2]:.2f}<br>'
-                                       f'<i>Magmom</i> {magmom:.2f}')
+                         hovertemplate=hovertemplate)
         data.append(mesh)
 
     # Bonds:
