@@ -60,50 +60,51 @@ class PlotUtil:
         assert np.allclose(self.dct['bs_soc']['path'].kpts,
                            self.dct['bs_nosoc']['path'].kpts)
 
-    def plot(self):
-        from ase.dft.kpoints import labels_from_kpts
+        (self.xcoords, self.label_xcoords,
+         self.orig_labels) = self.path.get_linear_kpoint_axis()
 
-        row = self.row
-        traces = []
 
-        label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
+    def scatter(self, xcoords_k, energies_xk):
+        assert len(xcoords_k) == energies_xk.shape[-1]
 
-        shape = self.e_skn.shape
-        xcoords, label_xcoords, orig_labels = labels_from_kpts(
-            self.kpts, row.cell, special_points=self.path.special_points
-        )
-        xcoords = np.vstack([xcoords] * shape[0] * shape[2])
-        # colors_s = plt.get_cmap('viridis')([0, 1])  # color for sz = 0
-        e_kn = np.hstack([self.e_skn[x] for x in range(shape[0])])
+        ndatasets = energies_xk.size // len(xcoords_k)
+        xcoords_xk = np.tile(xcoords_k, ndatasets)
 
-        scatterargs = dict(
+        self.scatterargs = dict(
             mode='markers',
             showlegend=True,
             hovertemplate='%{y:.3f} eV',
         )
 
         trace = go.Scattergl(
-            x=xcoords.ravel(),
-            y=e_kn.T.ravel() - self.evac,
+            x=xcoords_xk.ravel(),
+            y=energies_xk.ravel() - self.evac, #e_kn.T.ravel() - self.evac,
             name=f'{self.xcname} no SOC',
             marker=dict(size=4, color='#999999'),
-            **scatterargs,
+            **self.scatterargs,
         )
+        return trace
+
+    def plot(self):
+        row = self.row
+        traces = []
+
+        label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
+
+        Ns, Nk, Nn = self.e_skn.shape
+
+        trace = self.scatter(self.xcoords, self.e_skn.transpose(0, 2, 1))
 
         traces.append(trace)
 
         e_mk = self.dct['bs_soc']['energies']
         sz_mk = self.dct['bs_soc']['sz_mk']
 
-        xcoords, label_xcoords, orig_labels = labels_from_kpts(
-            self.kpts, row.cell, special_points=self.path.special_points
-        )
-
         shape = e_mk.shape
         perm = (-sz_mk).argsort(axis=None)
         e_mk = e_mk.ravel()[perm].reshape(shape)
         sz_mk = sz_mk.ravel()[perm].reshape(shape)
-        xcoords = np.vstack([xcoords] * shape[0])
+        xcoords = np.vstack([self.xcoords] * shape[0])
         xcoords = xcoords.ravel()[perm].reshape(shape)
 
         sdir = row.get('spin_axis', 'z')
@@ -125,7 +126,7 @@ class PlotUtil:
                     titleside='right',
                 ),
             ),
-            **scatterargs,
+            **self.scatterargs,
         )
         traces.append(trace)
 
@@ -139,7 +140,7 @@ class PlotUtil:
         )
         traces.append(linetrace)
 
-        labels = prettify_labels(orig_labels, label_xcoords)
+        labels = prettify_labels(self.orig_labels, self.label_xcoords)
 
         axisargs = dict(
             showgrid=True,
@@ -156,7 +157,7 @@ class PlotUtil:
             showticklabels=True,
             mirror=True,
             ticktext=labels,
-            tickvals=label_xcoords,
+            tickvals=self.label_xcoords,
             **axisargs,
         )
 
