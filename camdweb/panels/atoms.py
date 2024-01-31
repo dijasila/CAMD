@@ -161,9 +161,7 @@ class AtomsPanel(Panel):
         atoms2 = atoms.copy()
         try:
             atoms2.set_initial_magnetic_moments(atoms.calc.results['magmoms'])
-        except AttributeError:
-            pass
-        except KeyError:
+        except AttributeError, KeyError:
             pass
         atoms2 = atoms2.repeat([repeat if p else 1 for p in atoms.pbc])
         fig = plot_atoms(atoms2, unitcell)
@@ -201,8 +199,6 @@ def plot_atoms(atoms: Atoms,
     points = SPHERE_POINTS
     triangles = triangulate_sphere()
     i, j, k = triangles.T
-    lighting_effects = dict(ambient=0.4, diffuse=0.5, roughness=0.9,
-                            specular=0.6, fresnel=0.2)
     for Z, symbol, xyz, magmom in zip(atoms.numbers,
                                       atoms.symbols,
                                       atoms.positions,
@@ -218,8 +214,7 @@ def plot_atoms(atoms: Atoms,
                                        f'{xyz[0]:.2f}'
                                        f'{xyz[1]:.2f}'
                                        f'{xyz[2]:.2f}<br>'
-                                       f'<i>Magmom</i> {magmom:.2f}',
-                         lighting=lighting_effects)
+                                       f'<i>Magmom</i> {magmom:.2f}')
         data.append(mesh)
 
     # Bonds:
