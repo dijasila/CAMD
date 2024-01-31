@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+import dataclasses
 import json
 
 import numpy as np
@@ -29,48 +29,48 @@ class BandStructurePanel(Panel):
 
     def get_html(self, material, materials):
         row = Row(material)
-        fig = plot_bs_html(row)
+        plotter = plotter_from_row(row)
+        fig = plotter.plot()
+
         bandstructure_json = json.dumps(
             fig, cls=plotly.utils.PlotlyJSONEncoder)
         yield HTML.format(plot_data=bandstructure_json,
                           plot_name='bandstructure')
 
 
-def plot_bs_html(row):
+def plotter_from_row(row):
     dct = row.data.get('results-asr.bandstructure.json')
+    gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
+    fermilevel_soc = dct['bs_soc']['efermi']
 
     assert np.allclose(dct['bs_soc']['path'].kpts,
                        dct['bs_nosoc']['path'].kpts)
-
-    gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
-
-    fermilevel_soc = dct['bs_soc']['efermi']
 
     return PlotUtil(
         energy_soc_mk=dct['bs_soc']['energies'],
         energy_nosoc_skn=dct['bs_nosoc']['energies'],
         spin_zprojection_soc_mk=dct['bs_soc']['sz_mk'],
         path=dct['bs_nosoc']['path'],
-        evac=row.get('evac'),
-        fermilevel_soc=fermilevel_soc,
+        fermilevel=fermilevel_soc,
         emin=gaps.get('vbm', fermilevel_soc) - 3,
         emax=gaps.get('cbm', fermilevel_soc) + 3,
         spin_axisname=row.get('spin_axis', 'z')  # XXX crazy to have a default
-    ).plot()
+    ).subtract_reference_energy(row.get('evac'))
 
 
-@dataclass
+@dataclasses.dataclass
 class PlotUtil:
     path: BandPath
+
     energy_nosoc_skn: np.ndarray
     energy_soc_mk: np.ndarray
     spin_zprojection_soc_mk: np.ndarray
-    evac: float
-    fermilevel_soc: float
+
+    fermilevel: float
     emin: float
     emax: float
-
     spin_axisname: str
+
     xcname: str = 'PBE'  # XXX Should not take a default
 
     def __post_init__(self):
@@ -78,7 +78,7 @@ class PlotUtil:
 
         self.xcoords = xcoords
         self.label_xcoords = label_xcoords
-        self.kpoint_labels = prettify_labels(labels, label_xcoords),
+        self.kpoint_labels = prettify_labels(labels, label_xcoords)
 
         self.axisargs = dict(
             showgrid=True,
@@ -87,19 +87,32 @@ class PlotUtil:
             gridcolor='lightgrey',
             linecolor='black')
 
-    def boringmarker(self):
-        return dict(size=4, color='#999999')
+    def plot(self) -> go.Figure:
+        """Plot band structure.
 
-    @property
-    def xmax(self):
-        return self.xcoords[-1]
-
-    def plot(self):
+        This plots:
+         * The ordinary (non-spin–orbit-coupled) band structure
+         * The spin–orbit coupled band structure coloured by spin projection
+         * Reference energy (Fermi level).
+        """
         return go.Figure(
             data=[self.plot_bands_boring(),
                   self.plot_bands_fancy(),
                   self.plot_reference_energy_as_line()],
             layout=self.layout())
+
+    def subtract_reference_energy(self, reference):
+        return dataclasses.replace(
+            self,
+            energy_nosoc_skn=self.energy_nosoc_skn - reference,
+            energy_soc_mk=self.energy_soc_mk - reference,
+            fermilevel=self.fermilevel - reference,
+            emin=self.emin - reference,
+            emax=self.emax - reference)
+
+    @property
+    def xmax(self):
+        return self.xcoords[-1]
 
     def fancymarker_and_also_colorbar(self, color):
         cbtitle = f'〈<i><b>S</b></i><sub>{self.spin_axisname}</sub>〉'
@@ -114,9 +127,10 @@ class PlotUtil:
                 tickvals=[-1, 0, 1],
                 ticktext=['-1', '0', '1'],
                 title=cbtitle,
-                titleside='right',
-            ),
-        )
+                titleside='right'))
+
+    def boringmarker(self):
+        return dict(size=4, color='#999999')
 
     def plot_bands(self, xcoords_k, energies_xk, name, marker):
         assert len(xcoords_k) == energies_xk.shape[-1]
@@ -126,7 +140,7 @@ class PlotUtil:
 
         return go.Scattergl(
             x=xcoords_xk.ravel(),
-            y=energies_xk.ravel() - self.evac,
+            y=energies_xk.ravel(),
             name=name,
             marker=marker,
             mode='markers',
@@ -151,14 +165,12 @@ class PlotUtil:
             marker=self.fancymarker_and_also_colorbar(color=zsoc_mk))
 
     def plot_reference_energy_as_line(self):
-        line_position = self.fermilevel_soc - self.evac
         return go.Scatter(
             x=[0, self.xmax],
-            y=[line_position, line_position],
+            y=[self.fermilevel, self.fermilevel],
             mode='lines',
             line=dict(color=('rgb(0, 0, 0)'), width=2, dash='dash'),
-            name='Fermi level',
-        )
+            name='Fermi level')
 
     def layout(self):
         return go.Layout(
@@ -176,9 +188,7 @@ class PlotUtil:
                 x=0.0,
                 font=dict(size=14),
                 itemsizing='constant',
-                itemwidth=35
-            ),
-        )
+                itemwidth=35))
 
     def xaxis(self):
         return go.layout.XAxis(
@@ -194,7 +204,7 @@ class PlotUtil:
     def yaxis(self):
         return go.layout.YAxis(
             title='<i>E</i> - <i>E</i><sub>vac</sub> [eV]',
-            range=[self.emin - self.evac, self.emax - self.evac],
+            range=[self.emin, self.emax],
             zeroline=False,
             mirror='ticks',
             ticks='inside',
