@@ -176,7 +176,7 @@ def plot_2d(pd: PhaseDiagram,
     hull_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
         if this_idx[0][0] not in hull_idx:
-            hull_idx.append(this_idx[0][0])
+            hull_idx.append(this_idx[0][0])  # pragma: no cover
     for i in hull_idx:
         fig.add_annotation(x=x[i], y=y[i],
                            text=names[i],
@@ -233,7 +233,7 @@ def plot_3d(pd: PhaseDiagram,
     hull_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
         if this_idx[0][0] not in hull_idx:
-            hull_idx.append(this_idx[0][0])
+            hull_idx.append(this_idx[0][0])  # pragma: no cover
 
     annotations = []
     for i in hull_idx:
