@@ -1,3 +1,14 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
+
+cache:
+  paths:
+    - $PIP_CACHE_DIR
+    - $CI_PROJECT_DIR/venv
+  key: $CI_PROJECT_ID
+
+
 tests:
   image: python:3.12
   script:
