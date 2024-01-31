@@ -69,15 +69,21 @@ def plot_bs_html(row):
     xcoords = np.vstack([xcoords] * shape[0] * shape[2])
     # colors_s = plt.get_cmap('viridis')([0, 1])  # color for sz = 0
     e_kn = np.hstack([e_skn[x] for x in range(shape[0])])
+
+    scatterargs = dict(
+        mode='markers',
+        showlegend=True,
+        hovertemplate='%{y:.3f} eV',
+    )
+
     trace = go.Scattergl(
         x=xcoords.ravel(),
         y=e_kn.T.ravel() - reference,
-        mode='markers',
         name=f'{xcname} no SOC',
-        showlegend=True,
         marker=dict(size=4, color='#999999'),
-        hovertemplate='%{y:.3f} eV'
+        **scatterargs,
     )
+
     traces.append(trace)
 
     e_mk = d['bs_soc']['energies']
@@ -103,9 +109,7 @@ def plot_bs_html(row):
     trace = go.Scattergl(
         x=xcoords.ravel(),
         y=e_mk.ravel() - reference,
-        mode='markers',
         name=xcname,
-        showlegend=True,
         marker=dict(
             size=4,
             color=sz_mk.ravel(),
@@ -119,7 +123,7 @@ def plot_bs_html(row):
                 titleside='right',
             ),
         ),
-        hovertemplate='%{y:.3f} eV'
+        **scatterargs,
     )
     traces.append(trace)
 
@@ -147,34 +151,34 @@ def plot_bs_html(row):
             labels[i] = ''
         i += 1
 
+    axisargs = dict(
+        showgrid=True,
+        showline=True,
+        linewidth=2,
+        gridcolor='lightgrey',
+        linecolor='black',
+    )
+
     bandxaxis = go.layout.XAxis(
         title='k-points',
         range=[0, np.max(xcoords)],
-        showgrid=True,
-        showline=True,
         ticks='',
         showticklabels=True,
         mirror=True,
-        linewidth=2,
         ticktext=labels,
         tickvals=label_xcoords,
-        gridcolor='lightgrey',
-        linecolor='black',
+        **axisargs,
     )
 
     bandyaxis = go.layout.YAxis(
         title=label,
         range=[emin - reference, emax - reference],
-        showgrid=True,
-        showline=True,
         zeroline=False,
         mirror='ticks',
         ticks='inside',
-        linewidth=2,
         tickwidth=2,
         zerolinewidth=2,
-        gridcolor='lightgrey',
-        linecolor='black',
+        **axisargs,
     )
 
     bandlayout = go.Layout(
