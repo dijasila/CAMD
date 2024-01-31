@@ -24,10 +24,12 @@ def create_data(dir: Path, atoms: Atoms) -> None:
 
     # Create fake ASR result-files:
     (dir / 'results-asr.magstate.json').write_text('{"magstate": "NM"}')
+    (dir / 'results-asr.magnetic_anisotropy.json').write_text(
+        '{"spin_axis": "z"}')
     (dir / 'results-asr.structureinfo.json').write_text(
         '{"kwargs": {"data": {"has_inversion_symmetry": false}}}')
     (dir / 'results-asr.gs.json').write_text(
-        '{"kwargs": {"data": {"gap": 1.8, "evac":4.5}}}')
+        '{"kwargs": {"data": {"gap": 1.8, "evac": 4.5, "efermi": 1.5}}}')
     (dir / 'results-asr.gs@calculate.json').write_text(
         '{}')
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
@@ -47,6 +49,7 @@ def create_data(dir: Path, atoms: Atoms) -> None:
 
     # Phonons:
     dct = {'minhessianeig': 0.001,
+           'dynamic_stability_phonons': 'high',
            'path': kpts,
            'omega_kl': np.zeros((2, 7)),
            'q_qc': np.array([[0, 0, 0], [0, 0.5, 0]]),

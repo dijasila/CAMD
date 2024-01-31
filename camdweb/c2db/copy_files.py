@@ -30,6 +30,7 @@ from ase.io import read
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb import ColVal
 
 RESULT_FILES = [
     'convex_hull',
@@ -89,7 +90,7 @@ def copy_materials(root: Path, patterns: list[str],
             raise FileNotFoundError(
                 f'Could not find {oqmd_path}.\n'
                 'Please download the oqmd123.db file:\n\n'
-                '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n'
+                '   wget https://cmr.fysik.dtu.dk/_downloads/oqmd123.db\n\n'
                 'and convert to json with:\n\n'
                 '   python -m camdweb.c2db.oqmd123 <path-to-oqmd123.db>\n')
         update_chull_data(atomic_energies, refs)
@@ -114,22 +115,56 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     def rrf(name: str) -> dict:
         return read_result_file(dir / f'results-asr.{name}.json')
 
-    data = {'uid': uid}
+    # None values will be fremoved later:
+    data: dict[str, ColVal | None] = {'uid': uid}
     try:
         data['magstate'] = rrf('magstate')['magstate']
+        data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
         data['has_inversion_symmetry'] = rrf(
             'structureinfo')['has_inversion_symmetry']
         gs = rrf('gs')
         data['gap'] = gs['gap']
         data['evac'] = gs['evac']
+        data['efermi'] = gs['efermi']
         data['uid0'] = rrf('database.material_fingerprint')['uid']
     except FileNotFoundError:  # pragma: no cover
         return
 
     try:
-        data['minhessianeig'] = rrf('phonons')['minhessianeig']
+        ph = rrf('phonons')
+    except FileNotFoundError:
+        dyn_stab_phonons = 'unknown'
+    else:
+        data['minhessianeig'] = ph['minhessianeig']
+        dyn_stab_phonons = ph['dynamic_stability_phonons']
+
+    try:
+        ph = rrf('stiffness')
+    except FileNotFoundError:
+        dyn_stab_stiffness = 'unknown'
+    else:  # pragma: no cover
+        dyn_stab_stiffness = ph['dynamic_stability_stiffness']
+
+    data['dyn_stab'] = (dyn_stab_phonons == 'high' and
+                        dyn_stab_stiffness == 'high')
+
+    try:
+        hse = rrf('hse')
     except FileNotFoundError:
         pass
+    else:  # pragma: no cover
+        data['gap_hse'] = hse.get('gap_hse', 0.0)
+        data['vbm_hse'] = hse.get('vbm_hse')
+        data['cbm_hse'] = hse.get('cbm_hse')
+
+    try:
+        pol = rrf('polarizability')
+    except FileNotFoundError:
+        pass
+    else:  # pragma: no cover
+        for a in 'xyz':
+            data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
+            data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')
 
     data['energy'] = atoms.get_potential_energy()
 
@@ -150,6 +185,8 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         result = dir / f'results-asr.{name}.json'
         if result.is_file():
             shutil.copyfile(result, folder / result.name)
+
+    data = {key: value for key, value in data.items() if value is not None}
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
 

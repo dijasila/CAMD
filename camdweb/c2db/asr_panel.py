@@ -68,8 +68,10 @@ class Data:
             return None
         return dct
 
-    # def __contains__(self, name):
-    #     return False
+    def __contains__(self, name):  # pragma: no cover
+        assert name.startswith('results-asr.')
+        p = self.folder / name
+        return p.is_file() or p.with_suffix('.json.gz').is_file()
 
     def __getitem__(self, name):
         return self.get(name)
@@ -77,8 +79,12 @@ class Data:
 
 class ASRPanel(Panel):
     """Generic ASR-panel."""
-    def __init__(self, name: str, keys: set[str]):
+    def __init__(self,
+                 name: str,
+                 keys: set[str],
+                 use_process_pool: bool = True):
         self.name = name
+        self.use_process_pool = use_process_pool
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
@@ -99,7 +105,8 @@ class ASRPanel(Panel):
         if dct is None:
             return
         result = self.result_class(dct)
-        (p,) = self.webpanel(result, row, self.key_descriptions)
+        print(self.name)
+        (p, *_) = self.webpanel(result, row, self.key_descriptions)
         self.title = p['title']
 
         columns: list[list[str]] = [[], []]
@@ -109,28 +116,32 @@ class ASRPanel(Panel):
                     html = thing2html(thing, material.folder)
                     columns[i].append(html)
 
+        all_paths = []  # files to be created
         async_results = []
         for desc in p.get('plot_descriptions', []):
             if desc['filenames'] == ['bs.html']:
                 continue
             paths = [material.folder / filename
                      for filename in desc['filenames']]
+            all_paths += paths
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    if 1:
+                    if self.use_process_pool:
                         pool = materials.process_pool
                         result = pool.apply_async(
                             desc['function'], (row, *paths))
                         async_results.append(result)
-                    else:
+                    else:  # pragma: no cover
                         desc['function'](row, *paths)
                     break
 
         yield ''
 
         for result in async_results:
-            result.wait()
+            result.get()
+
+        assert all(path.is_file() for path in all_paths), all_paths
 
         html = HTML.format(title=p['title'],
                            col1='\n'.join(columns[0]),

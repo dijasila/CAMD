@@ -13,17 +13,18 @@ done using ``(`` and ``)``:
 * ``(Cu>1, gap>1.1) | Fe=0``
 """
 from __future__ import annotations
+
 import functools
 import re
 import sys
 from collections import defaultdict
-from typing import Callable, Union
+from typing import Callable
 
 import numpy as np
 from ase.data import chemical_symbols
 from ase.formula import Formula
 
-ColVal = Union[bool, int, float, str]
+from camdweb import ColVal
 
 
 @functools.lru_cache
