@@ -158,8 +158,15 @@ class AtomsPanel(Panel):
         assert repeat < 5, 'DOS!'
         atoms = material.atoms
         unitcell = atoms.cell.copy()
-        atoms = material.atoms.repeat([repeat if p else 1 for p in atoms.pbc])
-        fig = plot_atoms(atoms, unitcell)
+        atoms2 = atoms.copy()
+        try:
+            atoms2.set_initial_magnetic_moments(atoms.calc.results['magmoms'])
+        except AttributeError:
+            pass
+        except KeyError:
+            pass
+        atoms2 = atoms2.repeat([repeat if p else 1 for p in atoms.pbc])
+        fig = plot_atoms(atoms2, unitcell)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
@@ -172,8 +179,8 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
 
 
 def get_bonds(atoms):
-    i, j, D, S = neighbor_list('ijDS', atoms,
-                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+    i, j, D, S, d = neighbor_list('ijDSd', atoms,
+                                  cutoff=covalent_radii[atoms.numbers] * 1.2)
 
     # For bonds inside the cell (i.e., cell displacement S==(0, 0, 0)),
     # bonds are double-counted.  This mask un-doublecounts them:
@@ -182,38 +189,65 @@ def get_bonds(atoms):
     j = j[doublecount_mask]
     D = D[doublecount_mask]
     S = S[doublecount_mask]
-    return i, j, D, S
+    d = d[doublecount_mask]
+    return i, j, D, S, d
 
 
 def plot_atoms(atoms: Atoms,
                unitcell: np.ndarray | None = None) -> go.Figure:
     """Ball and stick plotly figure."""
     data = []
-
     # Atoms:
     points = SPHERE_POINTS
     triangles = triangulate_sphere()
     i, j, k = triangles.T
-    for Z, xyz in zip(atoms.numbers, atoms.positions):
+    lighting_effects = dict(ambient=0.4, diffuse=0.5, roughness=0.9,
+                            specular=0.6, fresnel=0.2)
+    for Z, symbol, xyz, magmom in zip(atoms.numbers,
+                                      atoms.symbols,
+                                      atoms.positions,
+                                      atoms.get_initial_magnetic_moments()):
         x, y, z = (points * covalent_radii[Z] * 0.5 + xyz).T
         mesh = go.Mesh3d(x=x, y=y, z=z,
                          i=i, j=j, k=k, opacity=1,
-                         color=color(Z))
+                         color=color(Z),
+                         text=symbol,
+                         name='',
+                         hovertemplate=f'<b>{symbol}</b><br>'
+                                       f'<i>Coord.</i>'
+                                       f'{xyz[0]:.2f}'
+                                       f'{xyz[1]:.2f}'
+                                       f'{xyz[2]:.2f}<br>'
+                                       f'<i>Magmom</i> {magmom:.2f}',
+                         lighting=lighting_effects)
         data.append(mesh)
 
     # Bonds:
-    i, j, D, S = get_bonds(atoms)
+    i, j, D, S, d = get_bonds(atoms)
     p = atoms.positions
 
-    xyz = np.empty((3, len(i) * 3))
-    xyz[:, 0::3] = p[i].T
-    D[S.any(1)] *= 0.5
-    xyz[:, 1::3] = (p[i] + D).T
-    xyz[:, 2::3] = np.nan
+    # Only add hover text to bond center
+    text = []
+    for L in d:
+        bond_txt = f'{L:.2f} Å'
+        text += ['', bond_txt, '', '']
+
+    xyz = np.empty((3, len(i) * 4))
+
+    # bond consists of 3 actual points (0, 1 and 2) and final nan value (3)
+    # to break the line, and this is repeated in sequence for each bond
+    xyz[:, 0::4] = p[i].T
+    xyz[:, 1::4] = (p[i] + D * 0.5).T
+    xyz[:, 2::4] = (p[i] + D).T
+    # If bond exits supercell, shorten it by half
+    xyz[:, 2::4][:, S.any(1)] = np.nan
+    xyz[:, 3::4] = np.nan
 
     x, y, z = xyz
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
-                             line=dict(color='grey', width=10),
+    data.append(go.Scatter3d(x=x, y=y, z=z, text=text, mode='lines',
+                             hovertemplate='%{text}',
+                             name='',
+                             line=dict(color='grey', width=5),
                              showlegend=False))
 
     # Unit cell:
@@ -221,7 +255,10 @@ def plot_atoms(atoms: Atoms,
         unitcell = atoms.cell
     x, y, z = (UNITCELL @ unitcell).T
     data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
-                             line=dict(color='#fa9fb5', width=6),
+                             hovertemplate='',
+                             hoverinfo='skip',
+                             name='',
+                             line=dict(color='#fa9fb5', width=10),
                              showlegend=False))
 
     fig = go.Figure(data=data)
