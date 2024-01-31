@@ -63,118 +63,92 @@ class PlotUtil:
         (self.xcoords, self.label_xcoords,
          self.orig_labels) = self.path.get_linear_kpoint_axis()
 
+        self.xmax = self.xcoords[-1]
+        assert all(self.xmax >= self.xcoords)
 
-    def scatter(self, xcoords_k, energies_xk):
-        assert len(xcoords_k) == energies_xk.shape[-1]
+        self.esoc_mk = self.dct['bs_soc']['energies']
+        self.zsoc_mk = self.dct['bs_soc']['sz_mk']
 
-        ndatasets = energies_xk.size // len(xcoords_k)
-        xcoords_xk = np.tile(xcoords_k, ndatasets)
-
-        self.scatterargs = dict(
-            mode='markers',
-            showlegend=True,
-            hovertemplate='%{y:.3f} eV',
-        )
-
-        trace = go.Scattergl(
-            x=xcoords_xk.ravel(),
-            y=energies_xk.ravel() - self.evac, #e_kn.T.ravel() - self.evac,
-            name=f'{self.xcname} no SOC',
-            marker=dict(size=4, color='#999999'),
-            **self.scatterargs,
-        )
-        return trace
-
-    def plot(self):
-        row = self.row
-        traces = []
-
-        label = '<i>E</i> - <i>E</i><sub>vac</sub> [eV]'
-
-        Ns, Nk, Nn = self.e_skn.shape
-
-        trace = self.scatter(self.xcoords, self.e_skn.transpose(0, 2, 1))
-
-        traces.append(trace)
-
-        e_mk = self.dct['bs_soc']['energies']
-        sz_mk = self.dct['bs_soc']['sz_mk']
-
-        shape = e_mk.shape
-        perm = (-sz_mk).argsort(axis=None)
-        e_mk = e_mk.ravel()[perm].reshape(shape)
-        sz_mk = sz_mk.ravel()[perm].reshape(shape)
-        xcoords = np.vstack([self.xcoords] * shape[0])
-        xcoords = xcoords.ravel()[perm].reshape(shape)
-
-        sdir = row.get('spin_axis', 'z')
-        cbtitle = f'〈<i><b>S</b></i><sub>{sdir}</sub>〉'
-        trace = go.Scattergl(
-            x=xcoords.ravel(),
-            y=e_mk.ravel() - self.evac,
-            name=self.xcname,
-            marker=dict(
-                size=4,
-                color=sz_mk.ravel(),
-                colorscale='Viridis',
-                showscale=True,
-                colorbar=dict(
-                    tickmode='array',
-                    tickvals=[-1, 0, 1],
-                    ticktext=['-1', '0', '1'],
-                    title=cbtitle,
-                    titleside='right',
-                ),
-            ),
-            **self.scatterargs,
-        )
-        traces.append(trace)
-
-        line_position = self.fermilevel_soc - self.evac
-        linetrace = go.Scatter(
-            x=[np.min(xcoords), np.max(xcoords)],
-            y=[line_position, line_position],
-            mode='lines',
-            line=dict(color=('rgb(0, 0, 0)'), width=2, dash='dash'),
-            name='Fermi level',
-        )
-        traces.append(linetrace)
-
-        labels = prettify_labels(self.orig_labels, self.label_xcoords)
-
-        axisargs = dict(
+        self.axisargs = dict(
             showgrid=True,
             showline=True,
             linewidth=2,
             gridcolor='lightgrey',
             linecolor='black',
         )
+        self.boringmarker = dict(size=4, color='#999999')
 
-        bandxaxis = go.layout.XAxis(
-            title='k-points',
-            range=[0, np.max(xcoords)],
-            ticks='',
-            showticklabels=True,
-            mirror=True,
-            ticktext=labels,
-            tickvals=self.label_xcoords,
-            **axisargs,
+    def fancymarker_and_also_colorbar(self, color):
+        sdir = self.row.get('spin_axis', 'z')
+        cbtitle = f'〈<i><b>S</b></i><sub>{sdir}</sub>〉'
+
+        return dict(
+            size=4,
+            color=color,
+            colorscale='Viridis',
+            showscale=True,
+            colorbar=dict(
+                tickmode='array',
+                tickvals=[-1, 0, 1],
+                ticktext=['-1', '0', '1'],
+                title=cbtitle,
+                titleside='right',
+            ),
         )
 
-        bandyaxis = go.layout.YAxis(
-            title=label,
-            range=[self.emin - self.evac, self.emax - self.evac],
-            zeroline=False,
-            mirror='ticks',
-            ticks='inside',
-            tickwidth=2,
-            zerolinewidth=2,
-            **axisargs,
+    def plot_bands(self, xcoords_k, energies_xk, name, marker):
+        assert len(xcoords_k) == energies_xk.shape[-1]
+
+        ndatasets = energies_xk.size // len(xcoords_k)
+        xcoords_xk = np.tile(xcoords_k, ndatasets)
+
+        return go.Scattergl(
+            x=xcoords_xk.ravel(),
+            y=energies_xk.ravel() - self.evac,
+            name=name,
+            marker=marker,
+            mode='markers',
+            showlegend=True,
+            hovertemplate='%{y:.3f} eV')
+
+    def plot_bands_boring(self):
+        return self.plot_bands(
+            self.xcoords, self.e_skn.transpose(0, 2, 1),
+            name=f'{self.xcname} no SOC',
+            marker=self.boringmarker)
+
+    def plot_bands_fancy(self):
+        perm = (-self.zsoc_mk).ravel().argsort()
+        esoc_mk = self.esoc_mk.ravel()[perm]
+        zsoc_mk = self.zsoc_mk.ravel()[perm]
+        ndatasets = esoc_mk.size // len(self.xcoords)
+        xcoords_mk = np.tile(self.xcoords, ndatasets)[perm]
+
+        return self.plot_bands(
+            xcoords_mk, esoc_mk, name=self.xcname,
+            marker=self.fancymarker_and_also_colorbar(color=zsoc_mk))
+
+    def plot(self):
+        return go.Figure(
+            data=[self.plot_bands_boring(),
+                  self.plot_bands_fancy(),
+                  self.plot_reference_energy_as_line()],
+            layout=self.bandlayout())
+
+    def plot_reference_energy_as_line(self):
+        line_position = self.fermilevel_soc - self.evac
+        return go.Scatter(
+            x=[0, self.xmax],
+            y=[line_position, line_position],
+            mode='lines',
+            line=dict(color=('rgb(0, 0, 0)'), width=2, dash='dash'),
+            name='Fermi level',
         )
 
-        bandlayout = go.Layout(
-            xaxis=bandxaxis,
-            yaxis=bandyaxis,
+    def bandlayout(self):
+        return go.Layout(
+            xaxis=self.bandxaxis(),
+            yaxis=self.bandyaxis(),
             plot_bgcolor='white',
             hovermode='closest',
             margin=dict(t=20, r=20),
@@ -191,7 +165,27 @@ class PlotUtil:
             ),
         )
 
-        return go.Figure(data=traces, layout=bandlayout)
+    def bandxaxis(self):
+        return go.layout.XAxis(
+            title='k-points',
+            range=[0, self.xmax],
+            ticks='',
+            showticklabels=True,
+            mirror=True,
+            ticktext=prettify_labels(self.orig_labels, self.label_xcoords),
+            tickvals=self.label_xcoords,
+            **self.axisargs)
+
+    def bandyaxis(self):
+        return go.layout.YAxis(
+            title='<i>E</i> - <i>E</i><sub>vac</sub> [eV]',
+            range=[self.emin - self.evac, self.emax - self.evac],
+            zeroline=False,
+            mirror='ticks',
+            ticks='inside',
+            tickwidth=2,
+            zerolinewidth=2,
+            **self.axisargs)
 
 
 def prettify_labels(orig_labels, label_xcoords):
