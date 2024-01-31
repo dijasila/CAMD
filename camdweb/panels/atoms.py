@@ -122,7 +122,6 @@ class AtomsPanel(Panel):
                  materials: Materials) -> Generator[str, None, None]:
         col1 = self.create_column_one(material, materials)
         col2 = self.create_column_two(material, materials)
-        xxxxx
         yield HTML.format(column1=col1,
                           column2=col2,
                           formula=material['formula'])
