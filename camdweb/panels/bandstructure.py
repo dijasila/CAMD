@@ -44,7 +44,7 @@ def plot_bs_html(row):
 
     gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
 
-    fermilevel_nosoc = dct['bs_nosoc']['efermi']
+    fermilevel_soc = dct['bs_soc']['efermi']
 
     return PlotUtil(
         energy_soc_mk=dct['bs_soc']['energies'],
@@ -52,22 +52,20 @@ def plot_bs_html(row):
         spin_zprojection_soc_mk=dct['bs_soc']['sz_mk'],
         path=dct['bs_nosoc']['path'],
         evac=row.get('evac'),
-        fermilevel_nosoc=fermilevel_nosoc,
-        fermilevel_soc=dct['bs_soc']['efermi'],
-        emin=gaps.get('vbm', fermilevel_nosoc) - 3,
-        emax=gaps.get('cbm', fermilevel_nosoc) + 3,
+        fermilevel_soc=fermilevel_soc,
+        emin=gaps.get('vbm', fermilevel_soc) - 3,
+        emax=gaps.get('cbm', fermilevel_soc) + 3,
         spin_axisname=row.get('spin_axis', 'z')  # XXX crazy to have a default
     ).plot()
 
 
 @dataclass
 class PlotUtil:
+    path: BandPath
     energy_nosoc_skn: np.ndarray
     energy_soc_mk: np.ndarray
     spin_zprojection_soc_mk: np.ndarray
-    path: BandPath
     evac: float
-    fermilevel_nosoc: float
     fermilevel_soc: float
     emin: float
     emax: float
