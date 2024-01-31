@@ -94,7 +94,8 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     """
     tbl1 = []
     tbl2 = []
-    labels = []
+    sources = []
+    uids = []
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
@@ -103,7 +104,8 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         else:
             assert source == 'C2DB'
             tbl2.append((hform, f'<a href={uid}>{f:html}</a>'))
-        labels.append(f'{source}({uid})')
+        sources.append(source)
+        uids.append(uid)
 
     try:
         pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
@@ -113,9 +115,9 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     else:
         if len(pd.symbols) < 4:
             if len(pd.symbols) == 2:
-                fig = plot_2d(pd, labels, uid=higlight_uid)
+                fig = plot_2d(pd, uids, sources, uid=higlight_uid)
             else:
-                fig = plot_3d(pd, labels, uid=higlight_uid)
+                fig = plot_3d(pd, uids, sources, uid=higlight_uid)
             chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
         else:
             chull = ''
@@ -129,10 +131,14 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
 
 
 def plot_2d(pd: PhaseDiagram,
-            labels: list[str] | None = None,
+            uids: list[str] | None = None,
+            sources: list[str] | None = None,
             uid: str | None = None,) -> go.Figure:
-    if labels is None:
-        labels = [r[2] for r in pd.references]
+    if uids is None:
+        uids = [r[2] for r in pd.references]
+
+    if sources is None:
+        sources = ['Materials']
 
     x, y = pd.points[:, 1:].T
 
@@ -143,27 +149,24 @@ def plot_2d(pd: PhaseDiagram,
         Y += [y[i], y[j], None]
     data = [go.Scatter(x=X, y=Y, mode='lines', showlegend=False)]
 
-    names = np.asarray([format(
-                        Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
-                        for ref in pd.references], dtype='<U30')
-
-    sources = set([label.split('(')[0] for label in labels])
+    names = [format(Formula(ref[2]).reduce()[0], 'html')
+             for ref in pd.references]
 
     # Highlight selected material:
     if uid is not None:
-        uids = np.asarray([label.split('(')[1].split(')')[0]
-                           for label in labels])
-        this_idx = np.where(uids == uid)
-        names[this_idx] = '<b>' + names[this_idx].item() + '</b>'
+        this_idx = uids.index(uid)
+        names[this_idx] = '<b>' + names[this_idx] + '</b>'
 
-    for source in sources:
-        mask = np.asarray([True if source in label else False
-                           for label in labels])
+    for source in set(sources):
+        #mask = np.asarray([True if source in label else False
+        #                   for label in labels])
+        mask = [True if source in label else False
+                for label in sources]
 
         data.append(go.Scatter(
             x=x[mask],
             y=y[mask],
-            text=[label for label in labels if source in label],
+            text=[uid for uid, x in zip(uids, mask) if x is True],
             name=source,
             hovertemplate='%{text}: %{y} eV/atom',
             mode='markers',))
@@ -174,8 +177,8 @@ def plot_2d(pd: PhaseDiagram,
 
     hull_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
-        if this_idx[0][0] not in hull_idx:
-            hull_idx.append(this_idx[0][0])  # pragma: no cover
+        if this_idx not in hull_idx:
+            hull_idx.append(this_idx)  # pragma: no cover
     for i in hull_idx:
         fig.add_annotation(x=x[i], y=y[i],
                            text=names[i],
