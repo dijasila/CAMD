@@ -6,3 +6,5 @@ dist/
 htmlcov/
 venv/
 camdweb.egg-info/
+*~
+*.swp

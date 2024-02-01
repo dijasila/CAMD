@@ -341,6 +341,8 @@ class Index:
 
     def formula(self, f: str) -> set[int]:
         formula = Formula(f)
+        if len(formula) == 1:
+            return self.key(f, '>', 0)
         stoichiometry, reduced, n = formula.stoichiometry()
         ids = self.reduced[str(reduced)]
         if n == 1:
