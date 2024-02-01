@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 
 from ase.formula import Formula
+import rich.progress as progress
 
 from camdweb.panels.convex_hull import (calculate_ehull_energies,
                                         group_references)
@@ -62,16 +63,13 @@ def update_chull_data(atomic_energies: dict[str, float],
 
     # Calculate ehull:
     ehull_energies = {}
-    for symbols, uids in groups.items():
-        try:
+    with progress.Progress() as pb:
+        pid = pb.add_task('Calculating ehull:', total=len(groups))
+        for symbols, uids in groups.items():
             ehull_energies.update(
                 calculate_ehull_energies({uid: refs[uid] for uid in uids},
                                          c2db_uids))
-        except AssertionError:
-            print(symbols, uids)
-            calculate_ehull_energies({uid: refs[uid] for uid in uids},
-                                     c2db_uids, verbose=1)
-
+            pb.advance(pid)
 
     # Update data.json files:
     for uid, path in paths.items():

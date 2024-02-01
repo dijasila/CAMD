@@ -166,15 +166,24 @@ def copy_material(fro: Path, to: Path, olduid: str, uid: str) -> None:
         'folder': str(fro)}
     try:
         data['magstate'] = rrf('magstate')['magstate']
+    except FileNotFoundError:
+        pass
+    try:
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
-        data['has_inversion_symmetry'] = rrf(
-            'structureinfo')['has_inversion_symmetry']
+    except FileNotFoundError:
+        pass
+
+    data['has_inversion_symmetry'] = rrf(
+        'structureinfo')['has_inversion_symmetry']
+
+    try:
         gs = rrf('gs')
+    except FileNotFoundError:
+        pass
+    else:
         data['gap'] = gs['gap']
         data['evac'] = gs['evac']
         data['efermi'] = gs['efermi']
-    except FileNotFoundError:  # pragma: no cover
-        return
 
     try:
         ph = rrf('phonons')
