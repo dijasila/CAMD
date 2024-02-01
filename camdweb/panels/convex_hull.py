@@ -217,7 +217,7 @@ def group_references(references: dict[str, tuple[str, ...]],
 
 
 def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
-                             uids: set[str]) -> dict[str, float]:
+                             uids: set[str], verbose=0) -> dict[str, float]:
     """Calculate energies above hull.
 
     >>> calculate_ehull_energies(
@@ -229,7 +229,7 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     """
     pd: PhaseDiagram | PhaseDiagram1D
     try:
-        pd = PhaseDiagram([ref for ref in refs.values()], verbose=False)
+        pd = PhaseDiagram([ref for ref in refs.values()], verbose=verbose)
     except ValueError:
         # PhaseDiagram can't handle 1D-case!  Should be fixed in ASE
         e0 = min(hform / sum(count.values())
@@ -239,6 +239,9 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     for uid in refs:
         if uid in uids:
             count, hform = refs[uid]
+            if verbose:
+                print([ref for ref in refs.values()])
+                print(count, hform, uid)
             ehull_energies[uid] = hform - pd.decompose(**count)[0]
     return ehull_energies
 

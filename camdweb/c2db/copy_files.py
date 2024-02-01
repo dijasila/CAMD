@@ -90,32 +90,39 @@ def copy_materials(root: Path, patterns: list[str],
 
     work = []
     parent_folders = set()
-    for dir in dirs:
-        fp = dir / 'results-asr.database.material_fingerprint.json'
-        olduid = json.loads(fp.read_text())['uid']
-        f = Formula(olduid.split('-')[0])
-        stoi, reduced, nunits = f.stoichiometry()
-        name = f'{nunits}{reduced}'
-        uid = uids.get(olduid)
-        if uid is not None:
-            name1, x = uid.split('-')
-            number = int(x)
-            assert name1 == name
-        else:
-            names[name] += 1
-            number = names[name]
-            uid = f'{nunits}{reduced}-{number}'
-            uids[olduid] = uid
-        folder = Path(f'{stoi}/{name}/{number}')
-        parent_folders.add(folder.parent)
-        work.append((dir, folder, olduid, uid))
+    with progress.Progress() as pb:
+        pid = pb.add_task('Finding UIDs:', total=len(dirs))
+        for dir in dirs:
+            fp = dir / 'results-asr.database.material_fingerprint.json'
+            try:
+                olduid = read_result_file(fp)['uid']
+            except FileNotFoundError:
+                print(fp)
+                continue
+            f = Formula(olduid.split('-')[0])
+            stoi, reduced, nunits = f.stoichiometry()
+            name = f'{nunits}{reduced}'
+            uid = uids.get(olduid)
+            if uid is not None:
+                name1, x = uid.split('-')
+                number = int(x)
+                assert name1 == name
+            else:
+                number = names[name]
+                names[name] += 1
+                uid = f'{nunits}{reduced}-{number}'
+                uids[olduid] = uid
+            folder = Path(f'{stoi}/{name}/{number}')
+            parent_folders.add(folder.parent)
+            work.append((dir, folder, olduid, uid))
+            pb.advance(pid)
 
     Path('uids.json').write_text(json.dumps(uids, indent=1))
 
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
 
-    with mp.Pool() as pool:
+    with mp.Pool(processes=8) as pool:
         print(pool)
         with progress.Progress() as pb:
             pid = pb.add_task('Copying materials:', total=len(work))
@@ -153,7 +160,10 @@ def copy_material(fro: Path, to: Path, olduid: str, uid: str) -> None:
         return read_result_file(fro / f'results-asr.{name}.json')
 
     # None values will be removed later:
-    data: dict[str, ColVal | None] = {'uid': uid, 'olduid': olduid}
+    data: dict[str, ColVal | None] = {
+        'uid': uid,
+        'olduid': olduid,
+        'folder': str(fro)}
     try:
         data['magstate'] = rrf('magstate')['magstate']
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
