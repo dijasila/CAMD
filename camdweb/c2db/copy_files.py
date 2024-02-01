@@ -66,6 +66,13 @@ PATTERNS = [
 # '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
+def read_uids(root: Path):
+    uids = {}
+    for path in root.glob('A*/*/*/'):
+        data = json.loads((path / 'data.json').read_text())
+        uids[data['uid0']] = data['uid']
+
+
 def copy_materials(root: Path, patterns: list[str],
                    update_chull: bool = True) -> None:
     dirs = [dir
@@ -115,7 +122,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     def rrf(name: str) -> dict:
         return read_result_file(dir / f'results-asr.{name}.json')
 
-    # None values will be fremoved later:
+    # None values will be removed later:
     data: dict[str, ColVal | None] = {'uid': uid}
     try:
         data['magstate'] = rrf('magstate')['magstate']
