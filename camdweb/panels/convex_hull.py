@@ -13,19 +13,21 @@ r"""
 +---------------------+-----------+
 """
 from __future__ import annotations
+
 import json
 import sys
 from collections import defaultdict
-from typing import Iterable, Generator
+from typing import Generator, Iterable
 
+import numpy as np
 import plotly
 import plotly.graph_objs as go
 from ase.formula import Formula
-from ase.phasediagram import PhaseDiagram
+from ase.phasediagram import PhaseDiagram, parse_formula, print_results
 
+from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
 from camdweb.material import Material, Materials
-from camdweb.c2db.asr_panel import read_result_file
 from camdweb.panels.panel import Panel
 
 HTML = """
@@ -227,9 +229,9 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     ...     {'i3'})
     {'i3': 1.0}
     """
-    pd: PhaseDiagram | PhaseDiagram1D
+    pd: MyPhaseDiagram | PhaseDiagram1D
     try:
-        pd = PhaseDiagram([ref for ref in refs.values()], verbose=verbose)
+        pd = MyPhaseDiagram([ref for ref in refs.values()], verbose=verbose)
     except ValueError:
         # PhaseDiagram can't handle 1D-case!  Should be fixed in ASE
         e0 = min(hform / sum(count.values())
@@ -239,9 +241,6 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     for uid in refs:
         if uid in uids:
             count, hform = refs[uid]
-            if verbose:
-                print([ref for ref in refs.values()])
-                print(count, hform, uid)
             ehull_energies[uid] = hform - pd.decompose(**count)[0]
     return ehull_energies
 
@@ -252,6 +251,69 @@ class PhaseDiagram1D:
 
     def decompose(self, **count):
         return [self.e0 * sum(count.values())]
+
+
+class MyPhaseDiagram(PhaseDiagram):
+    def decompose(self, formula=None, **kwargs):
+        """Find the combination of the references with the lowest energy.
+
+        formula: str
+            Stoichiometry.  Example: ``'ZnO'``.  Can also be given as
+            keyword arguments: ``decompose(Zn=1, O=1)``.
+
+        Example::
+
+            pd = PhaseDiagram(...)
+            pd.decompose(Zn=1, O=3)
+
+        Returns energy, indices of references and coefficients."""
+
+        if formula:
+            assert not kwargs
+            kwargs = parse_formula(formula)[0]
+
+        point = np.zeros(len(self.species))
+        N = 0
+        for symbol, n in kwargs.items():
+            point[self.species[symbol]] = n
+            N += n
+
+        # Find coordinates within each simplex:
+        X = self.points[self.simplices, 1:-1] - point[1:] / N
+
+        # Find the simplex with positive coordinates that sum to
+        # less than one:
+        eps = 1e-14
+        for i, Y in enumerate(X):
+            try:
+                x = np.linalg.solve((Y[1:] - Y[:1]).T, -Y[0])
+            except np.linalg.linalg.LinAlgError:
+                continue
+            if (x > -eps).all() and x.sum() < 1 + eps:
+                break
+        else:
+            assert False, X
+
+        indices = self.simplices[i]
+        points = self.points[indices]
+
+        scaledcoefs = [1 - x.sum()]
+        scaledcoefs.extend(x)
+
+        energy = N * np.dot(scaledcoefs, points[:, -1])
+
+        coefs = []
+        results = []
+        for coef, s in zip(scaledcoefs, indices):
+            count, e, name, natoms = self.references[s]
+            coef *= N / natoms
+            coefs.append(coef)
+            results.append((name, coef, e))
+
+        if self.verbose:
+            print_results(results)
+
+        return energy, indices, np.array(coefs)
 
 
 if __name__ == '__main__':
