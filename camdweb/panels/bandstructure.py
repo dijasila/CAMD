@@ -77,8 +77,8 @@ class PlotUtil:
         xcoords, label_xcoords, labels = self.path.get_linear_kpoint_axis()
 
         self.xcoords = xcoords
-        self.label_xcoords = label_xcoords
-        self.kpoint_labels = prettify_labels(labels, label_xcoords)
+        self.kpoint_labels, self.label_xcoords = prettify_labels(
+            labels, [*label_xcoords])
 
         self.axisargs = dict(
             showgrid=True,
@@ -214,21 +214,31 @@ class PlotUtil:
 
 
 def prettify_labels(orig_labels, label_xcoords):
+    import re
+
+    label_xcoords = [*label_xcoords]
 
     def pretty(kpt):
         if kpt == 'G':
-            kpt = 'Γ'
-        elif len(kpt) == 2:
-            kpt = kpt[0] + '$_' + kpt[1] + '$'
-        return kpt
+            return 'Γ'
+
+        # Convert Abc123 ----> Abc_{123}:
+        return re.sub('[0-9]+', lambda match: rf'_{{{match.group()}}}', kpt)
 
     labels = [pretty(name) for name in orig_labels]
 
+    assert len(labels) == len(label_xcoords)
+
     i = 1
     while i < len(labels):
-        if label_xcoords[i - 1] == label_xcoords[i]:
-            labels[i - 1] = labels[i - 1][:-1] + ',' + labels[i][1:]
-            labels[i] = ''
-        i += 1
+        if abs(label_xcoords[i - 1] - label_xcoords[i]) < 1e-6:
+            # Merge two special points A and B at same kpoint into a composite
+            # label "A,B" and shorten the list of labels:
+            labels[i - 1] =  f'{labels[i - 1]},{labels[i]}'
+            labels.pop(i)
+            label_xcoords.pop(i)
+        else:
+            i += 1
 
-    return labels
+    fancylabels = [rf'$\mathrm{{{label}}}$' for label in labels]
+    return fancylabels, label_xcoords
