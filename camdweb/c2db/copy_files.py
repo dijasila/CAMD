@@ -36,7 +36,6 @@ from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
 
 RESULT_FILES = [
-    'convex_hull',
     'stiffness',
     'phonons',
     'deformationpotentials',
@@ -126,7 +125,7 @@ def copy_materials(root: Path, patterns: list[str],
         print(pool)
         with progress.Progress() as pb:
             pid = pb.add_task('Copying materials:', total=len(work))
-            for _ in pool.imap_unordered(func, work):
+            for _ in pool.imap_unordered(worker, work):
                 pb.advance(pid)
 
     if update_chull:
@@ -144,7 +143,8 @@ def copy_materials(root: Path, patterns: list[str],
         update_chull_data(atomic_energies, refs)
 
 
-def func(args):
+def worker(args):
+    """Used by Pool"""
     copy_material(*args)
 
 

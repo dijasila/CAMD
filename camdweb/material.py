@@ -220,4 +220,4 @@ class Materials:
 
     @cached_property
     def process_pool(self):
-        return multiprocessing.get_context('fork').Pool()
+        return multiprocessing.Pool(maxtasksperchild=100)
