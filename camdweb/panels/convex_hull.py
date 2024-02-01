@@ -95,6 +95,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     tbl2 = []
     sources = []
     uids = []
+
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
