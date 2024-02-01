@@ -234,7 +234,7 @@ def prettify_labels(orig_labels, label_xcoords):
         if abs(label_xcoords[i - 1] - label_xcoords[i]) < 1e-6:
             # Merge two special points A and B at same kpoint into a composite
             # label "A,B" and shorten the list of labels:
-            labels[i - 1] =  f'{labels[i - 1]},{labels[i]}'
+            labels[i - 1] = f'{labels[i - 1]},{labels[i]}'
             labels.pop(i)
             label_xcoords.pop(i)
         else:
