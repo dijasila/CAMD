@@ -20,7 +20,6 @@ from typing import Iterable, Generator
 
 import plotly
 import plotly.graph_objs as go
-import numpy as np
 from ase.formula import Formula
 from ase.phasediagram import PhaseDiagram
 
@@ -138,7 +137,7 @@ def plot_2d(pd: PhaseDiagram,
         uids = [r[2] for r in pd.references]
 
     if sources is None:
-        sources = ['Materials']
+        sources = ['Materials'] * len(uids)
 
     x, y = pd.points[:, 1:].T
 
@@ -158,8 +157,6 @@ def plot_2d(pd: PhaseDiagram,
         names[this_idx] = '<b>' + names[this_idx] + '</b>'
 
     for source in set(sources):
-        #mask = np.asarray([True if source in label else False
-        #                   for label in labels])
         mask = [True if source in label else False
                 for label in sources]
 
@@ -175,11 +172,12 @@ def plot_2d(pd: PhaseDiagram,
     ymin = y.min() - 2.5 * delta
     fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
 
-    hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    # Add annotations for materials on the hull and the selected material:
+    annotate_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
-        if this_idx not in hull_idx:
-            hull_idx.append(this_idx)  # pragma: no cover
-    for i in hull_idx:
+        if this_idx not in annotate_idx:
+            annotate_idx.append(this_idx)  # pragma: no cover
+    for i in annotate_idx:
         fig.add_annotation(x=x[i], y=y[i],
                            text=names[i],
                            xanchor='left',
@@ -196,48 +194,49 @@ def plot_2d(pd: PhaseDiagram,
 
 
 def plot_3d(pd: PhaseDiagram,
-            labels: list[str] | None = None,
+            uids: list[str] | None = None,
+            sources: list[str] | None = None,
             uid: str | None = None,) -> go.Figure:
-    if labels is None:
-        labels = [r[2] for r in pd.references]
+    if uids is None:
+        uids = [r[2] for r in pd.references]
+
+    if sources is None:
+        sources = ['Materials'] * len(uids)
+
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
     data = [go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k,
                       opacity=0.5, hoverinfo='skip')]
 
-    names = np.asarray([format(
-                        Formula(ref[2].split(' ')[0]).reduce()[0], 'html')
-                        for ref in pd.references], dtype='<U30')
-
-    sources = set([label.split('(')[0] for label in labels])
+    names = [format(Formula(ref[2]).reduce()[0], 'html')
+             for ref in pd.references]
 
     # Highlight selected material:
     if uid is not None:
-        uids = np.asarray([label.split('(')[1].split(')')[0]
-                           for label in labels])
-        this_idx = np.where(uids == uid)
-        names[this_idx] = '<b>' + names[this_idx].item() + '</b>'
+        this_idx = uids.index(uid)
+        names[this_idx] = '<b>' + names[this_idx] + '</b>'
 
-    for source in sources:
-        mask = np.asarray([True if source in label else False
-                           for label in labels])
+    for source in set(sources):
+        mask = [True if source in label else False
+                for label in sources]
         data.append(
             go.Scatter3d(
                 x=x[mask], y=y[mask], z=z[mask],
-                text=[label for label in labels if source in label],
+                text=[uid for uid, x in zip(uids, mask) if x is True],
                 name=source,
                 hovertemplate='%{text}: %{z} eV/atom',
                 mode='markers'))
 
     fig = go.Figure(data=data)
 
-    hull_idx = [i for i, x in enumerate(pd.hull) if x]
+    # Add annotations for materials on the hull and the selected material:
+    annotate_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
-        if this_idx[0][0] not in hull_idx:
-            hull_idx.append(this_idx[0][0])  # pragma: no cover
+        if this_idx not in annotate_idx:
+            annotate_idx.append(this_idx)  # pragma: no cover
 
     annotations = []
-    for i in hull_idx:
+    for i in annotate_idx:
         annotations.append(dict(showarrow=False,
                                 x=x[i],
                                 y=y[i],
