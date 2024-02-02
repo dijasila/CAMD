@@ -107,8 +107,8 @@ def copy_materials(root: Path, patterns: list[str],
                 number = int(x)
                 assert name1 == name
             else:
-                number = names[name]
                 names[name] += 1
+                number = names[name]
                 uid = f'{nunits}{reduced}-{number}'
                 uids[olduid] = uid
             folder = Path(f'{stoi}/{name}/{number}')
