@@ -26,7 +26,7 @@ def test_bidb(tmp_path):
                  monolayer_uid='H-xyz')
     expand(dbfile)
     app = main(tmp_path)
-    app.index()
-    app.material('1H-0-stacking')
-    html = app.material('1H-0')
+    app.index_page()
+    app.material_page('1H-0-stacking')
+    html = app.material_page('1H-0')
     assert '15.000' in html

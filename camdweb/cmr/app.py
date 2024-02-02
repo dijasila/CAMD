@@ -74,8 +74,8 @@ class CMRProjectApp(CAMDApp):
         html = html.replace('/table?', f'/{self.name}/table?')
         return html, error
 
-    def material(self, uid: str) -> str:
-        html = super().material(uid)
+    def material_page(self, uid: str) -> str:
+        html = super().material_page(uid)
         html = html.replace('/callback', f'/{self.name}/callback')
         return html.replace('href="/">Search<',
                             f'href="/{self.name}">Search<', 1)

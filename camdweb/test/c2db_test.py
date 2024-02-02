@@ -55,7 +55,7 @@ def test_everything(oqmd_db_file):
     app = main(['AB2/1MoS2/1'])
     assert len(app.materials) == 1
 
-    app.index()
+    app.index_page()
 
     # Compress one of the result files:
     bs = root / 'AB2/1MoS2/1/results-asr.bandstructure.json'
@@ -63,13 +63,13 @@ def test_everything(oqmd_db_file):
         fd.write(bs.read_text())
     bs.unlink()
 
-    html = app.material('1MoS2-1')
+    html = app.material_page('1MoS2-1')
     key = 'Charges [|e|]'
     passed = key in html
     assert passed
 
     (root / 'AB2/1MoS2/1/bader.json').unlink()
     (root / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
-    html = app.material('1MoS2-1')
+    html = app.material_page('1MoS2-1')
     passed = key not in html  # Bader charge
     assert passed

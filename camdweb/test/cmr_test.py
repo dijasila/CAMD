@@ -28,12 +28,12 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
 
     papp = app.project_apps[name]
 
-    papp.index()
+    papp.index_page()
     for material in papp.materials:
-        papp.material(material.uid)
+        papp.material_page(material.uid)
 
     if name == 'oqmd123':
-        html = papp.material('id-1')
+        html = papp.material_page('id-1')
         assert 'http://oqmd.org' in html
 
         xyz = papp.download('id-1', 'xyz')
@@ -44,9 +44,9 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
 
     # Test also when png-files have already been generated:
     if name == 'abs3':
-        papp.material('1')
+        papp.material_page('1')
     if name == 'lowdim':
-        papp.material('a1')
+        papp.material_page('a1')
 
     if name == 'ads1d':
         with boddle(query={'name': 'atoms', 'uid': 'id-1', 'data': '1'}):

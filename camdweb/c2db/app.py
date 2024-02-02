@@ -120,7 +120,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('1MoS2-2')
+    app.material_page('1MoS2-2')
 
 
 def create_app():  # pragma: no cover
