@@ -196,7 +196,7 @@ class Index:
                 elif isinstance(value, (int, bool)):
                     integers[name].append((int(value), i))
                 else:
-                    raise ValueError
+                    raise ValueError(f'Bad value in {rows}, {name} - {value}')
 
         self.integers = {}
         self.floats = {}

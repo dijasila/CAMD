@@ -44,8 +44,8 @@ RESULT_FILES = [
     ]
 
 CHARGE_0_RESULT_FILES = ['defectinfo', 
-                         'sj_analyze', 
-                         'charge_neutrality']
+                         'sj_analyze'] 
+                         #'charge_neutrality'] handled in pris folder, same file
 RESULT_FILES.extend(CHARGE_0_RESULT_FILES)
 
 
@@ -53,8 +53,8 @@ ROOT = Path('/home/niflheim2/cmr/defects/WIP/defects/rerun-qpod/tree-fabian2')
 
 # Updated PATTERNS to match the new structure
 PATTERNS = [
-    r'A*/*/*/defects.*/charge_*',
-    r'A*/*/*/defects.pristine*'
+    'A*/*/*/defects.*/charge_*',
+    'A*/*/*/defects.pristine*'
 ]
 
 
@@ -86,6 +86,11 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         subfolder = parts[defects_index].split('.')[-1]
         folder = Path(material_folder) / subfolder
         RESULT_FILES.extend(['defectinfo'])     #'charge_neutrality' conditional
+        try:
+            charge_neutrality = dir / f'results-asr.charge_neutrality.json'
+            RESULT_FILES.extend(['charge_neutrality'])
+        except:
+            pass
     else:
         defects_parts = parts[defects_index].split('.')
         subfolder = defects_parts[-1]
@@ -99,11 +104,26 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
 
     data = {}
     try:
-        gs = rrf('gs')
-        data['evac'] = gs['evac']
+        fingerprint = rrf('database.material_fingerprint')
+        data['uid'] = fingerprint['uid']
     except FileNotFoundError:
+        print("Database.fingerprint file not found", dir)
         return
     
+    try:
+        defectinfo = rrf('defectinfo')     # Maybe take data from json directly at some later point
+        data['host_name'] = defectinfo['host_name']
+        data['defect_name'] = defectinfo['defect_name']
+        data['host_gap_pbe'] = defectinfo['host_gap_pbe']
+        data['host_gap_hse'] = defectinfo['host_gap_hse']
+        data['host_hof'] = defectinfo['host_hof']
+        data['host_uid'] = defectinfo['host_uid']
+        data['host_spacegroup'] = defectinfo['host_spacegroup']
+        data['host_pointgroup'] = defectinfo['host_pointgroup']
+        data['r_nn'] = defectinfo['R_nn'] or 0.0   # Defect-defect distance; 0 inplace of None
+    except FileNotFoundError:
+        pass
+
     data['energy'] = read(gpw).get_potential_energy()
 
     folder.mkdir(exist_ok=False, parents=True)

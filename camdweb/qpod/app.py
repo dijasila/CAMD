@@ -1,4 +1,4 @@
-"""C2DB web-app.
+"""QPOD web-app.
 
 This module has code to convert ~cmr/C2DB/tree/ folders and friends
 (see PATTERNS variable below) to canonical tree layout.
@@ -6,7 +6,7 @@ This module has code to convert ~cmr/C2DB/tree/ folders and friends
 Also contains simple web-app that can run off the tree of folders.
 
 Goal is to have the code decoupled from ASE, GPAW and ASR.
-Right now ASR webpanel() functions are still used (see cxdb.asr_panel module).
+Right now ASR webpanel() functions are still used (see camdweb.c2db.asr_panel module).
 """
 from __future__ import annotations
 
@@ -15,12 +15,12 @@ from pathlib import Path
 
 import rich.progress as progress
 
-from cxdb.material import Material, Materials
-from cxdb.panels.asr_panel import ASRPanel
-from cxdb.panels.atoms import AtomsPanel
-from cxdb.panels.panel import Panel
-from cxdb.panels.shift_current import ShiftCurrentPanel
-from cxdb.web import CXDBApp
+from camdweb.material import Material, Materials
+from camdweb.c2db.asr_panel import ASRPanel, read_result_file
+from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.panel import Panel
+from camdweb.panels.shift_current import ShiftCurrentPanel
+from camdweb.web import CAMDApp
 
 
 class QPODAtomsPanel(AtomsPanel):
@@ -28,47 +28,59 @@ class QPODAtomsPanel(AtomsPanel):
         super().__init__()
         self.column_names.update(
             magstate='Magnetic state',
-            host_crystal='Crystal type',
-            host_uid='C2DB link',
-            host_spacegroup='Space group',
-            host_pointgroup='Point group',
-            host_hof='Heat of formation [eV/atom]',
-            host_gap_pbe='Band gap (PBE) [eV]',
-            host_gap_hse='Band gap (HSE) [eV]',
-            energy='Energy [eV]')
+            host_name='Material',
+            defect_name='Defect',
+            host_crystal='Host crystal type',
+            host_uid='Host C2DB link',
+            host_spacegroup='Host space group',
+            host_pointgroup='Host point group',
+            host_hof='Heat of formation of host material [eV/atom]',
+            host_gap_pbe='Band gap of host material (PBE) [eV]',
+            host_gap_hse='Band gap of host material (HSE) [eV]',
+            energy='Energy [eV]',
+            r_nn='Defect-defect distance [Ang]')  # change to r_nn
         self.columns = list(self.column_names)
 
     def update_data(self, material: Material):
         super().update_data(material)
         data = json.loads((material.folder / 'data.json').read_text())
         for key, value in data.items():
-            material.add_column(key, value)
+            if key != 'uid':
+                material.add_column(key, value)
 
 
-def main(root: Path) -> CXDBApp:
-    """Create C2DB app."""
+def main(root: Path) -> CAMDApp:
+    """Create QPOD app."""
     mlist: list[Material] = []
-    files = list(root.glob('A*/*/*/'))
+    files = list(root.glob('*/*/charge*'))
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(files))
         for f in files:
-            uid = f'{f.parent.name}-{f.name}'
-            mlist.append(Material.from_file(f / 'structure.xyz', uid))
+            data_file = f / 'data.json'
+            if data_file.is_file():
+                with open(data_file, 'r') as json_file:
+                    data = json.load(json_file)
+                    uid = data.get('uid')
+                    mlist.append(Material.from_file(f / 'structure.xyz', 
+                                                    uid=uid))
+            else:
+                print(f'''Warning: data.json file not found 
+                        or not readable in {f}''')
             pb.advance(pid)
 
-    panels: list[Panel] = [C2DBAtomsPanel()]
-    for name in ['bandstructure',
-                 'phonons',
-                 'bader']:
-        panels.append(ASRPanel(name))
+    panels: list[Panel] = [QPODAtomsPanel()]
+    # for name in ['bandstructure',
+    #              'phonons',
+    #              'bader']:
+    #     panels.append(ASRPanel(name))
     panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['magstate', 'ehull', 'hform', 'gap', 'formula', 'area']
+    initial_columns = ['host_name', 'defect_name', 'formula', 'uid']
 
-    return CXDBApp(materials, initial_columns, root)
+    return CAMDApp(materials, initial_columns, root)
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8081, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8083, debug=True)
