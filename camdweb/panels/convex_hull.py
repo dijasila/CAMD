@@ -136,7 +136,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
 def plot_2d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None,) -> go.Figure:
+            uid: str | None = None) -> go.Figure:
     if uids is None:
         uids = [r[2] for r in pd.references]
 
@@ -167,10 +167,10 @@ def plot_2d(pd: PhaseDiagram,
         data.append(go.Scatter(
             x=x[mask],
             y=y[mask],
-            text=[uid for uid, x in zip(uids, mask) if x is True],
+            text=[uid for uid, x in zip(uids, mask) if x],
             name=source,
             hovertemplate='%{text}: %{y} eV/atom',
-            mode='markers',))
+            mode='markers'))
 
     delta = y.ptp() / 30
     ymin = y.min() - 2.5 * delta
@@ -186,7 +186,7 @@ def plot_2d(pd: PhaseDiagram,
                            text=names[i],
                            xanchor='left',
                            showarrow=False,
-                           xshift=10,)
+                           xshift=10)
 
     A, B = pd.symbols
     fig.update_layout(
@@ -200,7 +200,7 @@ def plot_2d(pd: PhaseDiagram,
 def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None,) -> go.Figure:
+            uid: str | None = None) -> go.Figure:
     if uids is None:
         uids = [r[2] for r in pd.references]
 
@@ -226,7 +226,7 @@ def plot_3d(pd: PhaseDiagram,
         data.append(
             go.Scatter3d(
                 x=x[mask], y=y[mask], z=z[mask],
-                text=[uid for uid, x in zip(uids, mask) if x is True],
+                text=[uid for uid, x in zip(uids, mask) if x],
                 name=source,
                 hovertemplate='%{text}: %{z} eV/atom',
                 mode='markers'))
@@ -248,7 +248,7 @@ def plot_3d(pd: PhaseDiagram,
                                 text=names[i],
                                 xanchor='left',
                                 xshift=10,
-                                opacity=0.7,))
+                                opacity=0.7))
 
     A, B, C = pd.symbols
     fig.update_layout(scene=dict(xaxis_title=B,
