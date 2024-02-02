@@ -255,8 +255,10 @@ class PhaseDiagram1D:
         return [self.e0 * sum(count.values())]
 
 
-class MyPhaseDiagram(PhaseDiagram):  # pagma: no cover
-    def decompose(self, formula=None, **kwargs):
+class MyPhaseDiagram(PhaseDiagram):
+    def decompose(self,
+                  formula=None,
+                  **kwargs):  # pragma: no cover
         """Find the combination of the references with the lowest energy.
 
         formula: str

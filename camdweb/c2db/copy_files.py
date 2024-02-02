@@ -95,7 +95,7 @@ def copy_materials(root: Path, patterns: list[str],
             fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
                 olduid = read_result_file(fp)['uid']
-            except FileNotFoundError:
+            except FileNotFoundError:  # pragma: no cover
                 print(fp)
                 continue
             f = Formula(olduid.split('-')[0])
