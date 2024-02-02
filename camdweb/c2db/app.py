@@ -24,6 +24,7 @@ from camdweb.panels.panel import Panel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.bandstructure import BandStructurePanel
 from camdweb.web import CAMDApp
 from camdweb.html import Select, Range, RangeX
 
@@ -86,6 +87,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         ASRPanel('phonons', keys),
         ASRPanel('deformationpotentials', keys),
         ASRPanel('bandstructure', keys),
+        BandStructurePanel(),
         # ASRPanel('pdos', keys),
         ASRPanel('effective_masses', keys),
         ASRPanel('hse', keys),

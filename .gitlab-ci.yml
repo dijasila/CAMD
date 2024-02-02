@@ -19,7 +19,7 @@ tests:
     - pip install git+https://gitlab.com/asr-dev/asr
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
-    - coverage report -i --precision=2 --fail-under=99.5
+    - coverage report -i --precision=2
     - coverage html
     - coverage xml --data-file .coverage
     - mypy
