@@ -55,57 +55,60 @@
 </nav>
 
 <!--  Search Table Forum  -->
-<div class="container-fluid col-md-10 mb-1">
+<div class="container-fluid d-flex mt-2 mb-2 justify-content-left">
+  <div class="col-1"></div>
   <div class="row">
-    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
-      <form>
-          <input class="shadow-sm form-control"
-                 type="hidden"
-                 name="sid"
-                 value="{{ session.sid }}">
-          <div class="row">
-            <div class="col-7">
-              <div class="input-group">
-                <input class="form-control shadow-sm"
-                   type="text"
-                   name="filter"
-                   value="{{ query.get('filter', '') }}"
-                   placeholder="MoS2, ...">
-                <button class="btn btn-primary shadow-sm" type="submit">
-                   Search
-                </button>
+    <div class="col d-flex justify-content-center">
+      <div class="card text-bg-light p-3 shadow-sm">
+        <form>
+          <div class="row ">
+            <div class="col">
+              <input class="shadow-sm form-control" type="hidden" name="sid" value="{{ session.sid }}">
+              <div class="mb-3">
+                <div class="input-group">
+                  <input class="form-control shadow-sm" type="text"
+                         name="filter" value="{{ query.get('filter', '') }}"
+                         placeholder="MoS2, ...">
+                  <button class="btn btn-primary shadow-sm" type="submit">Search</button>
+                </div>
               </div>
             </div>
             {{ error }}
-            <div class="col-1">
-              <div class="input-group-append">
-                <button class="btn btn-info shadow-sm ms-2"
-                        type="button"
-                        onclick="javascript:window.open('https://cmr.fysik.dtu.dk/searching.html', '_blank')">Help
-                </button>
+            <div class="col-auto d-flex justify-content-end">
+              <div class="mb-3">
+                <div class="input-group">
+                  <button class="btn btn-info shadow-sm ms-2" type="button" onclick="javascript:window.open('https://cmr.fysik.dtu.dk/searching.html', '_blank')">Help</button>
+                </div>
               </div>
             </div>
-            <div>
-              {{ !search }}
-            </div>
           </div>
-      </form>
+          <div class="col">
+            {{ !search }}
+          </div>
+        </form>
+      </div>
     </div>
+    <!--  can add a 2nd card here  -->
   </div>
 </div>
 
 <!--  Add Column to Search Table Results  -->
 <div class="container-fluid col-md-10">
-  <div class="row col-6 mb-3 pt-1">
-    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
+  <div class="row col-5 mb-3 pt-1">
+    <div class="pt-2 pb-2">
       <form>
-        <input type="hidden" name="sid" value="{{ session.sid }}">
-        <select name="toggle">
-          % for name, value in new_columns:
-            <option value="{{ name }}">{{ !value }}</option>
-          % end
-        </select>
-        <button class="save-scroll" type="submit" onclick="storeScrollPosition(event)">Add column</button>
+        <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
+
+        <div class="input-group">
+          <select class="form-select" name="toggle">
+            % for name, value in new_columns:
+              <option value="{{ name }}">{{ !value }}</option>
+            % end
+          </select>
+          <button class="btn btn-sm btn-outline-secondary save-scroll"
+                  type="submit" onclick="storeScrollPosition(event)">Add column
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -165,22 +168,40 @@
 <!--  Footer Pagination  -->
 <nav class="bg-dark border-bottom border-body sticky-bottom" data-bs-theme="dark">
   <div class="container-fluid d-flex flex-column justify-content-center align-items-center">
-    <div class="row">
-      <ul class="pagination mb-1 mt-1">
-        % for page, text in pages:
-        <li class="page-item">
-          % if page == -1:
-            <a class="page-link">...</a>
-          % elif page == session.page:
-            <a class="page-link">{{ text }}</a>
-          % else:
-          <a class="page-link"
-             href="?sid={{ session.sid }}&page={{ page }}">
-             {{ text }}
-          </a>
-          % end
-        </li>
+    <div class="flex-container col-10">
+        <ul class="pagination mb-1 mt-1">
+        <!-- first and previous page buttons -->
+        <div class="d-flex justify-content-start col-1.5">
+        % for page, text in pages[0:2]:
+          <li class="page-item {{! 'disabled' if (session.sid == page == session.page) else '' }}">
+            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
+               title="{{! text }}">{{! text }}</a>
+          </li>
         % end
+        </div>
+
+        <!-- active page buttons -->
+        <div class="d-flex justify-content-evenly col-8">
+        % for page, text in pages[2:-2]:
+          % active = 'active' if page == session.page else ''
+          <li class="page-item  {{! active }} col-1.5">
+            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
+               style="display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; margin-right: 5px;"
+               title="{{! text }}">{{! text }}</a>
+          </li>
+        % end
+        </div>
+
+        <!-- next and last page buttons -->
+        <div class="d-flex justify-content-end col-1.5">
+        % for page, text in pages[-2:]:
+          <li class="page-item {{! 'disabled' if session.sid == page == session.page else '' }}">
+            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
+               title="{{! text }}">{{! text }}</a>
+          </li>
+        % end
+        </div>
+
       </ul>
     </div>
   </div>

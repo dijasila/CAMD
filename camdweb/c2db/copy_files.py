@@ -95,7 +95,7 @@ def copy_materials(root: Path, patterns: list[str],
             fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
                 olduid = read_result_file(fp)['uid']
-            except FileNotFoundError:
+            except FileNotFoundError:  # pragma: no cover
                 print(fp)
                 continue
             f = Formula(olduid.split('-')[0])
@@ -107,8 +107,8 @@ def copy_materials(root: Path, patterns: list[str],
                 number = int(x)
                 assert name1 == name
             else:
-                number = names[name]
                 names[name] += 1
+                number = names[name]
                 uid = f'{nunits}{reduced}-{number}'
                 uids[olduid] = uid
             folder = Path(f'{stoi}/{name}/{number}')
@@ -143,12 +143,15 @@ def copy_materials(root: Path, patterns: list[str],
         update_chull_data(atomic_energies, refs)
 
 
-def worker(args):
+def worker(args):  # pragma: no cover
     """Used by Pool"""
     copy_material(*args)
 
 
-def copy_material(fro: Path, to: Path, olduid: str, uid: str) -> None:
+def copy_material(fro: Path,
+                  to: Path,
+                  olduid: str,
+                  uid: str) -> None:  # pragma: no cover
     gpw = fro / 'gs.gpw'
     if gpw.is_file():
         atoms = read(gpw)

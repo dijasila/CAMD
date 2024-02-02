@@ -68,7 +68,8 @@ class ConvexHullPanel(Panel):
         html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
         if chull:
             yield html + SCRIPT.format(chull_json=chull)
-        yield html  # pragma: no cover
+        else:
+            yield html  # pragma: no cover
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
@@ -110,7 +111,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     except ValueError:
         chull = ''  # only one species
     else:
-        if len(pd.symbols) < 4:
+        if 2 <= len(pd.symbols) <= 3:
             if len(pd.symbols) == 2:
                 fig = plot_2d(pd, labels)
             else:
@@ -255,7 +256,9 @@ class PhaseDiagram1D:
 
 
 class MyPhaseDiagram(PhaseDiagram):
-    def decompose(self, formula=None, **kwargs):
+    def decompose(self,
+                  formula=None,
+                  **kwargs):  # pragma: no cover
         """Find the combination of the references with the lowest energy.
 
         formula: str

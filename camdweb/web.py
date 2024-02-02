@@ -109,7 +109,6 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         filter_string = session.filter
         session.update(filter_string, query)
-        print(query.sort, filter_string, session.sort, session.direction)
         return self.get_table(session)[0]
 
     def get_filter_string(self, query: dict) -> str:
