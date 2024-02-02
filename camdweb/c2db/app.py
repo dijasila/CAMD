@@ -36,7 +36,7 @@ class C2DBAtomsPanel(AtomsPanel):
             gap='Band gap (PBE) [eV]',
             evac='Vacuum level [eV]',
             hform='Heat of formation [eV/atom]',
-            uid0='Old uid',
+            olduid='Old uid',
             magstate='Magnetic state',
             ehull='Energy above convex hull [eV/atom]',
             energy='Energy [eV]',
