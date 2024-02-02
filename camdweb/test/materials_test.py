@@ -25,7 +25,7 @@ def test_materials(material):
     assert (rows, header, pages, new_columns, error) == (
         [('x', ['x'])],
         [('uid', 'Unique ID')],
-        [(0, 'previous'), (0, 'next'), (0, '1-1')],
+        [(0, '«'), (0, '<'), (0, '1-1'), (0, '>'), (0, '»')],
         [('formula', 'Formula'),
          ('reduced_formula', 'Reduced formula'),
          ('stoichiometry', 'Stoichiometry'),

@@ -2,9 +2,11 @@ import json
 from pathlib import Path
 
 from ase.formula import Formula
+import rich.progress as progress
 
 from camdweb.panels.convex_hull import (calculate_ehull_energies,
                                         group_references)
+from camdweb.c2db.oqmd123 import read_oqmd123_data
 
 
 def update_chull_data(atomic_energies: dict[str, float],
@@ -61,10 +63,13 @@ def update_chull_data(atomic_energies: dict[str, float],
 
     # Calculate ehull:
     ehull_energies = {}
-    for symbols, uids in groups.items():
-        ehull_energies.update(
-            calculate_ehull_energies({uid: refs[uid] for uid in uids},
-                                     c2db_uids))
+    with progress.Progress() as pb:
+        pid = pb.add_task('Calculating ehull:', total=len(groups))
+        for symbols, uids in groups.items():
+            ehull_energies.update(
+                calculate_ehull_energies({uid: refs[uid] for uid in uids},
+                                         c2db_uids))
+            pb.advance(pid)
 
     # Update data.json files:
     for uid, path in paths.items():
@@ -75,3 +80,9 @@ def update_chull_data(atomic_energies: dict[str, float],
         data['ehull'] = ehull_energies[uid] / natoms
         data['hform'] = hform / natoms
         path.write_text(json.dumps(data, indent=2))
+
+
+if __name__ == '__main__':
+    oqmd_path = Path('oqmd123.json.gz')
+    atomic_energies, refs = read_oqmd123_data(oqmd_path)
+    update_chull_data(atomic_energies, refs)

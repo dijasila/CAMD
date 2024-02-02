@@ -33,7 +33,11 @@ def test_c2db_missing_phonons(tmp_path):
     os.chdir(tmp_path)
     (tmp_path / 'MoS2/results-asr.phonons.json').unlink()
     (tmp_path / 'MoS2/results-asr.bader.json').unlink()
+
     copy_materials(tmp_path, ['MoS2*'], update_chull=False)
+    # OK to do it again:
+    copy_materials(tmp_path, ['MoS2*'], update_chull=False)
+
     with pytest.raises(FileNotFoundError):
         copy_materials(tmp_path, [])
 

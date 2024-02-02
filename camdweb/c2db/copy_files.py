@@ -19,6 +19,7 @@ Build tree like this::
 
     """
 import json
+import multiprocessing as mp
 import shutil
 import sys
 from collections import defaultdict
@@ -26,14 +27,15 @@ from pathlib import Path
 
 import rich.progress as progress
 from ase import Atoms
+from ase.formula import Formula
 from ase.io import read
+
+from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
-from camdweb import ColVal
 
 RESULT_FILES = [
-    'convex_hull',
     'stiffness',
     'phonons',
     'deformationpotentials',
@@ -68,18 +70,63 @@ PATTERNS = [
 
 def copy_materials(root: Path, patterns: list[str],
                    update_chull: bool = True) -> None:
+    try:
+        uids = json.loads(Path('uids.json').read_text())
+    except FileNotFoundError:
+        uids = {}
+    print(len(uids), 'UIDs')
+
+    names: defaultdict[str, int] = defaultdict(int)
+    for uid in uids.values():
+        name = uid.split('-')[0]
+        names[name] += 1
+
     dirs = [dir
             for pattern in patterns
             for dir in root.glob(pattern)
             if dir.name[0] != '.']
     print(len(dirs), 'folders')
 
-    names: defaultdict[str, int] = defaultdict(int)
+    work = []
+    parent_folders = set()
     with progress.Progress() as pb:
-        pid = pb.add_task('Copying materials:', total=len(dirs))
+        pid = pb.add_task('Finding UIDs:', total=len(dirs))
         for dir in dirs:
-            copy_material(dir, names)
+            fp = dir / 'results-asr.database.material_fingerprint.json'
+            try:
+                olduid = read_result_file(fp)['uid']
+            except FileNotFoundError:  # pragma: no cover
+                print(fp)
+                continue
+            f = Formula(olduid.split('-')[0])
+            stoi, reduced, nunits = f.stoichiometry()
+            name = f'{nunits}{reduced}'
+            uid = uids.get(olduid)
+            if uid is not None:
+                name1, x = uid.split('-')
+                number = int(x)
+                assert name1 == name
+            else:
+                names[name] += 1
+                number = names[name]
+                uid = f'{nunits}{reduced}-{number}'
+                uids[olduid] = uid
+            folder = Path(f'{stoi}/{name}/{number}')
+            parent_folders.add(folder.parent)
+            work.append((dir, folder, olduid, uid))
             pb.advance(pid)
+
+    Path('uids.json').write_text(json.dumps(uids, indent=1))
+
+    for folder in parent_folders:
+        folder.mkdir(exist_ok=True, parents=True)
+
+    with mp.Pool(processes=8) as pool:
+        print(pool)
+        with progress.Progress() as pb:
+            pid = pb.add_task('Copying materials:', total=len(work))
+            for _ in pool.imap_unordered(worker, work):
+                pb.advance(pid)
 
     if update_chull:
         # Calculate hform, ehull, ...
@@ -96,39 +143,50 @@ def copy_materials(root: Path, patterns: list[str],
         update_chull_data(atomic_energies, refs)
 
 
-def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
-    gpw = dir / 'gs.gpw'
-    if not gpw.is_file():
-        return  # pragma: no cover
-    atoms = read(gpw)
+def worker(args):  # pragma: no cover
+    """Used by Pool"""
+    copy_material(*args)
+
+
+def copy_material(fro: Path,
+                  to: Path,
+                  olduid: str,
+                  uid: str) -> None:  # pragma: no cover
+    gpw = fro / 'gs.gpw'
+    if gpw.is_file():
+        atoms = read(gpw)
+    else:
+        atoms = read(fro / 'structure.json')
     assert isinstance(atoms, Atoms)
 
-    # Find uid (example: "1MoS2-1"):
-    f = atoms.symbols.formula
-    ab, xy, n = f.stoichiometry()
-    name = f'{ab}/{n}{xy}'
-    m = names[name] + 1
-    names[name] = m
-    folder = Path(name) / str(m)
-    uid = f'{n}{xy}-{m}'
-
     def rrf(name: str) -> dict:
-        return read_result_file(dir / f'results-asr.{name}.json')
+        return read_result_file(fro / f'results-asr.{name}.json')
 
-    # None values will be fremoved later:
-    data: dict[str, ColVal | None] = {'uid': uid}
+    # None values will be removed later:
+    data: dict[str, ColVal | None] = {
+        'uid': uid,
+        'olduid': olduid,
+        'folder': str(fro)}
     try:
         data['magstate'] = rrf('magstate')['magstate']
+    except FileNotFoundError:
+        pass
+    try:
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
-        data['has_inversion_symmetry'] = rrf(
-            'structureinfo')['has_inversion_symmetry']
+    except FileNotFoundError:
+        pass
+
+    data['has_inversion_symmetry'] = rrf(
+        'structureinfo')['has_inversion_symmetry']
+
+    try:
         gs = rrf('gs')
+    except FileNotFoundError:
+        pass
+    else:
         data['gap'] = gs['gap']
         data['evac'] = gs['evac']
         data['efermi'] = gs['efermi']
-        data['uid0'] = rrf('database.material_fingerprint')['uid']
-    except FileNotFoundError:  # pragma: no cover
-        return
 
     try:
         ph = rrf('phonons')
@@ -168,26 +226,26 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
 
     data['energy'] = atoms.get_potential_energy()
 
-    folder.mkdir(exist_ok=False, parents=True)
+    to.mkdir(exist_ok=True)
 
-    atoms.write(folder / 'structure.xyz')
+    atoms.write(to / 'structure.xyz')
 
     try:
         bc = rrf('bader')['bader_charges']
     except FileNotFoundError:
         pass
     else:
-        (folder / 'bader.json').write_text(
+        (to / 'bader.json').write_text(
             json.dumps({'charges': bc.tolist()}))
 
     # Copy result json-files:
     for name in RESULT_FILES:
-        result = dir / f'results-asr.{name}.json'
+        result = fro / f'results-asr.{name}.json'
         if result.is_file():
-            shutil.copyfile(result, folder / result.name)
+            shutil.copyfile(result, to / result.name)
 
     data = {key: value for key, value in data.items() if value is not None}
-    (folder / 'data.json').write_text(json.dumps(data, indent=0))
+    (to / 'data.json').write_text(json.dumps(data, indent=0))
 
 
 if __name__ == '__main__':
