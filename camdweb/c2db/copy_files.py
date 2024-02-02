@@ -143,12 +143,15 @@ def copy_materials(root: Path, patterns: list[str],
         update_chull_data(atomic_energies, refs)
 
 
-def worker(args):
+def worker(args):  # pragma: no cover
     """Used by Pool"""
     copy_material(*args)
 
 
-def copy_material(fro: Path, to: Path, olduid: str, uid: str) -> None:
+def copy_material(fro: Path,
+                  to: Path,
+                  olduid: str,
+                  uid: str) -> None:  # pragma: no cover
     gpw = fro / 'gs.gpw'
     if gpw.is_file():
         atoms = read(gpw)
