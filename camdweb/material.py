@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import multiprocessing
-from collections.abc import Container
 from functools import cached_property
 from math import nan
 from pathlib import Path
@@ -63,6 +62,9 @@ class Material:
                    update: bool = False) -> None:
         """Add data that can be used for filtering of materials."""
         if not update:
+            if name == 'uid':
+                assert value == self.uid
+                return
             assert name not in self.columns, name
         self.columns[name] = value
         if html is None:
@@ -84,11 +86,6 @@ class Material:
     def get(self, name: str, default: str = '') -> str:
         """Get HTML string for data."""
         return self._html_reprs.get(name, default)
-
-    def check_columns(self, column_names: Container[str]) -> None:
-        """Make sure we don't have unknown columns."""
-        for name in self._html_reprs:
-            assert name in column_names, name
 
 
 class Materials:
@@ -113,9 +110,6 @@ class Materials:
                 overlap = panel.column_names.keys() & self.column_names
                 raise ValueError(f'{overlap}')
             self.column_names.update(panel.column_names)
-
-        for material in materials:
-            material.check_columns(self.column_names)
 
         self.index = Index(
             [(mat.reduced_formula,
@@ -220,4 +214,4 @@ class Materials:
 
     @cached_property
     def process_pool(self):
-        return multiprocessing.get_context('fork').Pool()
+        return multiprocessing.Pool(maxtasksperchild=100)

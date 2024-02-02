@@ -36,12 +36,12 @@ class C2DBAtomsPanel(AtomsPanel):
             gap='Band gap (PBE) [eV]',
             evac='Vacuum level [eV]',
             hform='Heat of formation [eV/atom]',
-            uid0='Old uid',
+            olduid='Old uid',
             magstate='Magnetic state',
             ehull='Energy above convex hull [eV/atom]',
             energy='Energy [eV]',
-            spin_axis='...',
-            efermi='...',
+            spin_axis='Spin axis',
+            efermi='Fermi level [eV]',
             dyn_stab='Dynamically stable')
         self.columns = list(self.column_names)
 
@@ -75,9 +75,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             mlist.append(material)
             data = json.loads((f / 'data.json').read_text())
             for key, value in data.items():
-                if key == 'uid':
-                    assert value == uid
-                    continue  # already added
                 material.add_column(key, value)
                 keys.add(key)
             pb.advance(pid)
