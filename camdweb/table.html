@@ -4,21 +4,16 @@
   <div class="row col-5 mb-3 pt-1">
     <div class="pt-2 pb-2">
       <form>
-<!--        <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
--->
         <div class="input-group">
           <select
-          hx-get="/table?sid={{ session.sid }}"
-          hx-trigger="change"
-          hx-target="#table-div"
-          hx-swap="outerHTML" class="form-select" name="toggle">
+            hx-get="/table?sid={{ session.sid }}"
+            hx-trigger="change"
+            hx-target="#table-div"
+            hx-swap="outerHTML" class="form-select" name="toggle">
             % for name, value in new_columns:
-              <option value="{{ name }}">{{ !value }}</option>
+            <option value="{{ name }}">{{ !value }}</option>
             % end
           </select>
-<!--          <button class="btn btn-sm btn-outline-secondary save-scroll"
-          type="submit" onclick="storeScrollPosition(event)">Add column
-          </button> -->
         </div>
       </form>
     </div>
@@ -34,9 +29,9 @@
           % for name, column in header:
             <th>
               <a hx-get="/table?sid={{ session.sid }}&sort={{ name }}"
-              hx-trigger="click"
-              hx-target="#table-div"
-              hx-swap="outerHTML"
+                 hx-trigger="click"
+                 hx-target="#table-div"
+                 hx-swap="outerHTML"
                  onclick="storeScrollPosition(event)"
                  class="sticky-top save-scroll">
                 {{ !column }}
@@ -51,10 +46,10 @@
                 % end
               </a>
               <a hx-get="/table?sid={{ session.sid }}&toggle={{ name }}"
-              hx-trigger="click"
-              hx-target="#table-div"
-              hx-swap="outerHTML"
-                               onclick="storeScrollPosition(event)"
+                 hx-trigger="click"
+                 hx-target="#table-div"
+                 hx-swap="outerHTML"
+                 onclick="storeScrollPosition(event)"
                  class="text-decoration-none font-size-sm save-scroll"
                  style="color:#36454F;font-size: 10px;">
                   <i class="fa-regular fa-square-minus save-scroll"
@@ -92,9 +87,9 @@
         % for page, text in pages[0:2]:
           <li class="page-item {{! 'disabled' if (page == session.page) else '' }}">
             <a class="page-link" hx-get="/table?sid={{ session.sid }}&page={{ page }}"
-            hx-trigger="click"
-            hx-target="#table-div"
-            hx-swap="outerHTML"
+               hx-trigger="click"
+               hx-target="#table-div"
+               hx-swap="outerHTML"
                title="{{! text }}">{{ text }}</a>
           </li>
         % end
@@ -134,6 +129,4 @@
     </div>
   </div>
 </nav>
-
-
 </div>

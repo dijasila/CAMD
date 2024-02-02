@@ -34,6 +34,7 @@ def c2db(tmp_path_factory):
 def test_query_h2(c2db):
     with boddle(query={'filter': 'H=2'}):
         out = c2db.index()
+        c2db.table()
     assert 'H<sub>2' in out
 
 
