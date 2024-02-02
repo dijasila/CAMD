@@ -52,6 +52,7 @@ class CAMDApp:
     def route(self):
         self.app = Bottle()
         self.app.route('/')(self.index)
+        self.app.route('/table')(self.table)
         self.app.route('/material/<uid>')(self.material)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
@@ -82,19 +83,34 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         session.update(filter_string, query)
         search = '\n'.join(fp.render(query) for fp in self.form_parts)
-        rows, header, pages, new_columns, error = self.materials.get_rows(
-            session)
-        print(session.filter)
+        table, error = self.get_table(session)
         return template('index.html',
                         title=self.title,
                         query=query,
                         search=search,
                         session=session,
+                        table=table,
+                        error=error)
+
+    def get_table(self, session) -> tuple[str, str]:
+        """Page showing table of selected materials."""
+        rows, header, pages, new_columns, error = self.materials.get_rows(
+            session)
+        return template('table.html',
+                        session=session,
                         pages=pages,
                         rows=rows,
                         header=header,
-                        new_columns=new_columns,
-                        error=error)
+                        new_columns=new_columns), error
+
+    def table(self) -> str:
+        """Page showing table of selected materials."""
+        query = request.query
+        session = self.sessions.get(int(query.get('sid', '-1')))
+        filter_string = session.filter
+        session.update(filter_string, query)
+        print(query.sort, filter_string, session.sort, session.direction)
+        return self.get_table(session)[0]
 
     def get_filter_string(self, query: dict) -> str:
         """Generate filter string from URL query.
