@@ -31,6 +31,6 @@ def oqmd12345(tmp_path_factory):
 def test_everything(oqmd12345):
     app = main(oqmd12345)
     assert len(app.materials) == 1
-    app.index()
-    html = app.material('1Ar-588771')
+    app.index_page()
+    html = app.material_page('1Ar-588771')
     assert '8.62' in html  # band gap

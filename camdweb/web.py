@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-import sys
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -51,9 +50,9 @@ class CAMDApp:
 
     def route(self):
         self.app = Bottle()
-        self.app.route('/')(self.index)
-        self.app.route('/table')(self.table)
-        self.app.route('/material/<uid>')(self.material)
+        self.app.route('/')(self.index_page)
+        self.app.route('/table')(self.table_html)
+        self.app.route('/material/<uid>')(self.material_page)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
 
@@ -76,7 +75,7 @@ class CAMDApp:
         write(buf, atoms, format=ase_fmt)
         return buf.getvalue()
 
-    def index(self) -> str:
+    def index_page(self) -> str:
         """Page showing table of selected materials."""
         query = request.query
         filter_string = self.get_filter_string(query)
@@ -93,7 +92,7 @@ class CAMDApp:
                         error=error)
 
     def get_table(self, session) -> tuple[str, str]:
-        """Page showing table of selected materials."""
+        """Get HTML and error message (if there was one) for table."""
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
         return template('table.html',
@@ -103,8 +102,8 @@ class CAMDApp:
                         header=header,
                         new_columns=new_columns), error
 
-    def table(self) -> str:
-        """Page showing table of selected materials."""
+    def table_html(self) -> str:
+        """Get HTML for table."""
         query = request.query
         session = self.sessions.get(int(query.get('sid', '-1')))
         filter_string = session.filter
@@ -130,10 +129,8 @@ class CAMDApp:
             filters += s.get_filter_strings(query)
         return ','.join(filters)
 
-    def material(self, uid: str) -> str:
+    def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
-        if uid == 'stop':  # pragma: no cover
-            sys.stderr.close()
         material = self.materials[uid]
 
         titles = []
@@ -164,6 +161,10 @@ class CAMDApp:
                         footer='\n'.join(scripts))
 
     def callback(self) -> str:
+        """Send new json data.
+
+        Currently only used for the atoms-plot.
+        """
         query = request.query
         name = query['name']
         uid = query['uid']
@@ -171,11 +172,12 @@ class CAMDApp:
         return self.callbacks[name](material, int(query['data']))
 
     def png(self, path: str) -> bytes:
+        """Return binary data for png-figures."""
         return static_file(path, self.root)
 
 
 def cut_out_script(html: str) -> tuple[str, str]:
-    r"""XXX.
+    r"""We need to put the script tags in the footer.
 
     >>> cut_out_script('''Hello
     ... <script>

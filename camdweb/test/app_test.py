@@ -33,20 +33,20 @@ def c2db(tmp_path_factory):
 
 def test_query_h2(c2db):
     with boddle(query={'filter': 'H=2'}):
-        out = c2db.index()
-        c2db.table()
+        out = c2db.index_page()
+        c2db.table_html()
     assert 'H<sub>2' in out
 
 
 def test_query_sid_h2(c2db):
     with boddle(query={'sid': '0', 'filter': 'H=3,energy=42.0'}):
-        out = c2db.index()
+        out = c2db.index_page()
     assert 'H<sub>2' not in out
 
 
 def test_query_stoichiometry_h2(c2db):
     with boddle(query={'stoichiometry': 'A', 'nspecies': '1'}):
-        out = c2db.index()
+        out = c2db.index_page()
     assert 'H<sub>2' in out
 
 
@@ -57,11 +57,11 @@ def test_various_queries(c2db):
                   {'sort': 'volume'},
                   {'page': '0'}]:
         with boddle(query=query):
-            c2db.index()
+            c2db.index_page()
 
 
 def test_material(c2db):
-    out = c2db.material('h2')
+    out = c2db.material_page('h2')
     assert 'Atoms' in out
     assert 'Density of states' in out
     assert '1.23' in out
