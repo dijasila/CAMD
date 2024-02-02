@@ -1,6 +1,7 @@
 % rebase('base', plotly=False, callback=False)
 <body>
 <script src="https://kit.fontawesome.com/20e621d973.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
 
 <script>
     // Store scroll position in sessionStorage when save-scroll class is present
@@ -92,119 +93,6 @@
   </div>
 </div>
 
-<!--  Add Column to Search Table Results  -->
-<div class="container-fluid col-md-10">
-  <div class="row col-5 mb-3 pt-1">
-    <div class="pt-2 pb-2">
-      <form>
-        <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
-
-        <div class="input-group">
-          <select class="form-select" name="toggle">
-            % for name, value in new_columns:
-              <option value="{{ name }}">{{ !value }}</option>
-            % end
-          </select>
-          <button class="btn btn-sm btn-outline-secondary save-scroll"
-                  type="submit" onclick="storeScrollPosition(event)">Add column
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!--  Search Result Table  -->
-<div class="container-fluid col-md-10 col-12" >
-  <div class="row card">
-    <table class="table table-hover">
-      <thead class="sticky-top table-light">
-        <tr>
-          % for name, column in header:
-            <th>
-              <a href="?sid={{ session.sid }}&sort={{ name }}"
-                 onclick="storeScrollPosition(event)"
-                 class="sticky-top save-scroll">
-                {{ !column }}
-                % if name != session.sort:
-
-                % else:
-                  % if session.direction == 1:
-                    <a class="text-decoration-none">&#x25B2;</a>
-                  % else:
-                    <a class="text-decoration-none">&#x25BC;</a>
-                  % end
-                % end
-              </a>
-              <a href="?sid={{ session.sid }}&toggle={{ name }}"
-                 onclick="storeScrollPosition(event)"
-                 class="text-decoration-none font-size-sm save-scroll"
-                 style="color:#36454F;font-size: 10px;">
-                  <i class="fa-regular fa-square-minus save-scroll"
-                     style="font-size:18px" onclick="storeScrollPosition(event)"></i>
-              </a>
-            </th>
-          % end
-        </tr>
-      </thead>
-      <tbody class="table-responsive">
-        % for uid, columns in rows:
-          <tr style="transform: rotate(0);">
-            % for column in columns:
-              <th scope="row">
-                <a href=/material/{{ uid }} target="_blank" class="stretched-link"
-                   style="text-decoration: none; color: black; font-weight: normal;">
-                  {{ !column }}
-                </a>
-              </th>
-            % end
-          </tr>
-        % end
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!--  Footer Pagination  -->
-<nav class="bg-dark border-bottom border-body sticky-bottom" data-bs-theme="dark">
-  <div class="container-fluid d-flex flex-column justify-content-center align-items-center">
-    <div class="flex-container col-10">
-        <ul class="pagination mb-1 mt-1">
-        <!-- first and previous page buttons -->
-        <div class="d-flex justify-content-start col-1.5">
-        % for page, text in pages[0:2]:
-          <li class="page-item {{! 'disabled' if (session.sid == page == session.page) else '' }}">
-            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
-               title="{{! text }}">{{! text }}</a>
-          </li>
-        % end
-        </div>
-
-        <!-- active page buttons -->
-        <div class="d-flex justify-content-evenly col-8">
-        % for page, text in pages[2:-2]:
-          % active = 'active' if page == session.page else ''
-          <li class="page-item  {{! active }} col-1.5">
-            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
-               style="display: inline-block; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; margin-right: 5px;"
-               title="{{! text }}">{{! text }}</a>
-          </li>
-        % end
-        </div>
-
-        <!-- next and last page buttons -->
-        <div class="d-flex justify-content-end col-1.5">
-        % for page, text in pages[-2:]:
-          <li class="page-item {{! 'disabled' if session.sid == page == session.page else '' }}">
-            <a class="page-link" href="?sid={{ page }}&page={{ page }}"
-               title="{{! text }}">{{! text }}</a>
-          </li>
-        % end
-        </div>
-
-      </ul>
-    </div>
-  </div>
-</nav>
+{{ !table }}
 
 </body>

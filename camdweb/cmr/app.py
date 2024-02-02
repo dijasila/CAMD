@@ -68,9 +68,11 @@ class CMRProjectApp(CAMDApp):
         self.title = title
         self.form_parts += form_parts
 
-    def index(self) -> str:
-        html = super().index()
-        return html.replace('/material/', f'/{self.name}/material/')
+    def get_table(self, session) -> tuple[str, str]:
+        html, error = super().get_table(session)
+        html = html.replace('/material/', f'/{self.name}/material/')
+        html = html.replace('/table?', f'/{self.name}/table?')
+        return html, error
 
     def material(self, uid: str) -> str:
         html = super().material(uid)
