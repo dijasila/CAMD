@@ -176,8 +176,11 @@ def copy_material(fro: Path,
     except FileNotFoundError:
         pass
 
-    data['has_inversion_symmetry'] = rrf(
-        'structureinfo')['has_inversion_symmetry']
+    structure = rrf('structureinfo')
+    for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
+        data[key] = structure[key]
+
+    data['label'] = rrf('c2db.labels')['label']
 
     try:
         gs = rrf('gs')
@@ -225,6 +228,15 @@ def copy_material(fro: Path,
             data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')
 
     data['energy'] = atoms.get_potential_energy()
+
+    try:
+        info = json.loads((fro / 'info.json').read_text())
+    except FileNotFoundError:
+        pass
+    else:
+        for key in ['icsd_id', 'cod_id', 'doi']:
+            if key in info:
+                data[key] = info[key]
 
     to.mkdir(exist_ok=True)
 

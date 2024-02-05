@@ -26,7 +26,10 @@ from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.bandstructure import BandStructurePanel
 from camdweb.web import CAMDApp
-from camdweb.html import Select, Range, RangeX
+from camdweb.html import Select, Range, RangeX, table
+from camdweb.utils import cod, icsd, doi
+
+OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
 
 
 class C2DBAtomsPanel(AtomsPanel):
@@ -45,6 +48,40 @@ class C2DBAtomsPanel(AtomsPanel):
             efermi='Fermi level [eV]',
             dyn_stab='Dynamically stable')
         self.columns = list(self.column_names)
+
+    def create_column_one(self,
+                          material: Material,
+                          materials: Materials) -> str:
+        cols = material.columns
+        print(cols)
+        table1 = [
+            ('Layer group', cols['layergroup']),
+            ('Layer group number', cols['lgnum']),
+            ('COD id of parent bulk structure', cod(cols.get('cod_id'))),
+            ('ICSD id of parent bulk structure', icsd(cols.get('icsd_id'))),
+            ('Structure origin', cols['label']),
+            ('Reported DOI', doi(cols.get('doi'))),
+            ('Link to old C2DB', f'{OLD}/{cols["olduid"]}')]
+
+        table2 = [
+            ('Energy above convex hull [eV/atom]', cols['ehull']),
+            ('Heat of formation [eV/atom]', cols['hform']),
+            ('Dynamically stable', 'Yes' if cols['dyn_stab'] else 'No')]
+
+        table3 = [
+            ('Magnetic', 'Yes' if cols['magstate'] == 'FM' else 'No'),
+            ('Band gap [eV]', cols['gap']),
+            ('Band gap (HSE06) [eV]', cols.get('gap_hse')),
+            ('Band gap (G₀W₀) [eV]', cols.get('gap_gw'))]
+
+        # return three tables with None values removed:
+        return '\n'.join(
+            table([title, ''],
+                  [[key, value] for key, value in rows if value is not None])
+            for title, rows in [
+                ('Structure info', table1),
+                ('Stability', table2),
+                ('Basic properties', table3)])
 
 
 def main(argv: list[str] | None = None) -> CAMDApp:

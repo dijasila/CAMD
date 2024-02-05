@@ -48,3 +48,25 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
     stoichiometry = {abc[i]: c
                      for i, (symbol, c) in enumerate(reduced.items())}
     return count, reduced, stoichiometry
+
+
+COD = 'https://www.crystallography.net/cod/'
+ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
+
+
+def doi(id: str | None)  -> str | None:
+    if id is None:
+        return None
+    return f'<a href="https://doi.org/{id}">{id}</a>'
+
+
+def cod(id: str | None) -> str | None:
+    if id is None:
+        return None
+    return f'<a href="{COD}/{id}.html">COD {id}</a>'
+
+
+def icsd(id: str | None) -> str | None:
+    if id is None:
+        return None
+    return f'<a href="{ICSD}">ICSD {id}</a>'

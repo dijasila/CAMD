@@ -20,6 +20,7 @@ from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
 from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
+from camdweb.utils import cod, icsd
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -724,10 +725,6 @@ class LowDimProjectDescription(ProjectDescription):
         return ''  # use default AtomsPanel behavior
 
 
-COD = 'https://www.crystallography.net/cod/'
-ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
-
-
 @project('c1db')
 class C1DBProjectDescription(ProjectDescription):
     title = 'Computational 1D materials database'
@@ -766,13 +763,9 @@ class C1DBProjectDescription(ProjectDescription):
         source = material.source
         df = material.get('derived_from')
         if source == 'COD':
-            rows.append(
-                ['Source',
-                 f'<a href={COD}/{df}.html>COD {df}</a>'])
+            rows.append(['Source', cod(df)])
         elif source == 'ICSD':
-            rows.append(
-                ['Source',
-                 f'<a href={ICSD}>ICSD {df}</a>'])
+            rows.append(['Source', icsd(df)])
         elif source == 'Machine learning generated':
             rows.append(
                 ['Source', source])
