@@ -27,7 +27,9 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.magnetic_anisotropy.json').write_text(
         '{"spin_axis": "z"}')
     (dir / 'results-asr.structureinfo.json').write_text(
-        '{"kwargs": {"data": {"has_inversion_symmetry": false}}}')
+        """{"kwargs": {"data": {"has_inversion_symmetry": false,
+                                "layergroup": "p-6m2",
+                                "lgnum": 78}}}""")
     (dir / 'results-asr.gs.json').write_text(
         '{"kwargs": {"data": {"gap": 1.8, "evac": 4.5, "efermi": 1.5}}}')
     (dir / 'results-asr.gs@calculate.json').write_text(

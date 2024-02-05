@@ -17,71 +17,85 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-from camdweb.material import Material, Materials
+from ase.io import read
 from camdweb.c2db.asr_panel import ASRPanel
+from camdweb.html import Range, RangeX, Select, table
+from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel
 from camdweb.panels.bader import BaderPanel
-from camdweb.panels.shift_current import ShiftCurrentPanel
-from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.bandstructure import BandStructurePanel
+from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.panel import Panel
+from camdweb.panels.shift_current import ShiftCurrentPanel
+from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
-from camdweb.html import Select, Range, RangeX, table
-from camdweb.utils import cod, icsd, doi
 
 OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
+
+
+class C2DBMaterial(Material):
+    def __init__(self, folder: Path, uid: str):
+        super().__init__(folder, uid, read(folder / 'structure.xyz'))
+        data = json.loads((folder / 'data.json').read_text())
+        self.olduid: str = data['olduid']
+        self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
+        self.gap: float = data['gap']
+        self.evac: float = data['evac']
+        self.hform: float = data['hform']
+        self.magstate: str = data['magstate']
+        self.ehull: float = data['ehull']
+        self.energy: float = data['energy']
+        self.spin_axis: str = data['spin_axis']
+        self.efermi: float = data['efermi']
+        self.dyn_stab: bool = data['dyn_stab']
+        self.layergroup: str = data['layergroup']
+        self.lgnum: int = data['lgnum']
+        self.gap_hse: float | None = data.get('gap_pbe')
+        self.gap_gw: float | None = data.get('gap_gw')
+        self.cod_id: int | None = data.get('cod_id')
+        self.icsd_id: int | None = data.get('icsd_id')
+        self.doi: str | None = data.get('doi')
+        self.label: str | None = data.get('label')
 
 
 class C2DBAtomsPanel(AtomsPanel):
     def __init__(self):
         super().__init__()
-        self.column_names.update(
-            has_inversion_symmetry='Inversion symmetry',
-            gap='Band gap (PBE) [eV]',
-            evac='Vacuum level [eV]',
-            hform='Heat of formation [eV/atom]',
-            olduid='Old uid',
-            magstate='Magnetic state',
-            ehull='Energy above convex hull [eV/atom]',
-            energy='Energy [eV]',
-            spin_axis='Spin axis',
-            efermi='Fermi level [eV]',
-            dyn_stab='Dynamically stable')
-        self.columns = list(self.column_names)
 
     def create_column_one(self,
-                          material: Material,
+                          material: C2DBMaterial,
                           materials: Materials) -> str:
-        cols = material.columns
-        print(cols)
+        old = material.olduid
         table1 = [
-            ('Layer group', cols['layergroup']),
-            ('Layer group number', cols['lgnum']),
-            ('COD id of parent bulk structure', cod(cols.get('cod_id'))),
-            ('ICSD id of parent bulk structure', icsd(cols.get('icsd_id'))),
-            ('Structure origin', cols['label']),
-            ('Reported DOI', doi(cols.get('doi'))),
-            ('Link to old C2DB', f'{OLD}/{cols["olduid"]}')]
+            ('Layer group', material.layergroup),
+            ('Layer group number', material.lgnum),
+            ('COD id of parent bulk structure', cod(material.cod_id)),
+            ('ICSD id of parent bulk structure', icsd(material.icsd_id)),
+            ('Structure origin', material.label),
+            ('Reported DOI', doi(material.doi)),
+            ('Link to old C2DB', f'<a href={OLD}/{old}>{old}</a>')]
 
         table2 = [
-            ('Energy above convex hull [eV/atom]', cols['ehull']),
-            ('Heat of formation [eV/atom]', cols['hform']),
-            ('Dynamically stable', 'Yes' if cols['dyn_stab'] else 'No')]
+            ('Energy above convex hull [eV/atom]', material.ehull),
+            ('Heat of formation [eV/atom]', material.hform),
+            ('Dynamically stable', 'Yes' if material.dyn_stab else 'No')]
 
         table3 = [
-            ('Magnetic', 'Yes' if cols['magstate'] == 'FM' else 'No'),
-            ('Band gap [eV]', cols['gap']),
-            ('Band gap (HSE06) [eV]', cols.get('gap_hse')),
-            ('Band gap (G₀W₀) [eV]', cols.get('gap_gw'))]
+            ('Magnetic', 'Yes' if material.magstate == 'FM' else 'No'),
+            ('Band gap [eV]', material.gap),
+            ('Band gap (HSE06) [eV]', material.gap_hse),
+            ('Band gap (G₀W₀) [eV]', material.gap_gw)]
 
         # return three tables with None values removed:
-        return '\n'.join(
-            table([title, ''],
-                  [[key, value] for key, value in rows if value is not None])
-            for title, rows in [
-                ('Structure info', table1),
-                ('Stability', table2),
-                ('Basic properties', table3)])
+        tables = []
+        for title, rows in [('Structure info', table1),
+                            ('Stability', table2),
+                            ('Basic properties', table3)]:
+            tables.append(
+                table([title, ''],
+                      [[key, value]
+                       for key, value in rows if value is not None]))
+        return '\n'.join(tables)
 
 
 def main(argv: list[str] | None = None) -> CAMDApp:
@@ -109,12 +123,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
             uid = f'{f.parent.name}-{f.name}'
-            material = Material.from_file(f / 'structure.xyz', uid)
+            material = C2DBMaterial(f, uid)
             mlist.append(material)
-            data = json.loads((f / 'data.json').read_text())
-            for key, value in data.items():
-                material.add_column(key, value)
-                keys.add(key)
             pb.advance(pid)
 
     panels: list[Panel] = [
@@ -139,7 +149,20 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         ASRPanel('piezoelectrictensor', keys),
         ShiftCurrentPanel()]
 
-    materials = Materials(mlist, panels)
+    column_names = dict(
+        has_inversion_symmetry='Inversion symmetry',
+        gap='Band gap (PBE) [eV]',
+        evac='Vacuum level [eV]',
+        hform='Heat of formation [eV/atom]',
+        olduid='Old uid',
+        magstate='Magnetic state',
+        ehull='Energy above convex hull [eV/atom]',
+        energy='Energy [eV]',
+        spin_axis='Spin axis',
+        efermi='Fermi level [eV]',
+        dyn_stab='Dynamically stable')
+
+    materials = Materials(mlist, panels, column_names)
 
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
 

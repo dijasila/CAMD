@@ -180,7 +180,10 @@ def copy_material(fro: Path,
     for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
         data[key] = structure[key]
 
-    data['label'] = rrf('c2db.labels')['label']
+    try:
+        data['label'] = rrf('c2db.labels')['label']
+    except FileNotFoundError:
+        pass
 
     try:
         gs = rrf('gs')

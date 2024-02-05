@@ -43,7 +43,7 @@ class CAMDApp:
                    [''] + self.materials.stoichiometries()))
 
         # For nspecies selection:
-        maxnspecies = max(material.nspecies for material in self.materials)
+        maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
             Select('Number of chemical species', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies + 1)]))

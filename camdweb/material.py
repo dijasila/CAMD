@@ -6,13 +6,15 @@ from math import nan
 from pathlib import Path
 from typing import Generator, Sequence
 
+import numpy as np
 from ase import Atoms
 from ase.io import read
-from camdweb.filter import ColVal, Index, parse
+
+from camdweb.filter import Index, parse
 from camdweb.paging import get_pages
 from camdweb.panels.panel import Panel
 from camdweb.session import Session
-from camdweb.utils import fft, formula_dict_to_strings
+from camdweb.utils import fft, html_format_formula
 
 
 class Material:
@@ -34,20 +36,33 @@ class Material:
         self.uid = uid
         self.atoms = atoms
 
-        self.columns: dict[str, ColVal] = {'uid': uid}
-        self._html_reprs: dict[str, str] = {'uid': uid}
-
         # Get number-of-atoms dicts:
-        self._count, reduced, stoichiometry = fft(atoms.numbers)
-        f1, html1 = formula_dict_to_strings(self._count)
-        f2, html2 = formula_dict_to_strings(reduced)
-        f3, html3 = formula_dict_to_strings(stoichiometry)
+        self.count, self.formula, self.reduced, self.stoichiometry = fft(
+            atoms.numbers)
 
-        self.add_column('formula', f1, html1)
-        self.add_column('reduced_formula', f2, html2)
-        self.add_column('stoichiometry', f3, html3)
+    def get_columns(self):
+        cols = {'uid': self.uid,
+                'natoms': sum(self.count.values()),
+                'nspecies': len(self.count),
+                'formula': self.formula,
+                'reduced': self.reduced,
+                'stoichiometry': self.stoichiometry}
+        pbc = self.atoms.pbc
+        dims = pbc.sum()
+        if dims > 0:
+            vol = abs(np.linalg.det(self.atoms.cell[pbc][:, pbc]))
+            name = ['length', 'area', 'volume'][dims - 1]
+            cols[name] = vol
+        return cols
 
-        self.add_column('nspecies', len(self._count))
+    def html_format_column(self,
+                           key: str,
+                           value: bool | int | float | str) -> str:
+        if isinstance(value, float):
+            return f'{value:.3f}'
+        if key in ['formula', 'reduced', 'stoichiometry']:
+            return html_format_formula(value)
+        return str(value)
 
     @classmethod
     def from_file(cls, file: Path, uid: str) -> Material:
@@ -55,49 +70,23 @@ class Material:
         assert isinstance(atoms, Atoms)
         return cls(file.parent, uid, atoms)
 
-    def add_column(self,
-                   name: str,
-                   value: bool | int | float | str,
-                   html: str | None = None,
-                   update: bool = False) -> None:
-        """Add data that can be used for filtering of materials."""
-        if not update:
-            if name == 'uid':
-                assert value == self.uid
-                return
-            assert name not in self.columns, name
-        self.columns[name] = value
-        if html is None:
-            if isinstance(value, float):
-                html = f'{value:.3f}'
-            else:
-                html = str(value)
-        self._html_reprs[name] = html
-
-    def __getattr__(self, name):
-        if name.startswith('_') or name not in self.columns:
-            raise AttributeError(name)
-        return self.columns[name]
-
-    def __getitem__(self, name: str) -> str:
-        """Get HTML string for data."""
-        return self._html_reprs[name]
-
-    def get(self, name: str, default: str = '') -> str:
-        """Get HTML string for data."""
-        return self._html_reprs.get(name, default)
-
 
 class Materials:
     def __init__(self,
                  materials: list[Material],
-                 panels: Sequence[Panel]):
+                 panels: Sequence[Panel],
+                 column_names: dict[str, str]):
         self.column_names = {
             'formula': 'Formula',
-            'reduced_formula': 'Reduced formula',
+            'reduced': 'Reduced formula',
             'stoichiometry': 'Stoichiometry',
             'nspecies': 'Number of species',
-            'uid': 'Unique ID'}
+            'natoms': 'Number of atoms',
+            'uid': 'Unique ID',
+            'length': 'Unit cell length [Å]',
+            'area': 'Unit cell area [Å<sup>2</sup>]',
+            'volume': 'Unit cell volume [Å<sup>3</sup>]'}
+        self.column_names.update(column_names)
 
         self._materials: dict[str, Material] = {}
         for material in materials:
@@ -111,11 +100,8 @@ class Materials:
                 raise ValueError(f'{overlap}')
             self.column_names.update(panel.column_names)
 
-        self.index = Index(
-            [(mat.reduced_formula,
-              mat._count,
-              mat.columns)
-             for mat in self._materials.values()])
+        self.index = Index([(mat.reduced, mat.count, mat.get_columns())
+                            for mat in self._materials.values()])
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
@@ -187,14 +173,14 @@ class Materials:
             error = ex.args[0]
             rows = []
         else:
-            rows = [self._materials[self.i2uid[i]] for i in func(self.index)]
+            rows = list(func(self.index))
             error = ''
 
         if rows and session.sort:
             missing = '' if session.sort in self.index.strings else nan
 
-            def key(material):
-                return getattr(material, session.sort, missing)
+            def key(i):
+                return self.index.columns[i].get(session.sort, missing)
 
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
@@ -202,9 +188,15 @@ class Materials:
         n = session.rows_per_page
         pages = get_pages(page, len(rows), n)
         rows = rows[n * page:n * (page + 1)]
-        table = [(material.uid,
-                  [material.get(name, '') for name in session.columns])
-                 for material in rows]
+        table = []
+        for i in rows:
+            uid = self.i2uid[i]
+            material = self._materials[uid]
+            columns = self.index.columns[i]
+            table.append(
+                (uid,
+                 [material.html_format_column(name, columns.get(name, ''))
+                  for name in session.columns]))
         return (table,
                 [(name, self.column_names[name]) for name in session.columns],
                 pages,

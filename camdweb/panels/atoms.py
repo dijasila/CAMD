@@ -36,6 +36,7 @@ from scipy.spatial import ConvexHull
 from camdweb.html import table
 from camdweb.material import Material, Materials
 from camdweb.panels.panel import Panel
+from camdweb.utils import html_format_formula
 
 HTML = """
 <h4>{formula}</h4>
@@ -99,23 +100,6 @@ class AtomsPanel(Panel):
 
     def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
-        self.column_names = {}
-        self.columns = ['stoichiometry', 'uid']
-
-    def update_data(self, material):
-        pbc = material.atoms.pbc
-        dims = pbc.sum()
-        if dims > 0:
-            vol = abs(np.linalg.det(material.atoms.cell[pbc][:, pbc]))
-            name = DIMS[dims]
-            if name not in self.column_names:
-                if dims == 1:
-                    unit = 'Å'
-                else:
-                    unit = f'Å<sup>{dims}</sup>'
-                self.column_names[name] = f'{name.title()} [{unit}]'
-                self.columns.append(name)
-            material.add_column(name, vol)
 
     def get_html(self,
                  material: Material,
@@ -124,7 +108,7 @@ class AtomsPanel(Panel):
         col2 = self.create_column_two(material, materials)
         yield HTML.format(column1=col1,
                           column2=col2,
-                          formula=material['formula'])
+                          formula=html_format_formula(material.formula))
 
     def create_column_one(self,
                           material: Material,

@@ -58,7 +58,9 @@ class ConvexHullPanel(Panel):
     def get_html(self,
                  material: Material,
                  materials: Materials) -> Generator[str, None, None]:
-        tbl0 = table(None, materials.table(material, ['hform', 'ehull']))
+        tbl0 = table(
+            None,
+            [['Energy above convex hull [eV/atom]',             materials.table(material, ['hform', 'ehull']))
         root = material.folder.parent.parent.parent
         name = ''.join(sorted(material._count))
         ch_file = root / f'convex-hulls/{name}.json'

@@ -19,8 +19,8 @@ tests:
     - pip install git+https://gitlab.com/asr-dev/asr
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
-    - coverage report -i --precision=2
-    - coverage html
+    - coverage report -i --precision=2 --skip-covered
+    - coverage html --skip-covered
     - coverage xml --data-file .coverage
     - mypy
     - flake8 camdweb
