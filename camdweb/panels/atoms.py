@@ -34,7 +34,7 @@ from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 from camdweb.utils import html_format_formula
 
@@ -102,22 +102,19 @@ class AtomsPanel(Panel):
         self.callbacks = {'atoms': self.plot}
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        col1 = self.create_column_one(material, materials)
-        col2 = self.create_column_two(material, materials)
+                 material: Material) -> Generator[str, None, None]:
+        col1 = self.create_column_one(material)
+        col2 = self.create_column_two(material)
         yield HTML.format(column1=col1,
                           column2=col2,
                           formula=html_format_formula(material.formula))
 
     def create_column_one(self,
-                          material: Material,
-                          materials: Materials) -> str:
+                          material: Material) -> str:
         return table(None, materials.table(material, self.columns))
 
     def create_column_two(self,
-                          material: Material,
-                          materials: Materials) -> str:
+                          material: Material) -> str:
         defrep = default_repeat(material)
         return COLUMN2.format(
             axes=self.axes(material),

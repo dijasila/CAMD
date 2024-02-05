@@ -26,18 +26,17 @@ from ase.phasediagram import PhaseDiagram
 
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 
 HTML = """
 <div class="row">
   <div class="col-6">
-    {tbl0}
-    <div id='chull' class='chull'></div>
+    {table}
+    <div id='{id}' class='{id}'></div>
   </div>
   <div class="col-6">
-    {tbl1}
-    {tbl2}
+    {tables}
   </div>
 </div>
 """
@@ -45,32 +44,46 @@ HTML = """
 SCRIPT = """
 <script type='text/javascript'>
 var graphs = {chull_json};
-Plotly.newPlot('chull', graphs, {{}});
+Plotly.newPlot('{id}', graphs, {{}});
 </script>
 """
 
-OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
+
+class ConvexHullMaterial(Material):
+    sources: dict[str, tuple[str, str]]
+
+    def __init__(self, folder, uid, atoms, hform, ehull):
+        super().__init__(folder, uid, atoms)
+        self.hform = hform
+        self.ehull = ehull
+
+    def get_columns(self):
+        columns = super().get_columns()
+        columns.update(hform=self.hform, ehull=self.ehull)
+        return columns
 
 
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        tbl0 = table(
+                 material: ConvexHullMaterial) -> Generator[str, None, None]:
+        tbl = table(
             None,
-            [['Energy above convex hull [eV/atom]',             materials.table(material, ['hform', 'ehull']))
-        root = material.folder.parent.parent.parent
-        name = ''.join(sorted(material._count))
-        ch_file = root / f'convex-hulls/{name}.json'
+            [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
+             ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
+        root = material.folder.parents[2] / 'convex_hulls'
+        print(root, material.folder)
+        name = ''.join(sorted(material.count))
+        ch_file = root / f'{name}.json'
         refs = read_result_file(ch_file)
-        chull, tbl1, tbl2 = make_figure_and_tables(refs,
-                                                   higlight_uid=material.uid,
-                                                   verbose=False)
-        html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
+        chull, tables = make_figure_and_tables(refs,
+                                               higlight_uid=material.uid,
+                                               sources=material.sources,
+                                               verbose=False)
+        html = HTML.format(table=tbl, tables='\n'.join(tables), id='chull')
         if chull:
-            yield html + SCRIPT.format(chull_json=chull)
+            yield html + SCRIPT.format(chull_json=chull, id='chull')
         else:
             yield html  # pragma: no cover
 
@@ -79,7 +92,8 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
                                                  float,
                                                  str]],
                            higlight_uid: str | None = None,
-                           verbose: bool = True) -> tuple[str, str, str]:
+                           sources: dict[str, tuple[str, str]] | None = None,
+                           verbose: bool = True) -> tuple[str, str]:
     """Make convex-hull figure and tables.
 
     >>> refs = {'u1': ({'B': 1}, 0.0, 'OQMD'),
@@ -95,39 +109,36 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     3    BN            -0.200
     Simplices: 2
     """
-    tbl1 = []
-    tbl2 = []
-    sources = []
+    if sources is None:
+        sources = {'REFS': ('References', '{formula}, {uid}')}
+    tables = defaultdict(list)
+    source_names = []
     uids = []
 
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
-        if source == 'OQMD':
-            tbl1.append((hform, f'<a href={OQMD}/{uid}>{f:html}</a>'))
-        else:
-            assert source == 'C2DB'
-            tbl2.append((hform, f'<a href={uid}>{f:html}</a>'))
-        sources.append(source)
+        _, frmt = sources[source]
+        tables[source].append((hform, frmt.format(uid=uid, formula=f)))
+        source_names.append(source)
         uids.append(uid)
 
     pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
                       verbose=verbose)
     if 2 <= len(pd.symbols) <= 3:
         if len(pd.symbols) == 2:
-            fig = plot_2d(pd, uids, sources, uid=higlight_uid)
+            fig = plot_2d(pd, uids, source_names, uid=higlight_uid)
         else:
-            fig = plot_3d(pd, uids, sources, uid=higlight_uid)
+            fig = plot_3d(pd, uids, source_names, uid=higlight_uid)
         chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     else:
         chull = ''
 
-    html1 = table(['Bulk crystals from OQMD123', ''],
-                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl1)])
-    html2 = table(['Monolayers from C2DB', ''],
-                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl2)])
-
-    return chull, html1, html2
+    html = '\n'.join(
+        table([sources[source][0], ''],
+              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl)])
+        for source, tbl in tables.items())
+    return chull, html
 
 
 def plot_2d(pd: PhaseDiagram,

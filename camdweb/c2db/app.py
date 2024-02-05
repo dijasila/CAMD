@@ -20,30 +20,36 @@ import rich.progress as progress
 from ase.io import read
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.html import Range, RangeX, Select, table
-from camdweb.material import Material, Materials
+from camdweb.material import Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.bandstructure import BandStructurePanel
-from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.convex_hull import ConvexHullPanel, ConvexHullMaterial
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
 
 OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
+OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
-class C2DBMaterial(Material):
+class C2DBMaterial(ConvexHullMaterial):
+    sources = {'OQMD': ('Bulk crystals from OQMD123',
+                        '<a href={OQMD}/{uid}>{formula:html}</a>'),
+               'C2DB': ('Monolayers from C2DB',
+                        '<a href={uid}>{formula:html}</a>')}
+
     def __init__(self, folder: Path, uid: str):
-        super().__init__(folder, uid, read(folder / 'structure.xyz'))
         data = json.loads((folder / 'data.json').read_text())
+        super().__init__(folder, uid, read(folder / 'structure.xyz'),
+                         data['hform'],
+                         data['ehull'])
         self.olduid: str = data['olduid']
         self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
         self.gap: float = data['gap']
         self.evac: float = data['evac']
-        self.hform: float = data['hform']
         self.magstate: str = data['magstate']
-        self.ehull: float = data['ehull']
         self.energy: float = data['energy']
         self.spin_axis: str = data['spin_axis']
         self.efermi: float = data['efermi']
@@ -63,8 +69,7 @@ class C2DBAtomsPanel(AtomsPanel):
         super().__init__()
 
     def create_column_one(self,
-                          material: C2DBMaterial,
-                          materials: Materials) -> str:
+                          material: C2DBMaterial) -> str:
         old = material.olduid
         table1 = [
             ('Layer group', material.layergroup),
@@ -107,7 +112,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         '"AB2/1MoS2" (same as "AB2/1MoS2/*/") or "AB2/1MoS2/1".')
     args = parser.parse_args(argv)
 
-    mlist: list[Material] = []
+    mlist: list[C2DBMaterial] = []
     folders = []
     for path in args.path:
         p = Path(path)

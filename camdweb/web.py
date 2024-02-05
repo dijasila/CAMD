@@ -136,7 +136,7 @@ class CAMDApp:
         titles = []
         generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
-            generator = panel.get_html(material, self.materials)
+            generator = panel.get_html(material)
             try:
                 html = next(generator)
             except StopIteration:

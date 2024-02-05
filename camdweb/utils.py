@@ -20,7 +20,12 @@ def formula_dict_to_string(count: dict[str, int]) -> str:
 
 
 def html_format_formula(f: str) -> str:
-    return re.subn(r'(\d)', '<sub>#1</sub>', f)
+    """Convert formula string to HTML.
+
+    >>> html_format_formula('H2O')
+    H<sub>2</sub>O
+    """
+    return re.sub(r'(\d)', '<sub>\1</sub>', f)
 
 
 def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
