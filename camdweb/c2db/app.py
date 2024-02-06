@@ -216,8 +216,9 @@ def create_app():  # pragma: no cover
 
 
 def check_all():
-    c2db = main([path.name for path in Path().glob('A*/')])
+    c2db = main([path.name for path in Path().glob('AB2')])
     for material in c2db.materials:
+        print(material.uid)
         c2db.material_page(material.uid)
 
 
