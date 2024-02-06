@@ -215,5 +215,11 @@ def create_app():  # pragma: no cover
     return main([path.name for path in Path().glob('A*/')]).app
 
 
+def check_all():
+    c2db = main([path.name for path in Path().glob('A*/')])
+    for material in c2db.materials:
+        c2db.material_page(material.uid)
+
+
 if __name__ == '__main__':
     main().app.run(host='0.0.0.0', port=8081, debug=True)

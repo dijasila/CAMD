@@ -260,8 +260,10 @@ def copy_material(fro: Path,
     # Copy result json-files:
     for name in RESULT_FILES:
         result = fro / f'results-asr.{name}.json'
-        if result.is_file():
-            shutil.copyfile(result, to / result.name)
+        target = to / result.name
+        gzipped = target.with_suffix('.json.gz')
+        if result.is_file() and not (target.is_file() or gzipped.is_file()):
+            shutil.copyfile(result, target)
 
     data = {key: value for key, value in data.items() if value is not None}
     (to / 'data.json').write_text(json.dumps(data, indent=0))
