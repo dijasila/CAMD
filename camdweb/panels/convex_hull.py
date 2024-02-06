@@ -19,26 +19,24 @@ import sys
 from collections import defaultdict
 from typing import Generator, Iterable
 
-import numpy as np
 import plotly
 import plotly.graph_objs as go
 from ase.formula import Formula
-from ase.phasediagram import PhaseDiagram, parse_formula, print_results
+from ase.phasediagram import PhaseDiagram
 
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 
 HTML = """
 <div class="row">
   <div class="col-6">
-    {tbl0}
-    <div id='chull' class='chull'></div>
+    {table}
+    <div id='{id}' class='{id}'></div>
   </div>
   <div class="col-6">
-    {tbl1}
-    {tbl2}
+    {tables}
   </div>
 </div>
 """
@@ -46,30 +44,47 @@ HTML = """
 SCRIPT = """
 <script type='text/javascript'>
 var graphs = {chull_json};
-Plotly.newPlot('chull', graphs, {{}});
+Plotly.newPlot('{id}', graphs, {{}});
 </script>
 """
 
-OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
+
+class ConvexHullMaterial(Material):
+    sources: dict[str, tuple[str, str]]
+
+    def __init__(self, folder, uid, atoms, hform, ehull):
+        super().__init__(folder, uid, atoms)
+        self.hform = hform
+        self.ehull = ehull
+
+    def get_columns(self):
+        columns = super().get_columns()
+        columns.update(hform=self.hform, ehull=self.ehull)
+        return columns
 
 
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        tbl0 = table(None, materials.table(material, ['hform', 'ehull']))
-        root = material.folder.parent.parent.parent
-        name = ''.join(sorted(material._count))
-        ch_file = root / f'convex-hulls/{name}.json'
+                 material: Material) -> Generator[str, None, None]:
+        assert isinstance(material, ConvexHullMaterial)
+        tbl = table(
+            None,
+            [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
+             ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
+        root = material.folder.parents[2] / 'convex-hulls'
+        print(root, material.folder)
+        name = ''.join(sorted(material.count))
+        ch_file = root / f'{name}.json'
         refs = read_result_file(ch_file)
-        chull, tbl1, tbl2 = make_figure_and_tables(refs,
-                                                   higlight_uid=material.uid,
-                                                   verbose=False)
-        html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2)
+        chull, tables = make_figure_and_tables(refs,
+                                               higlight_uid=material.uid,
+                                               sources=material.sources,
+                                               verbose=False)
+        html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
-            yield html + SCRIPT.format(chull_json=chull)
+            yield html + SCRIPT.format(chull_json=chull, id='chull')
         else:
             yield html  # pragma: no cover
 
@@ -78,14 +93,15 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
                                                  float,
                                                  str]],
                            higlight_uid: str | None = None,
-                           verbose: bool = True) -> tuple[str, str, str]:
+                           sources: dict[str, tuple[str, str]] | None = None,
+                           verbose: bool = True) -> tuple[str, str]:
     """Make convex-hull figure and tables.
 
     >>> refs = {'u1': ({'B': 1}, 0.0, 'OQMD'),
     ...         'u2': ({'B': 1, 'N': 1}, -0.5, 'OQMD'),
     ...         'u3': ({'N': 1}, 0.0, 'OQMD'),
     ...         '11': ({'B': 1, 'N': 1}, -0.2, 'C2DB')}
-    >>> ch, tbl1, tbl2 = make_figure_and_tables(refs)
+    >>> ch, tables = make_figure_and_tables(refs)
     Species: B, N
     References: 4
     0    B              0.000
@@ -94,43 +110,36 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     3    BN            -0.200
     Simplices: 2
     """
-    tbl1 = []
-    tbl2 = []
-    sources = []
+    if sources is None:
+        sources = {}
+    tables = defaultdict(list)
+    source_names = []
     uids = []
 
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
-        if source == 'OQMD':
-            tbl1.append((hform, f'<a href={OQMD}/{uid}>{f:html}</a>'))
-        else:
-            assert source == 'C2DB'
-            tbl2.append((hform, f'<a href={uid}>{f:html}</a>'))
-        sources.append(source)
+        _, frmt = sources.get(source, ('', '{formula}, {uid}'))
+        tables[source].append((hform, frmt.format(uid=uid, formula=f)))
+        source_names.append(source)
         uids.append(uid)
 
-    try:
-        pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
-                          verbose=verbose)
-    except ValueError:
-        chull = ''  # only one species
-    else:
-        if 2 <= len(pd.symbols) <= 3:
-            if len(pd.symbols) == 2:
-                fig = plot_2d(pd, uids, sources, uid=higlight_uid)
-            else:
-                fig = plot_3d(pd, uids, sources, uid=higlight_uid)
-            chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
+                      verbose=verbose)
+    if 2 <= len(pd.symbols) <= 3:
+        if len(pd.symbols) == 2:
+            fig = plot_2d(pd, uids, source_names, uid=higlight_uid)
         else:
-            chull = ''
+            fig = plot_3d(pd, uids, source_names, uid=higlight_uid)
+        chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+    else:
+        chull = ''
 
-    html1 = table(['Bulk crystals from OQMD123', ''],
-                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl1)])
-    html2 = table(['Monolayers from C2DB', ''],
-                  [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl2)])
-
-    return chull, html1, html2
+    html = '\n'.join(
+        table([sources.get(source, ('References', ''))[0], ''],
+              [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl)])
+        for source, tbl in tables.items())
+    return chull, html
 
 
 def plot_2d(pd: PhaseDiagram,
@@ -305,93 +314,13 @@ def calculate_ehull_energies(refs: dict[str, tuple[dict[str, int], float]],
     ...     {'i3'})
     {'i3': 1.0}
     """
-    pd: MyPhaseDiagram | PhaseDiagram1D
-    try:
-        pd = MyPhaseDiagram([ref for ref in refs.values()], verbose=verbose)
-    except ValueError:
-        # PhaseDiagram can't handle 1D-case!  Should be fixed in ASE
-        e0 = min(hform / sum(count.values())
-                 for count, hform in refs.values())
-        pd = PhaseDiagram1D(e0)
+    pd = PhaseDiagram([ref for ref in refs.values()], verbose=verbose)
     ehull_energies = {}
     for uid in refs:
         if uid in uids:
             count, hform = refs[uid]
             ehull_energies[uid] = hform - pd.decompose(**count)[0]
     return ehull_energies
-
-
-class PhaseDiagram1D:
-    def __init__(self, e0: float):
-        self.e0 = e0
-
-    def decompose(self, **count):
-        return [self.e0 * sum(count.values())]
-
-
-class MyPhaseDiagram(PhaseDiagram):
-    def decompose(self,
-                  formula=None,
-                  **kwargs):  # pragma: no cover
-        """Find the combination of the references with the lowest energy.
-
-        formula: str
-            Stoichiometry.  Example: ``'ZnO'``.  Can also be given as
-            keyword arguments: ``decompose(Zn=1, O=1)``.
-
-        Example::
-
-            pd = PhaseDiagram(...)
-            pd.decompose(Zn=1, O=3)
-
-        Returns energy, indices of references and coefficients."""
-
-        if formula:
-            assert not kwargs
-            kwargs = parse_formula(formula)[0]
-
-        point = np.zeros(len(self.species))
-        N = 0
-        for symbol, n in kwargs.items():
-            point[self.species[symbol]] = n
-            N += n
-
-        # Find coordinates within each simplex:
-        X = self.points[self.simplices, 1:-1] - point[1:] / N
-
-        # Find the simplex with positive coordinates that sum to
-        # less than one:
-        eps = 1e-14
-        for i, Y in enumerate(X):
-            try:
-                x = np.linalg.solve((Y[1:] - Y[:1]).T, -Y[0])
-            except np.linalg.linalg.LinAlgError:
-                continue
-            if (x > -eps).all() and x.sum() < 1 + eps:
-                break
-        else:
-            assert False, X
-
-        indices = self.simplices[i]
-        points = self.points[indices]
-
-        scaledcoefs = [1 - x.sum()]
-        scaledcoefs.extend(x)
-
-        energy = N * np.dot(scaledcoefs, points[:, -1])
-
-        coefs = []
-        results = []
-        for coef, s in zip(scaledcoefs, indices):
-            count, e, name, natoms = self.references[s]
-            coef *= N / natoms
-            coefs.append(coef)
-            results.append((name, coef, e))
-
-        if self.verbose:
-            print_results(results)
-
-        return energy, indices, np.array(coefs)
 
 
 if __name__ == '__main__':

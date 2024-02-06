@@ -76,7 +76,7 @@ def test_parse_errors():
 
 
 def test_index2():
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         Index([('H', {'H': 2}, {'gap': 1j})])
     i = Index([('H', {'H': 2}, {'gap': 'high'})])
     with pytest.raises(ValueError):

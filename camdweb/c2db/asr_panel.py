@@ -1,13 +1,15 @@
 """Hack to use webpanel() functions from ASR."""
 import gzip
 import importlib
+from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Generator
 
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
+
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 
 HTML = """
@@ -40,7 +42,7 @@ class Row:
     """Fake row object."""
     def __init__(self, material: Material):
         self.data = Data(material.folder)
-        self.__dict__.update(material.columns)
+        self.__dict__.update(material.__dict__)
         self.atoms = material.atoms
         self.cell = self.atoms.cell
         self.pbc = self.atoms.pbc
@@ -81,24 +83,19 @@ class ASRPanel(Panel):
     """Generic ASR-panel."""
     def __init__(self,
                  name: str,
-                 keys: set[str],
-                 use_process_pool: bool = True):
+                 process_pool: Pool | None = None):
         self.name = name
-        self.use_process_pool = use_process_pool
+        self.process_pool = process_pool
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
         self.key_descriptions = {}
-        self.column_names = {}
         for key, desc in getattr(self.result_class,
                                  'key_descriptions', {}).items():
             self.key_descriptions[key] = KeyDescription(key, desc)
-            if key in keys:
-                self.column_names[key] = desc
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         dct = row.data.get(f'results-asr.{self.name}.json')
@@ -119,17 +116,14 @@ class ASRPanel(Panel):
         all_paths = []  # files to be created
         async_results = []
         for desc in p.get('plot_descriptions', []):
-            if desc['filenames'] == ['bs.html']:
-                continue
             paths = [material.folder / filename
                      for filename in desc['filenames']]
             all_paths += paths
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    if self.use_process_pool:
-                        pool = materials.process_pool
-                        result = pool.apply_async(
+                    if self.process_pool:
+                        result = self.process_pool.apply_async(
                             desc['function'], (row, *paths))
                         async_results.append(result)
                     else:  # pragma: no cover

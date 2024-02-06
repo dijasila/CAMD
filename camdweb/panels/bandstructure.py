@@ -27,7 +27,7 @@ Plotly.newPlot('{plot_name}', graphs, {{}});
 class BandStructurePanel(Panel):
     title = 'Band structure'
 
-    def get_html(self, material, materials):
+    def get_html(self, material):
         row = Row(material)
         plotter = plotter_from_row(row)
         fig = plotter.plot()

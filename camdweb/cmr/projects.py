@@ -18,8 +18,9 @@ from ase.db import connect
 
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
 from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
-from camdweb.material import Material, Materials
+from camdweb.material import Material, table_rows
 from camdweb.panels.panel import Panel
+from camdweb.utils import cod, icsd
 
 # Mapping from project name to ProjectDescription class:
 projects = {}
@@ -54,10 +55,10 @@ class ProjectDescription:
     def postprocess(self, material: Material) -> None:
         pass
 
-    def create_column_one(self, material: Material, materials: Materials):
+    def create_column_one(self, material: Material):
         return ''
 
-    def create_column_two(self, material: Material, materials: Materials):
+    def create_column_two(self, material: Material):
         return ''
 
 
@@ -149,8 +150,7 @@ class ABS3BandStructurePanel(Panel):
     title = 'Electronic band-structure'
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
         uid = material.uid
         path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -405,19 +405,11 @@ class OQMD123ProjectDescription(ProjectDescription):
     title = 'One, two and three component references from OQMD'
     column_names = {
         'hform': 'Heat of formation [eV/atom]',
-        'oqmd_id': 'OQMD ID'}
+        'oqmd_id': 'OQMD ID'}  # really?
     initial_columns = [
         'formula', 'energy', 'hform', 'stoichiometry', 'volume',
         'fmax', 'smax']
     uid = 'uid'
-
-    def postprocess(self, material: Material):
-        id = material.get('oqmd_id')
-        material.add_column(
-            'oqmd_id',
-            id,
-            f'<a href="http://oqmd.org/materials/entry/{id}">{id}</a>',
-            update=True)
 
 
 @project('organometal')
@@ -493,11 +485,12 @@ class Imp2DProjectDescription(ProjectDescription):
         Input('Host spacegroup number', 'host_spacegroup', 'e.g. 187')]
 
     def create_column_one(self,
-                          material: Material,
-                          materials: Materials) -> str:
+                          material: Material) -> str:
         return '\n'.join(
             table([header, ''],
-                  materials.table(material, names))
+                  table_rows(material,
+                             {name: self.column_names[name]
+                              for name in names}))
             for header, names in [
                 ('Host properties',
                  ['host',
@@ -574,11 +567,9 @@ class BiDBProjectDescription(ProjectDescription):
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
-    def create_column_one(self,
-                          material: Material,
-                          materials: Materials) -> str:
+    def create_column_one(self, material):
         def tab(names):
-            return materials.table(material, names)
+            return table_rows(material, self.column_names, names)
 
         if material.number_of_layers == 1:
             tables = [
@@ -698,11 +689,9 @@ class LowDimProjectDescription(ProjectDescription):
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
 
-    def create_column_one(self,
-                          material: Material,
-                          materials: Materials) -> str:
-        rows = materials.table(material, keysfortable0)
-        doi = material.get('doi')
+    def create_column_one(self, material):
+        rows = table_rows(material, self.column_names, keysfortable0)
+        doi = material.doi
         if doi:
             href = f'<a href="https://doi.org/{doi}">{doi}</a>'
             rows.append(('doi', href))
@@ -716,16 +705,10 @@ class LowDimProjectDescription(ProjectDescription):
             rows.insert(0, ('ICSD Number', material.dbid))
         return table(['Basic properties', ''], rows)
 
-    def create_column_two(self,
-                          material: Material,
-                          materials: Materials) -> str:
+    def create_column_two(self, material):
         if material.source == 'ICSD':
             return 'not allowed to show atoms'
         return ''  # use default AtomsPanel behavior
-
-
-COD = 'https://www.crystallography.net/cod/'
-ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
 
 
 @project('c1db')
@@ -761,18 +744,14 @@ class C1DBProjectDescription(ProjectDescription):
         RangeX('Band gap range [eV]', 'xc',
                ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
 
-    def create_column_one(self, material, materials):
-        rows = materials.table(material, self.column_names)
+    def create_column_one(self, material):
+        rows = table_rows(material, self.column_names)
         source = material.source
-        df = material.get('derived_from')
+        df = material.derived_from
         if source == 'COD':
-            rows.append(
-                ['Source',
-                 f'<a href={COD}/{df}.html>COD {df}</a>'])
+            rows.append(['Source', cod(df)])
         elif source == 'ICSD':
-            rows.append(
-                ['Source',
-                 f'<a href={ICSD}>ICSD {df}</a>'])
+            rows.append(['Source', icsd(df)])
         elif source == 'Machine learning generated':
             rows.append(
                 ['Source', source])

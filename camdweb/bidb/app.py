@@ -5,14 +5,36 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Generator
 
+import rich.progress as progress
+from ase.atoms import Atoms
 from ase.db import connect
 from ase.formula import Formula
+from ase.io import read
 
 from camdweb.html import table
 from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
+
+COLUMN_DESCRIPTIONS = {
+    'binding_energy_zscan': 'Binding energy (zscan)',
+    'number_of_layers': 'Number of layers',
+    'monolayer_uid': 'Monolayer ID',
+    'bilayer_uid': 'Bilayer ID',
+    'dynamically_stable': 'Dynamically stable',
+    'magnetic': 'Magnetic',
+    'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+    'slide_stability': 'Slide Stability',
+    'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
+    'ehull': 'Energy above convex hull [eV/atom]',
+    'gap_pbe': 'Band gap (PBE)',
+    'icsd_id': 'ICSD id of parent bulk structure',
+    'cod_id': 'COD id of parent bulk structure',
+    'layer_group': 'Layer group',
+    'layer_group_number': 'Layer group number',
+    'space_group': 'Space group',
+    'space_group_number': 'Space group number'}
 
 
 def expand(db_file: str) -> None:
@@ -38,85 +60,79 @@ def expand(db_file: str) -> None:
         (folder / 'data.json').write_text(json.dumps(row.key_value_pairs))
 
 
-class BilayerAtomsPanel(AtomsPanel):
-    def __init__(self):
-        super().__init__()
-        self.column_names.update(
-            {'binding_energy_zscan': 'Binding energy (zscan)',
-             'number_of_layers': 'Number of layers',
-             'monolayer_uid': 'Monolayer ID',
-             'bilayer_uid': 'Bilayer ID',
-             'dynamically_stable': 'Dynamically stable',
-             'magnetic': 'Magnetic',
-             'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
-             'slide_stability': 'Slide Stability',
-             'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
-             'ehull': 'Energy above convex hull [eV/atom]',
-             'gap_pbe': 'Band gap (PBE)',
-             'icsd_id': 'ICSD id of parent bulk structure',
-             'cod_id': 'COD id of parent bulk structure',
-             'layer_group': 'Layer group',
-             'layer_group_number': 'Layer group number',
-             'space_group': 'Space group',
-             'space_group_number': 'Space group number'})
-        self.columns = list(self.column_names)
+class BiDBMaterial(Material):
+    binding_energy_zscan: float
 
-    def update_data(self, material):
-        super().update_data(material)
-        dct = json.loads((material.folder / 'data.json').read_text())
-        for key, value in dct.items():
-            if key not in self.column_names:
-                continue
-            if key in {'space_group_number', 'cod_id', 'icsd_id'}:
-                value = str(value)
-            material.add_column(key, value)
+    def __init__(self,
+                 folder: Path,
+                 uid: str,
+                 bilayers: dict[str, BiDBMaterial] | None = None):
+        atoms = read(folder / 'structure.xyz')
+        assert isinstance(atoms, Atoms)
+        super().__init__(folder, uid, atoms)
+        data = json.loads((folder / 'data.json').read_text())
+        for key in COLUMN_DESCRIPTIONS:
+            setattr(self, key, data.get(key))
+        self.bilayers = bilayers
+
+    def get_columns(self):
+        columns = super().get_columns()
+        for key in COLUMN_DESCRIPTIONS:
+            value = getattr(self, key)
+            if value is not None:
+                columns[key] = value
+        return columns
+
+
+class BiDBAtomsPanel(AtomsPanel):
+    def create_column_one(self,
+                          material: Material) -> str:
+        rows = []
+        for key, desc in COLUMN_DESCRIPTIONS.items():
+            value = getattr(material, key)
+            rows.append([desc, material.html_format_column(key, value)])
+
+        return table(None, rows)
 
 
 class StackingsPanel(Panel):
     title = 'Stackings'
-    column_names = {'nstackings': 'Number of Stackings'}
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        if material.number_of_layers == 2:
+                 material: Material) -> Generator[str, None, None]:
+        assert isinstance(material, BiDBMaterial)
+        bilayers = material.bilayers
+        if bilayers is None:
             return
         rows = []
-        for f in self.bilayer_folders(material):
-            uid = f'{material.uid}-{f.name}'
-            bilayer = materials[uid]
-            rows.append([f'<a href="{uid}">{uid}</a>',
-                         bilayer['binding_energy_zscan']])
-        tbl = table(['Stacking', 'Binding energy'], rows)
+        for uid, bilayer in bilayers.items():
+            e = bilayer.binding_energy_zscan
+            rows.append([f'<a href="{uid}">{uid}</a>', f'{e:.3f}'])
+        tbl = table(['Stacking', 'Binding energy [meV/Å<sup>2</sup>]'], rows)
         yield tbl
-
-    def bilayer_folders(self, material) -> list[Path]:
-        return [f for f in material.folder.glob('../*/')
-                if f.name != 'monolayer']
-
-    def update_data(self,
-                    material: Material) -> None:
-        if material.number_of_layers == 1:
-            n = len(self.bilayer_folders(material))
-            material.add_column('nstackings', n)
 
 
 def main(root: Path) -> CAMDApp:
     mlist: list[Material] = []
-    for f in root.glob('*/*/*/'):
-        if f.name == 'monolayer':
-            uid = f.parent.name
-        else:
-            uid = f'{f.parent.name}-{f.name}'
-        if len(mlist) % 20 == 0:
-            print(end='.', flush=True)
-        mlist.append(Material.from_file(f / 'structure.xyz', uid))
-    print()
+    paths = list(root.glob('*/*/monolayer/'))
+    with progress.Progress() as pb:
+        pid = pb.add_task('Reading matrerials:', total=len(paths))
+        for f1 in paths:
+            uid1 = f1.parent.name
+            bilayers = {}
+            for f2 in f1.parent.glob('*/'):
+                if f2.name != 'monolayer':
+                    uid2 = f'{f2.parent.name}-{f2.name}'
+                    bilayer = BiDBMaterial(f2, uid2)
+                    bilayers[uid2] = bilayer
+                    mlist.append(bilayer)
+            mlist.append(BiDBMaterial(f1, uid1, bilayers))
+        pb.advance(pid)
 
-    panels = [BilayerAtomsPanel(),
+    panels = [BiDBAtomsPanel(),
               StackingsPanel()]
 
-    materials = Materials(mlist, panels)
+    materials = Materials(mlist, panels, COLUMN_DESCRIPTIONS)
 
     initial_columns = ['uid', 'area', 'formula']
 

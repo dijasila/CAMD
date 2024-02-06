@@ -14,7 +14,7 @@ def test_str2obj():
 def test_no_bader(tmp_path):
     material = Material(tmp_path, 'x1', Atoms())
     with pytest.raises(StopIteration):
-        next(BaderPanel().get_html(material, None))
+        next(BaderPanel().get_html(material))
 
 
 def test_thing():

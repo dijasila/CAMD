@@ -172,12 +172,14 @@ class Index:
 
         integers = defaultdict(list)
         floats = defaultdict(list)
+        self.columns = []
         self.strings: defaultdict[str, dict[str, set[int]]] = defaultdict(dict)
         self.natoms: dict[int, int] = {}
         self.reduced: defaultdict[str, set[int]] = defaultdict(set)
         self.ids = set()
 
         for i, (reduced, count, keys) in enumerate(rows):
+            self.columns.append(keys)
             self.natoms[i] = sum(count.values())
             self.reduced[reduced].add(i)
             self.ids.add(i)
@@ -193,10 +195,8 @@ class Index:
                         dct[value].add(i)
                 elif isinstance(value, float):
                     floats[name].append((value, i))
-                elif isinstance(value, (int, bool)):
-                    integers[name].append((int(value), i))
                 else:
-                    raise ValueError
+                    integers[name].append((int(value), i))
 
         self.integers = {}
         self.floats = {}

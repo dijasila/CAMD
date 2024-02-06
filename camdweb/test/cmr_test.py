@@ -33,9 +33,6 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
         papp.material_page(material.uid)
 
     if name == 'oqmd123':
-        html = papp.material_page('id-1')
-        assert 'http://oqmd.org' in html
-
         xyz = papp.download('id-1', 'xyz')
         assert 'energy=-27.0' in xyz
 

@@ -43,7 +43,7 @@ class CAMDApp:
                    [''] + self.materials.stoichiometries()))
 
         # For nspecies selection:
-        maxnspecies = max(material.nspecies for material in self.materials)
+        maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
             Select('Number of chemical species', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies + 1)]))
@@ -132,11 +132,10 @@ class CAMDApp:
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
         material = self.materials[uid]
-
         titles = []
         generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
-            generator = panel.get_html(material, self.materials)
+            generator = panel.get_html(material)
             try:
                 html = next(generator)
             except StopIteration:

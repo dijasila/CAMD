@@ -176,8 +176,14 @@ def copy_material(fro: Path,
     except FileNotFoundError:
         pass
 
-    data['has_inversion_symmetry'] = rrf(
-        'structureinfo')['has_inversion_symmetry']
+    structure = rrf('structureinfo')
+    for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
+        data[key] = structure[key]
+
+    try:
+        data['label'] = rrf('c2db.labels')['label']
+    except FileNotFoundError:
+        pass
 
     try:
         gs = rrf('gs')
@@ -206,14 +212,16 @@ def copy_material(fro: Path,
     data['dyn_stab'] = (dyn_stab_phonons == 'high' and
                         dyn_stab_stiffness == 'high')
 
-    try:
-        hse = rrf('hse')
-    except FileNotFoundError:
-        pass
-    else:  # pragma: no cover
-        data['gap_hse'] = hse.get('gap_hse', 0.0)
-        data['vbm_hse'] = hse.get('vbm_hse')
-        data['cbm_hse'] = hse.get('cbm_hse')
+    for x in ['hse', 'gw']:
+        try:
+            r = rrf(x)
+        except FileNotFoundError:
+            pass
+        else:  # pragma: no cover
+            data[f'gap_{x}'] = r.get(f'gap_{x}')
+            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}')
+            data[f'vbm_{x}'] = r.get(f'vbm_{x}')
+            data[f'cbm_{x}'] = r.get(f'cbm_{x}')
 
     try:
         pol = rrf('polarizability')
@@ -225,6 +233,15 @@ def copy_material(fro: Path,
             data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')
 
     data['energy'] = atoms.get_potential_energy()
+
+    try:
+        info = json.loads((fro / 'info.json').read_text())
+    except FileNotFoundError:
+        pass
+    else:
+        for key in ['icsd_id', 'cod_id', 'doi']:
+            if key in info:
+                data[key] = info[key]
 
     to.mkdir(exist_ok=True)
 
