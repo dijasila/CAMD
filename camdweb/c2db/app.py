@@ -49,9 +49,9 @@ class C2DBMaterial(ConvexHullMaterial):
                          data['ehull'])
         self.olduid: str = data['olduid']
         self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
-        self.gap: float = data['gap']
-        self.gap_dir: float = data['gap_dir']
-        self.gap_dir_nosoc: float = data['gap_dir_nosoc']  # ???
+        self.gap: float | None = data.get('gap')
+        self.gap_dir: float = data.get('gap_dir')
+        self.gap_dir_nosoc: float = data.get('gap_dir_nosoc')  # ???
         self.evac: float = data['evac']
         self.magstate: str = data['magstate']
         self.energy: float = data['energy']
