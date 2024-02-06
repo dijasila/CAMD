@@ -64,6 +64,11 @@ ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
 
 
 def doi(id: str | None) -> str | None:
+    """Create HTML anchor link to DOI.
+
+    >>> doi('10.1103/ABC.95.216')
+    '<a href="https://doi.org/10.1103/ABC.95.216">10.1103/ABC.95.216</a>'
+    """
     if id is None:
         return None
     assert isinstance(id, str)

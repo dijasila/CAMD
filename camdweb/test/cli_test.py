@@ -33,3 +33,5 @@ def test_cli(tmp_path):
 
     app = main([str(x) for x in [h2, h, cu]], run=False)
     assert 'volume' in app.index_page()
+    html = app.material_page('2')
+    assert 'Maximum force' in html

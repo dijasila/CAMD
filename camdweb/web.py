@@ -132,11 +132,9 @@ class CAMDApp:
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
         material = self.materials[uid]
-
         titles = []
         generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
-            print(getattr(panel, 'name', panel))
             generator = panel.get_html(material)
             try:
                 html = next(generator)

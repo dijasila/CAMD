@@ -6,7 +6,6 @@ from ase import Atoms
 from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel
 from camdweb.session import Session
 
 
@@ -56,19 +55,6 @@ def test_attribute_error(material):
 
 def test_pickle(material):
     pickle.loads(pickle.dumps(material))
-
-
-def ________test_collision():
-    class MyPanel(Panel):
-        column_names = {'formula': '...'}
-
-        def get_html(self, material, materials):
-            return
-
-    with pytest.raises(ValueError):
-        panel = MyPanel()
-        panel.get_html(1, 2)
-        Materials([], [panel])
 
 
 def test_row(material):

@@ -15,6 +15,3 @@ class Panel(abc.ABC):
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
         raise NotImplementedError
-
-    def xxxupdate_data(self, material: Material) -> None:
-        pass

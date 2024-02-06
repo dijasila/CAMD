@@ -75,15 +75,14 @@ class Data:
         p = self.folder / name
         return p.is_file() or p.with_suffix('.json.gz').is_file()
 
-    def __getitem__(self, name):
-        return self.get(name)
+    # def __getitem__(self, name):
+    #     return self.get(name)
 
 
 class ASRPanel(Panel):
     """Generic ASR-panel."""
     def __init__(self,
                  name: str,
-                 keys: set[str],
                  process_pool: Pool | None = None):
         self.name = name
         self.process_pool = process_pool
@@ -91,12 +90,9 @@ class ASRPanel(Panel):
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
         self.key_descriptions = {}
-        self.column_names = {}
         for key, desc in getattr(self.result_class,
                                  'key_descriptions', {}).items():
             self.key_descriptions[key] = KeyDescription(key, desc)
-            if key in keys:
-                self.column_names[key] = desc
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
@@ -120,8 +116,6 @@ class ASRPanel(Panel):
         all_paths = []  # files to be created
         async_results = []
         for desc in p.get('plot_descriptions', []):
-            if desc['filenames'] == ['bs.html']:
-                continue
             paths = [material.folder / filename
                      for filename in desc['filenames']]
             all_paths += paths

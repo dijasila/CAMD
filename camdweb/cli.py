@@ -25,20 +25,19 @@ class MyMaterial(Material):
         except AttributeError:
             results = {}
         self.energy = results.get('energy')
-        self.forces = results.get('forces')
-        self.stress = results.get('stress')
+        forces = results.get('forces')
+        self.fmax = (None if forces is None else
+                     (forces**2).sum(axis=1).max()**0.5)
+        stress = results.get('stress')
+        self.smax = None if stress is None else abs(stress).max()
         self.magmom = results.get('magmom')
 
     def get_columns(self):
         columns = super().get_columns()
-        if self.energy is not None:
-            columns['energy'] = self.energy
-        if self.magmom is not None:
-            columns['magmom'] = self.magmom
-        if self.forces is not None:
-            columns['fmax'] = (self.forces**2).sum(axis=1).max()**0.5
-        if self.stress is not None:
-            columns['smax'] = abs(self.stress).max()
+        for key in ['energy', 'fmax', 'smax', 'magmom']:
+            value = getattr(self, key, None)
+            if value is not None:
+                columns[key] = value
         return columns
 
 
@@ -48,11 +47,12 @@ class MyAtomsPanel(AtomsPanel):
         rows = []
         for key in ['formula', 'energy', 'fmax', 'smax', 'magmom',
                     'length', 'area', 'volume']:
-            value = getattr(material, key)
-            desc = COLUMN_DESCRIPTIONS.get(key)
-            desc = desc or COMMON_COLUMN_DESCRIPTIONS.get(key, key)
-            rows.append([desc, material.html_format_column(key, value)])
-
+            value = getattr(material, key, None)
+            if value is not None:
+                desc = COLUMN_DESCRIPTIONS.get(key)
+                desc = desc or COMMON_COLUMN_DESCRIPTIONS.get(key, key)
+                rows.append([desc, material.html_format_column(key, value)])
+        print(rows)
         return table(None, rows)
 
 
