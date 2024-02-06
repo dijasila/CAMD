@@ -5,40 +5,55 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
-from camdweb.material import Material, Materials
+from camdweb.material import Material, Materials, COMMON_COLUMN_DESCRIPTIONS
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
+from camdweb.html import table
+
+COLUMN_DESCRIPTIONS = dict(
+    energy='Energy [eV]',
+    fmax='Maximum force [eV/Å]',
+    smax='Maximum stress component [eV/Å<sup>3</sup>]',
+    magmom='Total magnetic moment [μ<sub>B</sub>]')
 
 
-class MyAtomsPanel(AtomsPanel):
-    def __init__(self):
-        super().__init__()
-        self.column_names.update(
-            energy='Energy [eV]',
-            fmax='Maximum force [eV/Å]',
-            smax='Maximum stress component [eV/Å<sup>3</sup>]',
-            magmom='Total magnetic moment [μ<sub>B</sub>]')
-        self.columns += ['energy', 'fmax', 'smax', 'magmom']
-
-    def update_data(self, material):
-        super().update_data(material)
-        atoms = material.atoms
+class MyMaterial(Material):
+    def __init__(self, folder, uid, atoms):
+        super().__init__(folder, uid, atoms)
         try:
             results = atoms.calc.results
         except AttributeError:
-            return
-        energy = results.get('energy')
-        if energy is not None:
-            material.add_column('energy', energy)
-        forces = results.get('forces')
-        if forces is not None:
-            material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
-        stress = results.get('stress')
-        if stress is not None:
-            material.add_column('smax', abs(stress).max())
-        magmom = results.get('magmom')
-        if magmom is not None:
-            material.add_column('magmom', magmom)
+            results = {}
+        self.energy = results.get('energy')
+        self.forces = results.get('forces')
+        self.stress = results.get('stress')
+        self.magmom = results.get('magmom')
+
+    def get_columns(self):
+        columns = super().get_columns()
+        if self.energy is not None:
+            columns['energy'] = self.energy
+        if self.magmom is not None:
+            columns['magmom'] = self.magmom
+        if self.forces is not None:
+            columns['fmax'] = (self.forces**2).sum(axis=1).max()**0.5
+        if self.stress is not None:
+            columns['smax'] = abs(self.stress).max()
+        return columns
+
+
+class MyAtomsPanel(AtomsPanel):
+    def create_column_one(self,
+                          material: MyMaterial) -> str:
+        rows = []
+        for key in ['formula', 'energy', 'fmax', 'smax', 'magmom',
+                    'length', 'area', 'volume']:
+            value = getattr(material, key)
+            desc = COLUMN_DESCRIPTIONS.get(key)
+            desc = desc or COMMON_COLUMN_DESCRIPTIONS.get(key, key)
+            rows.append([desc, material.html_format_column(key, value)])
+
+        return table(None, rows)
 
 
 def main(argv: list[str] | None = None,
@@ -52,14 +67,14 @@ def main(argv: list[str] | None = None,
         path = Path(filename)
         atoms = read(path)
         assert isinstance(atoms, Atoms)
-        rows.append(Material(path.parent, str(i), atoms))
+        rows.append(MyMaterial(path.parent, str(i), atoms))
 
     panels = [MyAtomsPanel()]
-    materials = Materials(rows, panels)
+    materials = Materials(rows, panels, COLUMN_DESCRIPTIONS)
 
     initial_columns = ['uid', 'formula', 'energy', 'fmax', 'smax', 'magmom']
     for key in ['length', 'area', 'volume']:
-        if key in materials.column_names:
+        if key in materials.column_descriptions:
             initial_columns.append(key)
 
     root = Path.cwd()

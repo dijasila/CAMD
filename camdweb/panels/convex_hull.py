@@ -100,7 +100,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     ...         'u2': ({'B': 1, 'N': 1}, -0.5, 'OQMD'),
     ...         'u3': ({'N': 1}, 0.0, 'OQMD'),
     ...         '11': ({'B': 1, 'N': 1}, -0.2, 'C2DB')}
-    >>> ch, tbl1, tbl2 = make_figure_and_tables(refs)
+    >>> ch, tables = make_figure_and_tables(refs)
     Species: B, N
     References: 4
     0    B              0.000
@@ -110,7 +110,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     Simplices: 2
     """
     if sources is None:
-        sources = {'REFS': ('References', '{formula}, {uid}')}
+        sources = {}
     tables = defaultdict(list)
     source_names = []
     uids = []
@@ -118,7 +118,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
-        _, frmt = sources[source]
+        _, frmt = sources.get(source, ('', '{formula}, {uid}'))
         tables[source].append((hform, frmt.format(uid=uid, formula=f)))
         source_names.append(source)
         uids.append(uid)
@@ -135,7 +135,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         chull = ''
 
     html = '\n'.join(
-        table([sources[source][0], ''],
+        table([sources.get(source, ('References', ''))[0], ''],
               [[link, f'{h:.2f} eV/atom'] for h, link in sorted(tbl)])
         for source, tbl in tables.items())
     return chull, html

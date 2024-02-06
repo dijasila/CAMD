@@ -111,7 +111,7 @@ class AtomsPanel(Panel):
 
     def create_column_one(self,
                           material: Material) -> str:
-        return table(None, materials.table(material, self.columns))
+        return ''
 
     def create_column_two(self,
                           material: Material) -> str:

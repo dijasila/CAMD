@@ -19,8 +19,9 @@ from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
+from camdweb.html import table
 
-COLUMN_NAMES = dict(
+COLUMN_DESCRIPTIONS = dict(
     etot='Total Energy [eV]',
     magstate='Magnetic state',
     fmax='Maximum Force [eV/A²]',
@@ -28,6 +29,8 @@ COLUMN_NAMES = dict(
     gap='Band gap (PBE) [eV]',
     gap_dir='Direct Band Gap (PBE) [eV]',
     oqmd_entry_id='OQMD Ref. ID')
+
+OQMD = 'https://oqmd.org/materials/entry'
 
 
 class OQMD12345Material(Material):
@@ -59,18 +62,16 @@ class OQMD12345AtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: OQMD12345Material) -> str:
         rows = []
-        for key, name in COLUMN_NAMES.items():
+        for key, desc in COLUMN_DESCRIPTIONS.items():
+            value = getattr(material, key)
             if key != 'oqmd_entry_id':
-                value = getattr(self, key)
-                rows.append([name, material.html_format_column(key, value)])
+                rows.append([desc, material.html_format_column(key, value)])
             else:
-                rows.append([name, value
-            ('Link to old C2DB', f'<a href={OLD}/{old}>{old}</a>')]
+                rows.append(
+                    [desc,
+                     f'<a href="{OQMD}/{value}">{value}</a>'])
 
-        return table([title, ''],
-                     [[key, value]
-                      for key, value in rows if value is not None]))
-        return '\n'.join(tables)
+        return table(None, rows)
 
 
 def main(root: Path) -> CAMDApp:
@@ -81,12 +82,12 @@ def main(root: Path) -> CAMDApp:
         pid = pb.add_task('Reading materials:', total=len(files))
         for f in files:
             uid = f'{f.parent.name}-{f.name}'
-            mlist.append(Material(f, uid))
+            mlist.append(OQMD12345Material(f, uid))
             pb.advance(pid)
 
-    panels: list[Panel] = [OQMDAtomsPanel()]
+    panels: list[Panel] = [OQMD12345AtomsPanel()]
 
-    materials = Materials(mlist, panels, column_names)
+    materials = Materials(mlist, panels, COLUMN_DESCRIPTIONS)
     initial_columns = ['formula', 'gap', 'gap_dir',
                        'magstate', 'etot', 'volume']
     return CAMDApp(materials, initial_columns, root)

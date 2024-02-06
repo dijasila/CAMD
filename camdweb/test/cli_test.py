@@ -32,4 +32,4 @@ def test_cli(tmp_path):
     atoms.write(cu)
 
     app = main([str(x) for x in [h2, h, cu]], run=False)
-    assert 'Volume' in app.index_page()
+    assert 'volume' in app.index_page()

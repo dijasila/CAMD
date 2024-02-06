@@ -25,7 +25,7 @@ def html_format_formula(f: str) -> str:
     >>> html_format_formula('H2O')
     'H<sub>2</sub>O'
     """
-    return re.sub(r'(\d)', r'<sub>\1</sub>', f)
+    return re.sub(r'(\d+)', r'<sub>\1</sub>', f)
 
 
 def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],

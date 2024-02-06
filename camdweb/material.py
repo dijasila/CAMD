@@ -14,6 +14,17 @@ from camdweb.panels.panel import Panel
 from camdweb.session import Session
 from camdweb.utils import fft, html_format_formula
 
+COMMON_COLUMN_DESCRIPTIONS = {
+    'formula': 'Formula',
+    'reduced': 'Reduced formula',
+    'stoichiometry': 'Stoichiometry',
+    'nspecies': 'Number of species',
+    'natoms': 'Number of atoms',
+    'uid': 'Unique ID',
+    'length': 'Unit cell length [Å]',
+    'area': 'Unit cell area [Å<sup>2</sup>]',
+    'volume': 'Unit cell volume [Å<sup>3</sup>]'}
+
 
 class Material:
     def __init__(self, folder: Path, uid: str, atoms: Atoms):
@@ -22,13 +33,10 @@ class Material:
         >>> mat = Material(Path(), 'x1', Atoms('H2O'))
         >>> mat.formula
         'OH2'
-        >>> mat['formula']
+        >>> mat.html_format_column('formula', 'OH2')
         'OH<sub>2</sub>'
         >>> mat.stoichiometry
         'AB2'
-        >>> mat.add_column('energy', -1.23456)
-        >>> mat.energy, mat['energy']
-        (-1.23456, '-1.235')
         """
         self.folder = folder
         self.uid = uid
@@ -73,34 +81,25 @@ class Materials:
     def __init__(self,
                  materials: list[Material],
                  panels: Sequence[Panel],
-                 column_names: dict[str, str] | None = None):
-        self.column_names = {
-            'formula': 'Formula',
-            'reduced': 'Reduced formula',
-            'stoichiometry': 'Stoichiometry',
-            'nspecies': 'Number of species',
-            'natoms': 'Number of atoms',
-            'uid': 'Unique ID',
-            'length': 'Unit cell length [Å]',
-            'area': 'Unit cell area [Å<sup>2</sup>]',
-            'volume': 'Unit cell volume [Å<sup>3</sup>]'}
-        if column_names:
-            self.column_names.update(column_names)
+                 column_descriptions: dict[str, str] | None = None):
 
-        self._materials: dict[str, Material] = {}
-        for material in materials:
-            for panel in panels:
-                panel.update_data(material)
-            self._materials[material.uid] = material
-
-        for panel in panels:
-            if not panel.column_names.keys().isdisjoint(self.column_names):
-                overlap = panel.column_names.keys() & self.column_names
-                raise ValueError(f'{overlap}')
-            self.column_names.update(panel.column_names)
+        self._materials = {material.uid: material for material in materials}
 
         self.index = Index([(mat.reduced, mat.count, mat.get_columns())
                             for mat in self._materials.values()])
+
+        keys = set()
+        for columns in self.index.columns:
+            keys.update(columns)
+
+        self.column_descriptions = COMMON_COLUMN_DESCRIPTIONS.copy()
+        if column_descriptions:
+            self.column_descriptions.update(column_descriptions)
+        self.column_descriptions = {
+            name: desc
+            for name, desc in self.column_descriptions.items()
+            if name in keys}
+
         self.i2uid = {i: mat.uid for i, mat in enumerate(self)}
 
         self.panels = panels
@@ -197,8 +196,10 @@ class Materials:
                  [material.html_format_column(name, columns.get(name, ''))
                   for name in session.columns]))
         return (table,
-                [(name, self.column_names[name]) for name in session.columns],
+                [(name, self.column_descriptions[name])
+                 for name in session.columns],
                 pages,
-                [(name, value) for name, value in self.column_names.items()
+                [(name, value)
+                 for name, value in self.column_descriptions.items()
                  if name not in session.columns],
                 error)

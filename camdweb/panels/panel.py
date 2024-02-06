@@ -8,15 +8,13 @@ if TYPE_CHECKING:
 
 class Panel(abc.ABC):
     title: str
-    column_names: dict[str, str] = {}
 
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
     @abc.abstractmethod
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
         raise NotImplementedError
 
-    def update_data(self, material: Material) -> None:
+    def xxxupdate_data(self, material: Material) -> None:
         pass
