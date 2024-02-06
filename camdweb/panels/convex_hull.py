@@ -82,7 +82,7 @@ class ConvexHullPanel(Panel):
                                                higlight_uid=material.uid,
                                                sources=material.sources,
                                                verbose=False)
-        html = HTML.format(table=tbl, tables='\n'.join(tables), id='chull')
+        html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
             yield html + SCRIPT.format(chull_json=chull, id='chull')
         else:

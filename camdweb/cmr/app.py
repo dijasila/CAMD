@@ -12,9 +12,11 @@ from ase.db import connect
 from ase.db.row import AtomsRow
 from bottle import Bottle, static_file, template
 
+from camdweb.cli import COLUMN_DESCRIPTIONS
 from camdweb.cmr.projects import ProjectDescription, create_project_description
 from camdweb.html import FormPart, table
-from camdweb.material import Material, Materials
+from camdweb.material import (COMMON_COLUMN_DESCRIPTIONS, Material, Materials,
+                              table_rows)
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
@@ -83,16 +85,18 @@ class CMRProjectApp(CAMDApp):
 
 class CMRAtomsPanel(AtomsPanel):
     def __init__(self,
+                 columnd_descriptions,
                  create_column_one: Callable[[Material], str],
                  create_column_two: Callable[[Material], str]):
         super().__init__()
+        self.column_descriptions = columnd_descriptions
         self._create_column_one = create_column_one
         self._create_column_two = create_column_two
 
     def create_column_one(self, material):
         col1 = self._create_column_one(material)
         if not col1:
-            return super().create_column_one(material)
+            return table(None, table_rows(material, self.column_descriptions))
         return col1
 
     def create_column_two(self, material):
@@ -119,15 +123,17 @@ def app_from_db(dbpath: Path,
                 rows.append(row2material(row, pd, root))
                 pb.advance(pid)
 
+        column_descriptions = COLUMN_DESCRIPTIONS | COMMON_COLUMN_DESCRIPTIONS
+        for name, desc in pd.column_names.items():
+            column_descriptions[name.lower()] = desc
+
         panels: list[Panel] = [
             CMRAtomsPanel(
+                column_descriptions,
                 pd.create_column_one,
                 pd.create_column_two)]
         panels += pd.panels
-        cd = {'hform': '...'}
-        for name, desc in pd.column_names.items():
-            cd[name.lower()] = desc
-        materials = Materials(rows, panels, cd)
+        materials = Materials(rows, panels, column_descriptions)
 
     initial_columns = [name.lower() for name in pd.initial_columns]
     return CMRProjectApp(

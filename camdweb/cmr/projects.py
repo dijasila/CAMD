@@ -405,7 +405,7 @@ class OQMD123ProjectDescription(ProjectDescription):
     title = 'One, two and three component references from OQMD'
     column_names = {
         'hform': 'Heat of formation [eV/atom]',
-        'oqmd_id': 'OQMD ID'}
+        'oqmd_id': 'OQMD ID'}  # really?
     initial_columns = [
         'formula', 'energy', 'hform', 'stoichiometry', 'volume',
         'fmax', 'smax']

@@ -75,8 +75,8 @@ class Data:
         p = self.folder / name
         return p.is_file() or p.with_suffix('.json.gz').is_file()
 
-    # def __getitem__(self, name):
-    #     return self.get(name)
+    def __getitem__(self, name):
+        return self.get(name)
 
 
 class ASRPanel(Panel):

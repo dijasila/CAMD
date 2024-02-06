@@ -58,12 +58,19 @@ class C2DBMaterial(ConvexHullMaterial):
         self.dyn_stab: bool = data['dyn_stab']
         self.layergroup: str = data['layergroup']
         self.lgnum: int = data['lgnum']
-        self.gap_hse: float | None = data.get('gap_pbe')
+        self.gap_hse: float | None = data.get('gap_hse')
+        self.gap_dir_hse: float | None = data.get('gap_dir_hse')
+        self.vbm_hse: float | None = data.get('vbm_hse')
+        self.cbm_hse: float | None = data.get('cbm_hse')
         self.gap_gw: float | None = data.get('gap_gw')
+        self.gap_dir_gw: float | None = data.get('gap_dir_gw')
+        self.vbm_gw: float | None = data.get('vbm_gw')
+        self.cbm_gw: float | None = data.get('cbm_gw')
         self.cod_id: int | None = data.get('cod_id')
         self.icsd_id: int | None = data.get('icsd_id')
         self.doi: str | None = data.get('doi')
         self.label: str | None = data.get('label')
+        self.minhessianeig: float | None = data.get('minhessianeig')
 
     def get_columns(self):
         columns = super().get_columns()

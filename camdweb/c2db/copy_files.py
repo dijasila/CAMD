@@ -212,14 +212,16 @@ def copy_material(fro: Path,
     data['dyn_stab'] = (dyn_stab_phonons == 'high' and
                         dyn_stab_stiffness == 'high')
 
-    try:
-        hse = rrf('hse')
-    except FileNotFoundError:
-        pass
-    else:  # pragma: no cover
-        data['gap_hse'] = hse.get('gap_hse', 0.0)
-        data['vbm_hse'] = hse.get('vbm_hse')
-        data['cbm_hse'] = hse.get('cbm_hse')
+    for x in ['hse', 'gw']:
+        try:
+            r = rrf(x)
+        except FileNotFoundError:
+            pass
+        else:  # pragma: no cover
+            data[f'gap_{x}'] = r.get(f'gap_{x}')
+            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}')
+            data[f'vbm_{x}'] = r.get(f'vbm_{x}')
+            data[f'cbm_{x}'] = r.get(f'cbm_{x}')
 
     try:
         pol = rrf('polarizability')
