@@ -136,6 +136,7 @@ class CAMDApp:
         titles = []
         generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
+            print(getattr(panel, 'name', panel))
             generator = panel.get_html(material)
             try:
                 html = next(generator)

@@ -14,17 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
 from ase.io import read
+
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.html import Range, RangeX, Select, table
 from camdweb.material import Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.bandstructure import BandStructurePanel
-from camdweb.panels.convex_hull import ConvexHullPanel, ConvexHullMaterial
+from camdweb.panels.convex_hull import ConvexHullMaterial, ConvexHullPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
@@ -36,7 +38,7 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 class C2DBMaterial(ConvexHullMaterial):
     sources = {'OQMD': ('Bulk crystals from OQMD123',
-                        '<a href={OQMD}/{uid}>{formula:html}</a>'),
+                        f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
                'C2DB': ('Monolayers from C2DB',
                         '<a href={uid}>{formula:html}</a>')}
 
@@ -63,11 +65,20 @@ class C2DBMaterial(ConvexHullMaterial):
         self.doi: str | None = data.get('doi')
         self.label: str | None = data.get('label')
 
+    def get_columns(self):
+        columns = super().get_columns()
+        for key in [
+            'olduid', 'has_inversion_symmetry', 'gap', 'evac',
+            'magstate', 'energy', 'spin_axis', 'efermi',
+            'dyn_stab', 'layergroup', 'lgnum', 'gap_hse',
+            'gap_gw', 'cod_id', 'icsd_id', 'doi', 'label']:
+            value = getattr(self, key)
+            if value is not None:
+                columns[key] = value
+        return columns
+
 
 class C2DBAtomsPanel(AtomsPanel):
-    def __init__(self):
-        super().__init__()
-
     def create_column_one(self,
                           material: C2DBMaterial) -> str:
         old = material.olduid
@@ -132,26 +143,30 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             mlist.append(material)
             pb.advance(pid)
 
+    pool = mp.Pool(maxtasksperchild=100)
+
+    def asr_panel(name):
+        return ASRPanel(name, keys, pool)
+
     panels: list[Panel] = [
         C2DBAtomsPanel(),
         ConvexHullPanel(),
-        ASRPanel('stiffness', keys),
-        ASRPanel('phonons', keys),
-        ASRPanel('deformationpotentials', keys),
-        ASRPanel('bandstructure', keys),
+        asr_panel('stiffness'),
+        asr_panel('phonons'),
+        asr_panel('deformationpotentials'),
         BandStructurePanel(),
-        # ASRPanel('pdos', keys),
-        ASRPanel('effective_masses', keys),
-        ASRPanel('hse', keys),
-        ASRPanel('gw', keys),
-        ASRPanel('borncharges', keys),
-        ASRPanel('shg', keys),
-        ASRPanel('polarizability', keys),
-        ASRPanel('infraredpolarizability', keys),
-        ASRPanel('raman', keys),
-        # ASRPanel('bse', keys),
+        # asr_panel('pdos'),
+        asr_panel('effective_masses'),
+        asr_panel('hse'),
+        asr_panel('gw'),
+        asr_panel('borncharges'),
+        asr_panel('shg'),
+        asr_panel('polarizability'),
+        asr_panel('infraredpolarizability'),
+        asr_panel('raman'),
+        # asr_panel('bse'),
         BaderPanel(),
-        ASRPanel('piezoelectrictensor', keys),
+        asr_panel('piezoelectrictensor'),
         ShiftCurrentPanel()]
 
     column_names = dict(

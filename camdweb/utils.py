@@ -8,7 +8,7 @@ from ase.data import chemical_symbols
 def formula_dict_to_string(count: dict[str, int]) -> str:
     """Convert dict to string representation.
 
-    >>> formula_dict_to_strings({'H': 2, 'O': 1})
+    >>> formula_dict_to_string({'H': 2, 'O': 1})
     'H2O'
     """
     s = ''
@@ -23,9 +23,9 @@ def html_format_formula(f: str) -> str:
     """Convert formula string to HTML.
 
     >>> html_format_formula('H2O')
-    H<sub>2</sub>O
+    'H<sub>2</sub>O'
     """
-    return re.sub(r'(\d)', '<sub>\1</sub>', f)
+    return re.sub(r'(\d)', r'<sub>\1</sub>', f)
 
 
 def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
@@ -36,7 +36,7 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
     Three dicts are returned:
 
     >>> fft([1, 1, 8, 1, 1, 8])
-    ({'O': 2, 'H': 4}, {'O': 1, 'H': 2}, {'A': 1, 'B': 2})
+    ({'O': 2, 'H': 4}, 'O2H4', 'OH2', 'AB2')
 
     full, reduced and stoichiometry.
 

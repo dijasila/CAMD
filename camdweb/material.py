@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import multiprocessing
-from functools import cached_property
 from math import nan
 from pathlib import Path
 from typing import Generator, Sequence
@@ -75,7 +73,7 @@ class Materials:
     def __init__(self,
                  materials: list[Material],
                  panels: Sequence[Panel],
-                 column_names: dict[str, str]):
+                 column_names: dict[str, str] | None = None):
         self.column_names = {
             'formula': 'Formula',
             'reduced': 'Reduced formula',
@@ -86,7 +84,8 @@ class Materials:
             'length': 'Unit cell length [Å]',
             'area': 'Unit cell area [Å<sup>2</sup>]',
             'volume': 'Unit cell volume [Å<sup>3</sup>]'}
-        self.column_names.update(column_names)
+        if column_names:
+            self.column_names.update(column_names)
 
         self._materials: dict[str, Material] = {}
         for material in materials:
@@ -203,7 +202,3 @@ class Materials:
                 [(name, value) for name, value in self.column_names.items()
                  if name not in session.columns],
                 error)
-
-    @cached_property
-    def process_pool(self):
-        return multiprocessing.Pool(maxtasksperchild=100)

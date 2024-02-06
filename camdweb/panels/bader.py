@@ -2,7 +2,7 @@ import json
 from typing import Generator
 
 from camdweb.panels.panel import Panel
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.html import table
 
 
@@ -17,8 +17,7 @@ class BaderPanel(Panel):
     title = 'Bader-charge analysis'
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
         path = material.folder / 'bader.json'
         if not path.is_file():
             return

@@ -72,7 +72,7 @@ class ConvexHullPanel(Panel):
             None,
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
              ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
-        root = material.folder.parents[2] / 'convex_hulls'
+        root = material.folder.parents[2] / 'convex-hulls'
         print(root, material.folder)
         name = ''.join(sorted(material.count))
         ch_file = root / f'{name}.json'
