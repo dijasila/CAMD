@@ -220,8 +220,8 @@ def copy_material(fro: Path,
         except FileNotFoundError:
             pass
         else:  # pragma: no cover
-            data[f'gap_{x}'] = r.get(f'gap_{x}')
-            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}')
+            data[f'gap_{x}'] = r.get(f'gap_{x}', 0.0)
+            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}', 0.0)
             data[f'vbm_{x}'] = r.get(f'vbm_{x}')
             data[f'cbm_{x}'] = r.get(f'cbm_{x}')
 
