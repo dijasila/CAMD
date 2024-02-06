@@ -52,7 +52,7 @@ class C2DBMaterial(ConvexHullMaterial):
         self.gap: float | None = data.get('gap')
         self.gap_dir: float = data.get('gap_dir')
         self.gap_dir_nosoc: float = data.get('gap_dir_nosoc')  # ???
-        self.evac: float = data['evac']
+        self.evac: float = data.get('evac')
         self.magstate: str = data['magstate']
         self.energy: float = data['energy']
         self.spin_axis: str = data['spin_axis']
