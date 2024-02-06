@@ -53,13 +53,13 @@ class C2DBMaterial(ConvexHullMaterial):
         self.gap_dir: float = data.get('gap_dir')
         self.gap_dir_nosoc: float = data.get('gap_dir_nosoc')  # ???
         self.evac: float = data.get('evac')
-        self.magstate: str = data['magstate']
+        self.magstate: str = data.get('magstate')
         self.energy: float = data['energy']
-        self.spin_axis: str = data['spin_axis']
-        self.efermi: float = data['efermi']
+        self.spin_axis: str = data.get('spin_axis')
+        self.efermi: float = data.get('efermi')
         self.dyn_stab: bool = data['dyn_stab']
-        self.layergroup: str = data['layergroup']
-        self.lgnum: int = data['lgnum']
+        self.layergroup: str = data.get('layergroup')
+        self.lgnum: int = data.get('lgnum')
         self.gap_hse: float | None = data.get('gap_hse')
         self.gap_dir_hse: float | None = data.get('gap_dir_hse')
         self.vbm_hse: float | None = data.get('vbm_hse')
@@ -151,7 +151,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             mlist.append(material)
             pb.advance(pid)
 
-    pool = mp.Pool(maxtasksperchild=100)
+    pool = None  # mp.Pool(maxtasksperchild=100)
 
     def asr_panel(name):
         return ASRPanel(name, pool)
