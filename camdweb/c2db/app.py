@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import multiprocessing as mp
+# import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
