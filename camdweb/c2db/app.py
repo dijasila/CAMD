@@ -50,6 +50,8 @@ class C2DBMaterial(ConvexHullMaterial):
         self.olduid: str = data['olduid']
         self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
         self.gap: float = data['gap']
+        self.gap_dir: float = data['gap_dir']
+        self.gap_dir_nosoc: float = data['gap_dir_nosoc']  # ???
         self.evac: float = data['evac']
         self.magstate: str = data['magstate']
         self.energy: float = data['energy']
@@ -161,7 +163,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
         BandStructurePanel(),
-        # asr_panel('pdos'),
+        asr_panel('pdos'),
         asr_panel('effective_masses'),
         asr_panel('hse'),
         asr_panel('gw'),
@@ -170,7 +172,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('polarizability'),
         asr_panel('infraredpolarizability'),
         asr_panel('raman'),
-        # asr_panel('bse'),
+        asr_panel('bse'),
         BaderPanel(),
         asr_panel('piezoelectrictensor'),
         ShiftCurrentPanel()]

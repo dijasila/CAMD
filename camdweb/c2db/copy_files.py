@@ -191,6 +191,8 @@ def copy_material(fro: Path,
         pass
     else:
         data['gap'] = gs['gap']
+        data['gap_dir'] = gs['gap_dir']
+        data['gap_dir_nosoc'] = gs['gap_dir_nosoc']
         data['evac'] = gs['evac']
         data['efermi'] = gs['efermi']
 

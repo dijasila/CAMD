@@ -1,4 +1,6 @@
 """Hack to use webpanel() functions from ASR."""
+from __future__ import annotations
+
 import gzip
 import importlib
 from multiprocessing.pool import Pool
@@ -57,6 +59,12 @@ class Row:
         else:  # pragma: no cover
             print('MISSING:', name, default)
             return default
+
+    def __contains__(self, key):
+        return hasattr(self, key)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
 
 
 class Data:
