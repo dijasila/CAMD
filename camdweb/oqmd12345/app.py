@@ -13,13 +13,14 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
+from ase import Atoms
 from ase.io import read
 
+from camdweb.html import table
 from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
-from camdweb.html import table
 
 COLUMN_DESCRIPTIONS = dict(
     etot='Total Energy [eV]',
@@ -36,7 +37,9 @@ OQMD = 'https://oqmd.org/materials/entry'
 class OQMD12345Material(Material):
     def __init__(self, folder: Path, uid: str):
         data = json.loads((folder / 'data.json').read_text())
-        super().__init__(folder, uid, read(folder / 'structure.xyz'))
+        atoms = read(folder / 'structure.xyz')
+        assert isinstance(atoms, Atoms)
+        super().__init__(folder, uid, atoms)
         self.etot: float = data['etot']
         self.magstate: str = data['magstate']
         self.fmax: float = data['fmax']
@@ -60,7 +63,7 @@ class OQMD12345Material(Material):
 
 class OQMD12345AtomsPanel(AtomsPanel):
     def create_column_one(self,
-                          material: OQMD12345Material) -> str:
+                          material: Material) -> str:
         rows = []
         for key, desc in COLUMN_DESCRIPTIONS.items():
             value = getattr(material, key)

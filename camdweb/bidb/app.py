@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Generator
 
 import rich.progress as progress
+from ase.atoms import Atoms
 from ase.db import connect
 from ase.formula import Formula
 from ase.io import read
@@ -60,11 +61,15 @@ def expand(db_file: str) -> None:
 
 
 class BiDBMaterial(Material):
+    binding_energy_zscan: float
+
     def __init__(self,
                  folder: Path,
                  uid: str,
                  bilayers: dict[str, BiDBMaterial] | None = None):
-        super().__init__(folder, uid, read(folder / 'structure.xyz'))
+        atoms = read(folder / 'structure.xyz')
+        assert isinstance(atoms, Atoms)
+        super().__init__(folder, uid, atoms)
         data = json.loads((folder / 'data.json').read_text())
         for key in COLUMN_DESCRIPTIONS:
             setattr(self, key, data.get(key))
@@ -81,7 +86,7 @@ class BiDBMaterial(Material):
 
 class BiDBAtomsPanel(AtomsPanel):
     def create_column_one(self,
-                          material: BiDBMaterial) -> str:
+                          material: Material) -> str:
         rows = []
         for key, desc in COLUMN_DESCRIPTIONS.items():
             value = getattr(material, key)
@@ -95,10 +100,12 @@ class StackingsPanel(Panel):
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        if material.number_of_layers == 2:
+        assert isinstance(material, BiDBMaterial)
+        bilayers = material.bilayers
+        if bilayers is None:
             return
         rows = []
-        for uid, bilayer in material.bilayers.items():
+        for uid, bilayer in bilayers.items():
             e = bilayer.binding_energy_zscan
             rows.append([f'<a href="{uid}">{uid}</a>', f'{e:.3f}'])
         tbl = table(['Stacking', 'Binding energy [meV/Å<sup>2</sup>]'], rows)

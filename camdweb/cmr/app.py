@@ -83,32 +83,22 @@ class CMRProjectApp(CAMDApp):
 
 class CMRAtomsPanel(AtomsPanel):
     def __init__(self,
-                 column_names: dict[str, str],
-                 create_column_one: Callable[[Material, Materials],
-                                             tuple[str, str]],
-                 create_column_two: Callable[[Material, Materials],
-                                             tuple[str, str]]):
+                 create_column_one: Callable[[Material], str],
+                 create_column_two: Callable[[Material], str]):
         super().__init__()
-        self.column_names.update(column_names)
-        self.column_names.update(
-            energy='Energy [eV]',
-            fmax='Maximum force [eV/Å]',
-            smax='Maximum stress component [eV/Å<sup>3</sup>]',
-            magmom='Total magnetic moment [μ<sub>B</sub>]')
-        self.columns = list(self.column_names)
         self._create_column_one = create_column_one
         self._create_column_two = create_column_two
 
-    def create_column_one(self, material, materials):
-        col1 = self._create_column_one(material, materials)
+    def create_column_one(self, material):
+        col1 = self._create_column_one(material)
         if not col1:
-            return super().create_column_one(material, materials)
+            return super().create_column_one(material)
         return col1
 
-    def create_column_two(self, material, materials):
-        col2 = self._create_column_two(material, materials)
+    def create_column_two(self, material):
+        col2 = self._create_column_two(material)
         if not col2:
-            return super().create_column_two(material, materials)
+            return super().create_column_two(material)
         return col2
 
 
@@ -131,18 +121,36 @@ def app_from_db(dbpath: Path,
 
         panels: list[Panel] = [
             CMRAtomsPanel(
-                {name.lower(): desc
-                 for name, desc in pd.column_names.items()},
                 pd.create_column_one,
                 pd.create_column_two)]
         panels += pd.panels
-        materials = Materials(rows, panels)
+        cd = {'hform': '...'}
+        for name, desc in pd.column_names.items():
+            cd[name.lower()] = desc
+        materials = Materials(rows, panels, cd)
 
-    initial_columns = [name.lower() for name in pd.initial_columns
-                       if name in materials.column_names]
+    initial_columns = [name.lower() for name in pd.initial_columns]
     return CMRProjectApp(
         materials, initial_columns,
         dbpath, pd.title, pd.form_parts)
+
+
+class CMRMaterial(Material):
+    def __init__(self, folder, uid, atoms):
+        super().__init__(folder, uid, atoms)
+        self.keys = []
+
+    def add(self, key, value):
+        setattr(self, key, value)
+        self.keys.append(key)
+
+    def get_columns(self):
+        columns = super().get_columns()
+        for key in self.keys:
+            value = getattr(self, key, None)
+            if value is not None:
+                columns[key] = value
+        return columns
 
 
 def row2material(row: AtomsRow,
@@ -151,32 +159,31 @@ def row2material(row: AtomsRow,
     atoms = row.toatoms()
     if pd.pbc is not None:
         atoms.pbc = pd.pbc
-    material = Material(root, str(row[pd.uid]), atoms)
+    material = CMRMaterial(root, str(row[pd.uid]), atoms)
 
     energy = row.get('energy')
     if energy is not None:
-        material.add_column('energy', energy)
+        material.add('energy', energy)
     forces = row.get('forces')
     if forces is not None:
-        material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
+        material.add('fmax', (forces**2).sum(axis=1).max()**0.5)
     stress = row.get('stress')
     if stress is not None:
-        material.add_column('smax', abs(stress).max())
+        material.add('smax', abs(stress).max())
     magmom = row.get('magmom')
     if magmom is not None:
-        material.add_column('magmom', magmom)
+        material.add('magmom', magmom)
 
     for name in pd.column_names:
         value = row.get(name)
-        if value is not None:
-            if isinstance(value, int) and pd.column_names[name][-1] == ']':
-                # Column description is something like
-                # "Description ... [unit]".  This means we
-                # have an integer with a unit!
-                value = float(value)
-            elif isinstance(value, float) and not isfinite(value):
-                continue
-            material.add_column(name.lower(), value)
+        if isinstance(value, int) and pd.column_names[name][-1] == ']':
+            # Column description is something like
+            # "Description ... [unit]".  This means we
+            # have an integer with a unit!
+            value = float(value)
+        elif isinstance(value, float) and not isfinite(value):
+            continue
+        material.add(name.lower(), value)
     pd.postprocess(material)
     return material
 

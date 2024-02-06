@@ -67,7 +67,8 @@ class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
     def get_html(self,
-                 material: ConvexHullMaterial) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
+        assert isinstance(material, ConvexHullMaterial)
         tbl = table(
             None,
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from math import nan
 from pathlib import Path
-from typing import Generator, Sequence
+from typing import Generator, Sequence, Iterable
 
 import numpy as np
 from ase import Atoms
@@ -67,6 +67,7 @@ class Material:
         if isinstance(value, float):
             return f'{value:.3f}'
         if key in ['formula', 'reduced', 'stoichiometry']:
+            assert isinstance(value, str)
             return html_format_formula(value)
         return str(value)
 
@@ -77,9 +78,24 @@ class Material:
         return cls(file.parent, uid, atoms)
 
 
+def table_rows(material: Material,
+               column_descriptions: dict[str, str],
+               names: Iterable[str] | None = None):
+    if names is None:
+        names = column_descriptions
+
+    rows = []
+    for name in names:
+        value = getattr(material, name, None)
+        if value is not None:
+            value = material.html_format_column(name, value)
+            rows.append([column_descriptions[name], value])
+    return rows
+
+
 class Materials:
     def __init__(self,
-                 materials: list[Material],
+                 materials: Sequence[Material],
                  panels: Sequence[Panel],
                  column_descriptions: dict[str, str] | None = None):
 
@@ -88,7 +104,7 @@ class Materials:
         self.index = Index([(mat.reduced, mat.count, mat.get_columns())
                             for mat in self._materials.values()])
 
-        keys = set()
+        keys: set[str] = set()
         for columns in self.index.columns:
             keys.update(columns)
 
@@ -122,13 +138,6 @@ class Materials:
         for material in self:
             s.add(material.stoichiometry)
         return list(s)
-
-    def table(self,
-              material: Material,
-              columns: list[str]) -> list[tuple[str, str]]:
-        return [(self.column_names[name], material[name])
-                for name in columns
-                if name in material.columns]
 
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]
@@ -196,7 +205,7 @@ class Materials:
                  [material.html_format_column(name, columns.get(name, ''))
                   for name in session.columns]))
         return (table,
-                [(name, self.column_descriptions[name])
+                [(name, self.column_descriptions.get(name, name))
                  for name in session.columns],
                 pages,
                 [(name, value)

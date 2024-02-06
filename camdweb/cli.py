@@ -44,7 +44,7 @@ class MyMaterial(Material):
 
 class MyAtomsPanel(AtomsPanel):
     def create_column_one(self,
-                          material: MyMaterial) -> str:
+                          material: Material) -> str:
         rows = []
         for key in ['formula', 'energy', 'fmax', 'smax', 'magmom',
                     'length', 'area', 'volume']:

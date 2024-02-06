@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from typing import Callable, TYPE_CHECKING, Generator
 if TYPE_CHECKING:
-    from camdweb.material import Material, Materials
+    from camdweb.material import Material
 
 
 class Panel(abc.ABC):

@@ -70,15 +70,13 @@ def doi(id: str | None) -> str | None:
     return f'<a href="https://doi.org/{id}">{id}</a>'
 
 
-def cod(id: int | None) -> str | None:
+def cod(id: str | int | None) -> str | None:
     if id is None:
         return None
-    assert isinstance(id, int)
     return f'<a href="{COD}/{id}.html">COD {id}</a>'
 
 
-def icsd(id: int | None) -> str | None:
+def icsd(id: str | int | None) -> str | None:
     if id is None:
         return None
-    assert isinstance(id, int)
     return f'<a href="{ICSD}">ICSD {id}</a>'

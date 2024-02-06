@@ -22,7 +22,7 @@ from ase.io import read
 
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.html import Range, RangeX, Select, table
-from camdweb.material import Materials
+from camdweb.material import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.bandstructure import BandStructurePanel
@@ -67,11 +67,10 @@ class C2DBMaterial(ConvexHullMaterial):
 
     def get_columns(self):
         columns = super().get_columns()
-        for key in [
-            'olduid', 'has_inversion_symmetry', 'gap', 'evac',
-            'magstate', 'energy', 'spin_axis', 'efermi',
-            'dyn_stab', 'layergroup', 'lgnum', 'gap_hse',
-            'gap_gw', 'cod_id', 'icsd_id', 'doi', 'label']:
+        for key in ['olduid', 'has_inversion_symmetry', 'gap', 'evac',
+                    'magstate', 'energy', 'spin_axis', 'efermi',
+                    'dyn_stab', 'layergroup', 'lgnum', 'gap_hse',
+                    'gap_gw', 'cod_id', 'icsd_id', 'doi', 'label']:
             value = getattr(self, key)
             if value is not None:
                 columns[key] = value
@@ -80,7 +79,8 @@ class C2DBMaterial(ConvexHullMaterial):
 
 class C2DBAtomsPanel(AtomsPanel):
     def create_column_one(self,
-                          material: C2DBMaterial) -> str:
+                          material: Material) -> str:
+        assert isinstance(material, C2DBMaterial)
         old = material.olduid
         table1 = [
             ('Layer group', material.layergroup),
@@ -134,7 +134,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         else:
             folders += list(p.glob('*/'))
 
-    keys = set()
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
@@ -146,7 +145,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     pool = mp.Pool(maxtasksperchild=100)
 
     def asr_panel(name):
-        return ASRPanel(name, keys, pool)
+        return ASRPanel(name, pool)
 
     panels: list[Panel] = [
         C2DBAtomsPanel(),
