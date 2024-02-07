@@ -216,10 +216,12 @@ def test():  # pragma: no cover
 
 
 def create_app():  # pragma: no cover
+    """Create the WSGI app."""
     return main([str(path) for path in Path().glob('A*/')]).app
 
 
-def check_all(pattern: str):
+def check_all(pattern: str):  # pragma: no cover
+    """Generate png-files."""
     c2db = main([str(path) for path in Path().glob(pattern)])
     for material in c2db.materials:
         print(material.uid)

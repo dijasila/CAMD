@@ -133,7 +133,7 @@ class ASRPanel(Panel):
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    if self.process_pool:
+                    if self.process_pool:  # pragma: no cover
                         result = self.process_pool.apply_async(
                             worker, (desc['function'], row, *paths))
                         async_results.append(result)
@@ -144,7 +144,7 @@ class ASRPanel(Panel):
 
         yield ''
 
-        for result in async_results:
+        for result in async_results:  # pragma: no cover
             result.get()
 
         assert all(path.is_file() for path in all_paths), all_paths
@@ -156,7 +156,7 @@ class ASRPanel(Panel):
         yield html
 
 
-def worker(webpanel, *args):
+def worker(webpanel, *args):  # pragma: no cover
     webpanel(*args)
     plt.close()
 

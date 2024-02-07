@@ -6,7 +6,7 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
 from camdweb.c2db.app import main
-from camdweb.c2db.copy_files import copy_materials
+from camdweb.c2db.copy_files import copy_materials, main as copymain
 from camdweb.test.c2db import create_tree
 from camdweb.c2db.oqmd123 import db2json
 
@@ -46,7 +46,7 @@ def test_everything(oqmd_db_file):
     root = oqmd_db_file.parent
     create_tree(root)
     os.chdir(root)
-    copy_materials(root, ['MoS2*'])
+    copymain([str(root), 'MoS2*'])
 
     app = main(['AB2'])
     assert len(app.materials) == 1
