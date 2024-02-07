@@ -154,7 +154,7 @@ def worker(args):  # pragma: no cover
 def copy_material(fro: Path,
                   to: Path,
                   olduid: str,
-                  uid: str) -> None:
+                  uid: str) -> None:  # pragma: no cover
     gpw = fro / 'gs.gpw'
     if gpw.is_file():
         atoms = read(gpw)
