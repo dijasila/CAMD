@@ -17,10 +17,11 @@ Build tree like this::
     $ cd tree
     $ python -m camdweb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
-    """
+"""
+from __future__ import annotations
+
 import argparse
 import json
-import multiprocessing as mp
 import shutil
 from collections import defaultdict
 from pathlib import Path
@@ -34,6 +35,7 @@ from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb.utils import process_pool
 
 RESULT_FILES = [
     'stiffness',
@@ -68,8 +70,10 @@ PATTERNS = [
 # '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
-def copy_materials(root: Path, patterns: list[str],
-                   update_chull: bool = True) -> None:
+def copy_materials(root: Path,
+                   patterns: list[str],
+                   update_chull: bool = True,
+                   processes: int = 1) -> None:
     try:
         uids = json.loads(Path('uids.json').read_text())
     except FileNotFoundError:
@@ -121,8 +125,7 @@ def copy_materials(root: Path, patterns: list[str],
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
 
-    with mp.Pool(processes=8) as pool:
-        print(pool)
+    with process_pool(processes) as pool:
         with progress.Progress() as pb:
             pid = pb.add_task('Copying materials:', total=len(work))
             for _ in pool.imap_unordered(worker, work):
@@ -144,14 +147,14 @@ def copy_materials(root: Path, patterns: list[str],
 
 
 def worker(args):  # pragma: no cover
-    """Used by Pool"""
+    """Used by Pool."""
     copy_material(*args)
 
 
 def copy_material(fro: Path,
                   to: Path,
                   olduid: str,
-                  uid: str) -> None:  # pragma: no cover
+                  uid: str) -> None:
     gpw = fro / 'gs.gpw'
     if gpw.is_file():
         atoms = read(gpw)
@@ -289,10 +292,12 @@ def main(argv: list[str] | None = None):
         help='Glob pattern like "tree/A*/*/*/". '
         f'Use "ALL" to get all the standard patterns: {patterns}.')
     parser.add_argument('-s', '--skip-convex-hulls', action='store_true')
+    parser.add_argument('-p', '--processes', default=1)
     args = parser.parse_args(argv)
-    if args.pattern == ['ALL']:
+    if args.pattern == ['ALL']:  # pragma: no cover
         args.pattern = PATTERNS
-    copy_materials(Path(args.root), args.pattern, not args.skip_convex_hulls)
+    copy_materials(Path(args.root), args.pattern, not args.skip_convex_hulls,
+                   args.processes)
 
 
 if __name__ == '__main__':

@@ -28,7 +28,8 @@ class BandStructurePanel(Panel):
     title = 'Band structure'
 
     def get_html(self, material):
-        if not (material.folder / 'results-asr.bandstructure.json').is_file():
+        bs = material.folder / 'results-asr.bandstructure.json'
+        if not (bs.is_file() or bs.with_suffix('.json.gz').is_file()):
             return
         row = Row(material)
         plotter = plotter_from_row(row)

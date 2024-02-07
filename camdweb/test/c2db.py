@@ -35,7 +35,8 @@ def create_data(dir: Path, atoms: Atoms) -> None:
                                 "gap_dir": 1.8,
                                 "gap_dir_nosoc": 1.9,
                                 "evac": 4.5,
-                                "efermi": 1.5}}}""")
+                                "efermi": 1.5,
+                                "gaps_nosoc": {"vbm": 0.5, "cbm": 2.5}}}}""")
     (dir / 'results-asr.gs@calculate.json').write_text(
         '{}')
     (dir / 'results-asr.database.material_fingerprint.json').write_text(
