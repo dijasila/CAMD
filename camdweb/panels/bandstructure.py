@@ -42,20 +42,22 @@ class BandStructurePanel(Panel):
 
 def plotter_from_row(row):
     dct = row.data.get('results-asr.bandstructure.json')
-    gaps = row.data.get('results-asr.gs.json', {}).get('gaps_nosoc', {})
+    gaps = row.data['results-asr.gs.json']['gaps_nosoc']
     fermilevel_soc = dct['bs_soc']['efermi']
 
     assert np.allclose(dct['bs_soc']['path'].kpts,
                        dct['bs_nosoc']['path'].kpts)
 
+    vbm = gaps['vbm']
+    cbm = gaps['cbm']
     return PlotUtil(
         energy_soc_mk=dct['bs_soc']['energies'],
         energy_nosoc_skn=dct['bs_nosoc']['energies'],
         spin_zprojection_soc_mk=dct['bs_soc']['sz_mk'],
         path=dct['bs_nosoc']['path'],
         fermilevel=fermilevel_soc,
-        emin=gaps.get('vbm', fermilevel_soc) - 3,
-        emax=gaps.get('cbm', fermilevel_soc) + 3,
+        emin=(fermilevel_soc if vbm is None else vbm) - 3,
+        emax=(fermilevel_soc if cbm is None else cbm) + 3,
         spin_axisname=row.get('spin_axis', 'z')  # XXX crazy to have a default
     ).subtract_reference_energy(row.get('evac'))
 
