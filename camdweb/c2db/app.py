@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import multiprocessing as mp
+# import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
@@ -47,17 +47,23 @@ class C2DBMaterial(ConvexHullMaterial):
         super().__init__(folder, uid, read(folder / 'structure.xyz'),
                          data['hform'],
                          data['ehull'])
+
+        # Must have:
         self.olduid: str = data['olduid']
         self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
-        self.gap: float = data['gap']
-        self.evac: float = data['evac']
-        self.magstate: str = data['magstate']
         self.energy: float = data['energy']
-        self.spin_axis: str = data['spin_axis']
-        self.efermi: float = data['efermi']
         self.dyn_stab: bool = data['dyn_stab']
         self.layergroup: str = data['layergroup']
         self.lgnum: int = data['lgnum']
+
+        # May have:
+        self.gap: float | None = data.get('gap')
+        self.gap_dir: float | None = data.get('gap_dir')
+        self.gap_dir_nosoc: float | None = data.get('gap_dir_nosoc')  # ???
+        self.evac: float | None = data.get('evac')
+        self.magstate: str | None = data.get('magstate')
+        self.spin_axis: str | None = data.get('spin_axis')
+        self.efermi: float | None = data.get('efermi')
         self.gap_hse: float | None = data.get('gap_hse')
         self.gap_dir_hse: float | None = data.get('gap_dir_hse')
         self.vbm_hse: float | None = data.get('vbm_hse')
@@ -149,7 +155,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             mlist.append(material)
             pb.advance(pid)
 
-    pool = mp.Pool(maxtasksperchild=100)
+    pool = None  # mp.Pool(maxtasksperchild=100)
 
     def asr_panel(name):
         return ASRPanel(name, pool)
@@ -161,7 +167,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
         BandStructurePanel(),
-        # asr_panel('pdos'),
+        asr_panel('pdos'),
         asr_panel('effective_masses'),
         asr_panel('hse'),
         asr_panel('gw'),
@@ -170,7 +176,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('polarizability'),
         asr_panel('infraredpolarizability'),
         asr_panel('raman'),
-        # asr_panel('bse'),
+        asr_panel('bse'),
         BaderPanel(),
         asr_panel('piezoelectrictensor'),
         ShiftCurrentPanel()]
@@ -210,7 +216,16 @@ def test():  # pragma: no cover
 
 
 def create_app():  # pragma: no cover
-    return main([path.name for path in Path().glob('A*/')]).app
+    """Create the WSGI app."""
+    return main([str(path) for path in Path().glob('A*/')]).app
+
+
+def check_all(pattern: str):  # pragma: no cover
+    """Generate png-files."""
+    c2db = main([str(path) for path in Path().glob(pattern)])
+    for material in c2db.materials:
+        print(material.uid)
+        c2db.material_page(material.uid)
 
 
 if __name__ == '__main__':

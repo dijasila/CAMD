@@ -1,13 +1,15 @@
 """Hack to use webpanel() functions from ASR."""
+from __future__ import annotations
+
 import gzip
 import importlib
 from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
-
 from camdweb.html import table
 from camdweb.material import Material
 from camdweb.panels.panel import Panel
@@ -42,7 +44,7 @@ class Row:
     """Fake row object."""
     def __init__(self, material: Material):
         self.data = Data(material.folder)
-        self.__dict__.update(material.__dict__)
+        self.__dict__.update({key: val for key, val in material.__dict__.items() if val is not None})
         self.atoms = material.atoms
         self.cell = self.atoms.cell
         self.pbc = self.atoms.pbc
@@ -58,6 +60,12 @@ class Row:
             print('MISSING:', name, default)
             return default
 
+    def __contains__(self, key):
+        return hasattr(self, key)
+
+    def __getitem__(self, key):
+        return getattr(self, key)
+
 
 class Data:
     def __init__(self, folder: Path):
@@ -68,6 +76,9 @@ class Data:
             dct = read_result_file(self.folder / name)
         except FileNotFoundError:
             return None
+        dct = {key: val['kwargs']['data']
+               if isinstance(val, dict) and 'kwargs' in val else val
+               for key, val in dct.items()}
         return dct
 
     def __contains__(self, name):  # pragma: no cover
@@ -122,17 +133,18 @@ class ASRPanel(Panel):
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    if self.process_pool:
+                    if self.process_pool:  # pragma: no cover
                         result = self.process_pool.apply_async(
-                            desc['function'], (row, *paths))
+                            worker, (desc['function'], row, *paths))
                         async_results.append(result)
                     else:  # pragma: no cover
                         desc['function'](row, *paths)
+                        plt.close()
                     break
 
         yield ''
 
-        for result in async_results:
+        for result in async_results:  # pragma: no cover
             result.get()
 
         assert all(path.is_file() for path in all_paths), all_paths
@@ -142,6 +154,11 @@ class ASRPanel(Panel):
                            col2='\n'.join(columns[1]))
 
         yield html
+
+
+def worker(webpanel, *args):  # pragma: no cover
+    webpanel(*args)
+    plt.close()
 
 
 def thing2html(thing: dict, path: Path) -> str:

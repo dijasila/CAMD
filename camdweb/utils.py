@@ -1,5 +1,8 @@
 from __future__ import annotations
+
+import multiprocessing as mp
 import re
+from contextlib import contextmanager
 
 import numpy as np
 from ase.data import chemical_symbols
@@ -85,3 +88,17 @@ def icsd(id: str | int | None) -> str | None:
     if id is None:
         return None
     return f'<a href="{ICSD}">ICSD {id}</a>'
+
+
+class NoPool:
+    def imap_unordered(self, worker, work):
+        for args in work:
+            yield worker(args)
+
+
+@contextmanager
+def process_pool(processes: int):
+    if processes == 1:
+        yield NoPool()
+    else:
+        yield mp.Pool(processes=processes)

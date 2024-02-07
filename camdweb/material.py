@@ -137,7 +137,7 @@ class Materials:
         s = set()
         for material in self:
             s.add(material.stoichiometry)
-        return list(s)
+        return sorted(s)
 
     def __getitem__(self, uid: str) -> Material:
         return self._materials[uid]

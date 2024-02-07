@@ -17,11 +17,12 @@ Build tree like this::
     $ cd tree
     $ python -m camdweb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
-    """
+"""
+from __future__ import annotations
+
+import argparse
 import json
-import multiprocessing as mp
 import shutil
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -34,6 +35,7 @@ from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
+from camdweb.utils import process_pool
 
 RESULT_FILES = [
     'stiffness',
@@ -68,8 +70,10 @@ PATTERNS = [
 # '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
 
 
-def copy_materials(root: Path, patterns: list[str],
-                   update_chull: bool = True) -> None:
+def copy_materials(root: Path,
+                   patterns: list[str],
+                   update_chull: bool = True,
+                   processes: int = 1) -> None:
     try:
         uids = json.loads(Path('uids.json').read_text())
     except FileNotFoundError:
@@ -121,8 +125,7 @@ def copy_materials(root: Path, patterns: list[str],
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
 
-    with mp.Pool(processes=8) as pool:
-        print(pool)
+    with process_pool(processes) as pool:
         with progress.Progress() as pb:
             pid = pb.add_task('Copying materials:', total=len(work))
             for _ in pool.imap_unordered(worker, work):
@@ -144,7 +147,7 @@ def copy_materials(root: Path, patterns: list[str],
 
 
 def worker(args):  # pragma: no cover
-    """Used by Pool"""
+    """Used by Pool."""
     copy_material(*args)
 
 
@@ -178,6 +181,9 @@ def copy_material(fro: Path,
 
     structure = rrf('structureinfo')
     for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
+        if key not in structure:
+            print(fro)
+            return
         data[key] = structure[key]
 
     try:
@@ -191,6 +197,8 @@ def copy_material(fro: Path,
         pass
     else:
         data['gap'] = gs['gap']
+        data['gap_dir'] = gs['gap_dir']
+        data['gap_dir_nosoc'] = gs['gap_dir_nosoc']
         data['evac'] = gs['evac']
         data['efermi'] = gs['efermi']
 
@@ -218,8 +226,8 @@ def copy_material(fro: Path,
         except FileNotFoundError:
             pass
         else:  # pragma: no cover
-            data[f'gap_{x}'] = r.get(f'gap_{x}')
-            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}')
+            data[f'gap_{x}'] = r.get(f'gap_{x}', 0.0)
+            data[f'gap_dir_{x}'] = r.get(f'gap_dir_{x}', 0.0)
             data[f'vbm_{x}'] = r.get(f'vbm_{x}')
             data[f'cbm_{x}'] = r.get(f'cbm_{x}')
 
@@ -258,15 +266,39 @@ def copy_material(fro: Path,
     # Copy result json-files:
     for name in RESULT_FILES:
         result = fro / f'results-asr.{name}.json'
-        if result.is_file():
-            shutil.copyfile(result, to / result.name)
+        target = to / result.name
+        gzipped = target.with_suffix('.json.gz')
+        if result.is_file() and not (target.is_file() or gzipped.is_file()):
+            shutil.copyfile(result, target)
 
+    path = to / 'data.json'
+    if path.is_file():
+        olddata = json.loads(path.read_text())
+        data['ehull'] = olddata.get('ehull')
+        data['hform'] = olddata.get('hform')
+
+    # Remove None values:
     data = {key: value for key, value in data.items() if value is not None}
-    (to / 'data.json').write_text(json.dumps(data, indent=0))
+
+    path.write_text(json.dumps(data, indent=0))
+
+
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('root', help='Root of ASR-tree to copy from.')
+    patterns = ', '.join(f'"{p}"' for p in PATTERNS)
+    parser.add_argument(
+        'pattern', nargs='+',
+        help='Glob pattern like "tree/A*/*/*/". '
+        f'Use "ALL" to get all the standard patterns: {patterns}.')
+    parser.add_argument('-s', '--skip-convex-hulls', action='store_true')
+    parser.add_argument('-p', '--processes', default=1)
+    args = parser.parse_args(argv)
+    if args.pattern == ['ALL']:  # pragma: no cover
+        args.pattern = PATTERNS
+    copy_materials(Path(args.root), args.pattern, not args.skip_convex_hulls,
+                   args.processes)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        copy_materials(ROOT, PATTERNS)
-    else:
-        copy_materials(Path(sys.argv[1]), sys.argv[2:])
+    main()
