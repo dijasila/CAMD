@@ -47,19 +47,23 @@ class C2DBMaterial(ConvexHullMaterial):
         super().__init__(folder, uid, read(folder / 'structure.xyz'),
                          data['hform'],
                          data['ehull'])
+
+        # Must have:
         self.olduid: str = data['olduid']
         self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
-        self.gap: float | None = data.get('gap')
-        self.gap_dir: float = data.get('gap_dir')
-        self.gap_dir_nosoc: float = data.get('gap_dir_nosoc')  # ???
-        self.evac: float = data.get('evac')
-        self.magstate: str = data.get('magstate')
         self.energy: float = data['energy']
-        self.spin_axis: str = data.get('spin_axis')
-        self.efermi: float = data.get('efermi')
         self.dyn_stab: bool = data['dyn_stab']
-        self.layergroup: str = data.get('layergroup')
-        self.lgnum: int = data.get('lgnum')
+        self.layergroup: str = data['layergroup']
+        self.lgnum: int = data['lgnum']
+
+        # May have:
+        self.gap: float | None = data.get('gap')
+        self.gap_dir: float | None = data.get('gap_dir')
+        self.gap_dir_nosoc: float | None = data.get('gap_dir_nosoc')  # ???
+        self.evac: float | None = data.get('evac')
+        self.magstate: str | None = data.get('magstate')
+        self.spin_axis: str | None = data.get('spin_axis')
+        self.efermi: float | None = data.get('efermi')
         self.gap_hse: float | None = data.get('gap_hse')
         self.gap_dir_hse: float | None = data.get('gap_dir_hse')
         self.vbm_hse: float | None = data.get('vbm_hse')

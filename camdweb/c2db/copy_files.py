@@ -18,10 +18,10 @@ Build tree like this::
     $ python -m camdweb.c2db.copy_files <root-dir> <pattern> <pattern> ...
 
     """
+import argparse
 import json
 import multiprocessing as mp
 import shutil
-import sys
 from collections import defaultdict
 from pathlib import Path
 
@@ -268,12 +268,32 @@ def copy_material(fro: Path,
         if result.is_file() and not (target.is_file() or gzipped.is_file()):
             shutil.copyfile(result, target)
 
+    path = to / 'data.json'
+    if path.is_file():
+        olddata = json.loads(path.read_text())
+        data['ehull'] = olddata.get('ehull')
+        data['hform'] = olddata.get('hform')
+
+    # Remove None values:
     data = {key: value for key, value in data.items() if value is not None}
-    (to / 'data.json').write_text(json.dumps(data, indent=0))
+
+    path.write_text(json.dumps(data, indent=0))
+
+
+def main(argv: list[str] | None = None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument('root', help='Root of ASR-tree to copy from.')
+    patterns = ', '.join(f'"{p}"' for p in PATTERNS)
+    parser.add_argument(
+        'pattern', nargs='+',
+        help='Glob pattern like "tree/A*/*/*/". '
+        f'Use "ALL" to get all the standard patterns: {patterns}.')
+    parser.add_argument('-s', '--skip-convex-hulls', action='store_true')
+    args = parser.parse_args(argv)
+    if args.pattern == ['ALL']:
+        args.pattern = PATTERNS
+    copy_materials(Path(args.root), args.pattern, not args.skip_convex_hulls)
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 1:
-        copy_materials(ROOT, PATTERNS)
-    else:
-        copy_materials(Path(sys.argv[1]), sys.argv[2:])
+    main()
