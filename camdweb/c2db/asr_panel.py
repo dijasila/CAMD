@@ -7,9 +7,9 @@ from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import Generator
 
+import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
-
 from camdweb.html import table
 from camdweb.material import Material
 from camdweb.panels.panel import Panel
@@ -76,6 +76,9 @@ class Data:
             dct = read_result_file(self.folder / name)
         except FileNotFoundError:
             return None
+        dct = {key: val['kwargs']['data']
+               if isinstance(val, dict) and 'kwargs' in val else val
+               for key, val in dct.items()}
         return dct
 
     def __contains__(self, name):  # pragma: no cover
@@ -132,10 +135,11 @@ class ASRPanel(Panel):
                     # Call plot-function:
                     if self.process_pool:
                         result = self.process_pool.apply_async(
-                            desc['function'], (row, *paths))
+                            worker, (desc['function'], row, *paths))
                         async_results.append(result)
                     else:  # pragma: no cover
                         desc['function'](row, *paths)
+                        plt.close()
                     break
 
         yield ''
@@ -150,6 +154,11 @@ class ASRPanel(Panel):
                            col2='\n'.join(columns[1]))
 
         yield html
+
+
+def worker(webpanel, *args):
+    webpanel(*args)
+    plt.close()
 
 
 def thing2html(thing: dict, path: Path) -> str:

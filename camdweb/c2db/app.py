@@ -212,11 +212,11 @@ def test():  # pragma: no cover
 
 
 def create_app():  # pragma: no cover
-    return main([path.name for path in Path().glob('A*/')]).app
+    return main([str(path) for path in Path().glob('A*/')]).app
 
 
-def check_all():
-    c2db = main([path.name for path in Path().glob('AB2')])
+def check_all(pattern: str):
+    c2db = main([str(path) for path in Path().glob(pattern)])
     for material in c2db.materials:
         print(material.uid)
         c2db.material_page(material.uid)

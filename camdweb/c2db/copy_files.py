@@ -178,6 +178,9 @@ def copy_material(fro: Path,
 
     structure = rrf('structureinfo')
     for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
+        if key not in structure:
+            print(fro)
+            return
         data[key] = structure[key]
 
     try:
