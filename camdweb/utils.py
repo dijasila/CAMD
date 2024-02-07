@@ -93,8 +93,7 @@ def icsd(id: str | int | None) -> str | None:
 class NoPool:
     def imap_unordered(self, worker, work):
         for args in work:
-            worker(*args)
-            yield
+            yield worker(args)
 
 
 @contextmanager

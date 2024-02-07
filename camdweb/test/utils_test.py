@@ -1,5 +1,7 @@
-from camdweb.html import Range, RangeX, RangeS
 import pytest
+
+from camdweb.html import Range, RangeS, RangeX
+from camdweb.utils import process_pool
 
 
 @pytest.fixture(scope='module')
@@ -29,3 +31,16 @@ def test_range_s():
     r = RangeS('ABC', 'x', ['A', 'B'])
     assert r.get_filter_strings({'from_x': '0.5'}) == ['x>=0.5']
     assert r.get_filter_strings({'to_x': '0.5'}) == ['x<=0.5']
+
+
+def f(x):
+    return x
+
+
+@pytest.mark.parametrize('n', [1, 2])
+def test_ppool(n):
+    s = ''
+    with process_pool(n) as pool:
+        for x in pool.imap_unordered(f, 'abc'):
+            s += x
+    assert ''.join(sorted(s)) == 'abc'

@@ -7,6 +7,7 @@ from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.session import Session
+from camdweb.panels.bandstructure import BandStructurePanel
 
 
 @pytest.fixture(scope='module')
@@ -58,4 +59,12 @@ def test_pickle(material):
 
 
 def test_row(material):
-    assert Row(material).toatoms().pbc.all()
+    row = Row(material)
+    assert row.toatoms().pbc.all()
+    assert 'sadkjhads' not in row
+    assert row.get('pbc').all()
+
+
+def test_no_bs(material):
+    with pytest.raises(StopIteration):
+        next(BandStructurePanel().get_html(material))
