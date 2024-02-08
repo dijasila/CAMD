@@ -12,7 +12,7 @@ from ase.formula import Formula
 from ase.io import read
 
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp

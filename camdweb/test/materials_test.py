@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 from ase import Atoms
-from camdweb.material import Material, Materials
+from camdweb.materials import Material, Materials
 from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.session import Session

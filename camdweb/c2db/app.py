@@ -22,7 +22,7 @@ from ase.io import read
 
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.html import Range, RangeX, Select, table
-from camdweb.material import Material, Materials
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.bandstructure import BandStructurePanel
@@ -36,95 +36,25 @@ OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
 OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
-class C2DBMaterial(ConvexHullMaterial):
-    sources = {'OQMD': ('Bulk crystals from OQMD123',
-                        f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
-               'C2DB': ('Monolayers from C2DB',
-                        '<a href={uid}>{formula:html}</a>')}
-
-    def __init__(self, folder: Path, uid: str):
-        data = json.loads((folder / 'data.json').read_text())
-        super().__init__(folder, uid, read(folder / 'structure.xyz'),
-                         data['hform'],
-                         data['ehull'])
-
-        # Must have:
-        self.olduid: str = data['olduid']
-        self.has_inversion_symmetry: bool = data['has_inversion_symmetry']
-        self.energy: float = data['energy']
-        self.dyn_stab: bool = data['dyn_stab']
-        self.layergroup: str = data['layergroup']
-        self.lgnum: int = data['lgnum']
-
-        # May have:
-        self.gap: float | None = data.get('gap')
-        self.gap_dir: float | None = data.get('gap_dir')
-        self.gap_dir_nosoc: float | None = data.get('gap_dir_nosoc')  # ???
-        self.evac: float | None = data.get('evac')
-        self.magstate: str | None = data.get('magstate')
-        self.spin_axis: str | None = data.get('spin_axis')
-        self.efermi: float | None = data.get('efermi')
-        self.gap_hse: float | None = data.get('gap_hse')
-        self.gap_dir_hse: float | None = data.get('gap_dir_hse')
-        self.vbm_hse: float | None = data.get('vbm_hse')
-        self.cbm_hse: float | None = data.get('cbm_hse')
-        self.gap_gw: float | None = data.get('gap_gw')
-        self.gap_dir_gw: float | None = data.get('gap_dir_gw')
-        self.vbm_gw: float | None = data.get('vbm_gw')
-        self.cbm_gw: float | None = data.get('cbm_gw')
-        self.cod_id: int | None = data.get('cod_id')
-        self.icsd_id: int | None = data.get('icsd_id')
-        self.doi: str | None = data.get('doi')
-        self.label: str | None = data.get('label')
-        self.minhessianeig: float | None = data.get('minhessianeig')
-
-    def get_columns(self):
-        columns = super().get_columns()
-        for key in ['olduid', 'has_inversion_symmetry', 'gap', 'evac',
-                    'magstate', 'energy', 'spin_axis', 'efermi',
-                    'dyn_stab', 'layergroup', 'lgnum', 'gap_hse',
-                    'gap_gw', 'cod_id', 'icsd_id', 'doi', 'label']:
-            value = getattr(self, key)
-            if value is not None:
-                columns[key] = value
-        return columns
-
-
 class C2DBAtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: Material) -> str:
-        assert isinstance(material, C2DBMaterial)
         old = material.olduid
-        table1 = [
-            ('Layer group', material.layergroup),
-            ('Layer group number', material.lgnum),
-            ('COD id of parent bulk structure', cod(material.cod_id)),
-            ('ICSD id of parent bulk structure', icsd(material.icsd_id)),
-            ('Structure origin', material.label),
-            ('Reported DOI', doi(material.doi)),
-            ('Link to old C2DB', f'<a href={OLD}/{old}>{old}</a>')]
+        html1 = table(['Structure info', ''],
+                      self.table_rows(['layergroup', 'lgnum', 'lable',
+                                       'cod_id', 'icsd_id', 'doi', 'olduid']))
+        html2 = table(['Stability', ''],
+                      self.table_rows(['ehull', 'hform', 'dyn_stab']))
+        html3 = table(['Basic properties', ''],
+                      self.table_rows(['magstate', 'gap', 'gap_hse',
+                                       'gap_gw']))
+        return '\n'.join([html1, html2, html3])
 
-        table2 = [
-            ('Energy above convex hull [eV/atom]', material.ehull),
-            ('Heat of formation [eV/atom]', material.hform),
-            ('Dynamically stable', 'Yes' if material.dyn_stab else 'No')]
 
-        table3 = [
-            ('Magnetic', 'Yes' if material.magstate == 'FM' else 'No'),
-            ('Band gap [eV]', material.gap),
-            ('Band gap (HSE06) [eV]', material.gap_hse),
-            ('Band gap (G₀W₀) [eV]', material.gap_gw)]
-
-        # return three tables with None values removed:
-        tables = []
-        for title, rows in [('Structure info', table1),
-                            ('Stability', table2),
-                            ('Basic properties', table3)]:
-            tables.append(
-                table([title, ''],
-                      [[key, value]
-                       for key, value in rows if value is not None]))
-        return '\n'.join(tables)
+def olduid(uid, link=False):
+    if link:
+        return f'<a href={OLD}/{old}>{old}</a>'
+    return uid
 
 
 def main(argv: list[str] | None = None) -> CAMDApp:
@@ -151,7 +81,9 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
             uid = f'{f.parent.name}-{f.name}'
-            material = C2DBMaterial(f, uid)
+            material = Material.from_file(f / 'structure.xyz', uid)
+            data = json.loads((f / 'data.json').read_text())
+            material.columns.update(data)
             mlist.append(material)
             pb.advance(pid)
 
@@ -162,7 +94,11 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
     panels: list[Panel] = [
         C2DBAtomsPanel(),
-        ConvexHullPanel(),
+        ConvexHullPanel(
+            sources= {'OQMD': ('Bulk crystals from OQMD123',
+                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
+                      'C2DB': ('Monolayers from C2DB',
+                               '<a href={uid}>{formula:html}</a>')}),
         asr_panel('stiffness'),
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
@@ -181,7 +117,9 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('piezoelectrictensor'),
         ShiftCurrentPanel()]
 
-    column_names = dict(
+    materials = Materials(mlist, panels, column_names)
+
+    materials.column_descriptions.update(
         has_inversion_symmetry='Inversion symmetry',
         gap='Band gap (PBE) [eV]',
         evac='Vacuum level [eV]',
@@ -193,10 +131,24 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         spin_axis='Spin axis',
         efermi='Fermi level [eV]',
         dyn_stab='Dynamically stable')
+            ('COD id of parent bulk structure', cod(material.cod_id)),
+            ('ICSD id of parent bulk structure', icsd(material.icsd_id)),
+            ('Reported DOI', doi(material.doi)),
+            ('Layer group number', material.
+            ('Structure origin', material.label),
+            ('Dynamically stable', 'Yes' if material.dyn_stab else 'No')]
+            ('Band gap [eV]', material.gap),
+            ('Band gap (HSE06) [eV]', material.gap_hse),
+            ('Band gap (G₀W₀) [eV]', material.gap_gw)]
 
-    materials = Materials(mlist, panels, column_names)
+    materials.html_formatters.update(
+        cod_id=cod,
+        icsd_id=icsd,
+        doi=doi,
+        olduid=olduid)
 
-    initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
+    initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate',
+                       'layergroup']
 
     root = folders[0].parent.parent.parent
     app = CAMDApp(materials, initial_columns, root)

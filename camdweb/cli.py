@@ -5,7 +5,7 @@ from pathlib import Path
 from ase import Atoms
 from ase.io import read
 
-from camdweb.material import Material, Materials, COMMON_COLUMN_DESCRIPTIONS
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
 from camdweb.html import table

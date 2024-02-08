@@ -9,13 +9,9 @@ class Panel:
     title: str
     info = ''
     datafiles = []
+    column_descriptions = {}
+    html_formatters = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-
-    def __init__(self,
-                 column_descriptions,
-                 html_formatters):
-        self.column_descriptions = column_descriptions
-        self.html_formatters = html_formatters
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
@@ -24,6 +20,17 @@ class Panel:
     def get_columns(self, material):
         return {}
 
+    def update_material(self, material):
+        pass
+
+    def update_column_descriptions(self, column_descriptions):
+        column_descriptions.update(self.column_descriptions)
+        self.column_descriptions = column_descriptions
+
+    def update_html_formatters(self, html_formatters):
+        html_formatters.update(self.html_formatters)
+        self.html_formatters = html_formatters
+
     def table_rows(self, names, material):
         rows = []
         for name in names:
@@ -31,11 +38,11 @@ class Panel:
             if value is not None:
                 formatter = self.html_formatters.get(name, default_formatter)
                 rows.append([self.column_descriptions.get(name, name),
-                             formatter(value)])
+                             formatter(value, link=True)])
         return rows
 
 
-def default_formatter(value):
+def default_formatter(value, link=False):
     if isinstance(value, str):
         return value
     if isinstance(value, float):

@@ -18,7 +18,7 @@ from ase.db import connect
 
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
 from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
-from camdweb.material import Material, table_rows
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 from camdweb.utils import cod, icsd
 

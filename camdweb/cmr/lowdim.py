@@ -8,7 +8,7 @@ import numpy as np
 
 from camdweb.html import table
 from camdweb.panels.panel import Panel
-from camdweb.material import Material, table_rows
+from camdweb.material import Material
 
 Desc = namedtuple('Desc', ['short', 'long', 'unit'])
 

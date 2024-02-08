@@ -15,8 +15,7 @@ from bottle import Bottle, static_file, template
 from camdweb.cli import COLUMN_DESCRIPTIONS
 from camdweb.cmr.projects import ProjectDescription, create_project_description
 from camdweb.html import FormPart, table
-from camdweb.material import (COMMON_COLUMN_DESCRIPTIONS, Material, Materials,
-                              table_rows)
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
