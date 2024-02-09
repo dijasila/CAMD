@@ -1,7 +1,10 @@
 """Panel base class."""
 from __future__ import annotations
-from typing import Callable, TYPE_CHECKING, Generator
+
+from typing import TYPE_CHECKING, Callable, Generator, Iterable
+
 from camdweb import ColVal
+
 if TYPE_CHECKING:
     from camdweb.material import Material
 
@@ -18,21 +21,26 @@ class Panel:
                  material: Material) -> Generator[str, None, None]:
         yield 'hello'
 
-    def get_columns(self, material):
-        return {}
-
-    def update_material(self, material):
+    def update_material(self, material: Material) -> None:
         pass
 
-    def update_column_descriptions(self, column_descriptions):
+    def update_column_descriptions(self,
+                                   column_descriptions: dict[str, str]
+                                   ) -> None:
         column_descriptions.update(self.column_descriptions)
         self.column_descriptions = column_descriptions
 
-    def update_html_formatters(self, html_formatters):
+    def update_html_formatters(self,
+                               html_formatters: dict[
+                                   str,
+                                   Callable[[ColVal, bool], str]]
+                               ) -> None:
         html_formatters.update(self.html_formatters)
         self.html_formatters = html_formatters
 
-    def table_rows(self, names, material):
+    def table_rows(self,
+                   material: Material,
+                   names: Iterable[str]) -> list[list[str]]:
         rows = []
         for name in names:
             value = material.columns.get(name)
@@ -43,7 +51,7 @@ class Panel:
         return rows
 
 
-def default_formatter(value, link=False):
+def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, str):
         return value
     if isinstance(value, float):

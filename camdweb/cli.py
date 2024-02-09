@@ -18,10 +18,7 @@ COLUMN_DESCRIPTIONS = dict(
 
 
 class MyAtomsPanel(AtomsPanel):
-    def update_column_descriptions(self,
-                                   column_descriptions: dict[str, str]
-                                   ) -> None:
-        column_descriptions.update(COLUMN_DESCRIPTIONS)
+    column_descriptions = COLUMN_DESCRIPTIONS
 
     def update_material(self, material: Material) -> None:
         try:
@@ -47,6 +44,7 @@ class MyAtomsPanel(AtomsPanel):
             material,
             ['formula', 'energy', 'fmax', 'smax', 'magmom',
              'length', 'area', 'volume'])
+        print(material, rows, self.column_descriptions)
         return table(None, rows)
 
 

@@ -6,10 +6,8 @@ from pathlib import Path
 from typing import Generator
 
 import rich.progress as progress
-from ase.atoms import Atoms
 from ase.db import connect
 from ase.formula import Formula
-from ase.io import read
 
 from camdweb.html import table
 from camdweb.materials import Material, Materials
@@ -60,10 +58,8 @@ def expand(db_file: str) -> None:
         (folder / 'data.json').write_text(json.dumps(row.key_value_pairs))
 
 
-
 class BiDBAtomsPanel(AtomsPanel):
-    def update_column_descriptions(self, column_descriptions):
-        column_descriptions.update(COLUMN_DESCRIPTIONS)
+    column_descriptions = COLUMN_DESCRIPTIONS
 
     def update_material(self, material):
         data = json.loads((material.folder / 'data.json').read_text())
@@ -71,11 +67,8 @@ class BiDBAtomsPanel(AtomsPanel):
 
     def create_column_one(self,
                           material: Material) -> str:
-        rows = []
-        for key, desc in COLUMN_DESCRIPTIONS.items():
-            value = getattr(material, key)
-            rows.append([desc, material.html_format_column(key, value)])
-
+        rows = self.table_rows(material, COLUMN_DESCRIPTIONS)
+        print(rows)
         return table(None, rows)
 
 
@@ -84,7 +77,6 @@ class StackingsPanel(Panel):
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        assert isinstance(material, BiDBMaterial)
         bilayers = material.data.get('bilayers')
         if bilayers is None:
             return
@@ -111,7 +103,7 @@ def main(root: Path) -> CAMDApp:
                     bilayers[uid2] = bilayer
                     mlist.append(bilayer)
             monolayer = Material.from_file(f1 / 'structure.xyz', uid1)
-            monolayer.data['bilayer'] = bilayers
+            monolayer.data['bilayers'] = bilayers
             mlist.append(monolayer)
         pb.advance(pid)
 

@@ -1,5 +1,4 @@
 import pickle
-from pathlib import Path
 
 import pytest
 from ase import Atoms
@@ -14,7 +13,7 @@ from camdweb.panels.bandstructure import BandStructurePanel
 def material():
     atoms = Atoms('H2', [(0, 0, 0), (0.7, 0, 0)], pbc=True)
     atoms.center(vacuum=2)
-    material = Material(Path(), 'x', atoms)
+    material = Material('x', atoms)
     return material
 
 

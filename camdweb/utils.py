@@ -23,7 +23,7 @@ def formula_dict_to_string(count: dict[str, int]) -> str:
     return s
 
 
-def html_format_formula(f: str) -> str:
+def html_format_formula(f: str, link: bool = False) -> str:
     """Convert formula string to HTML.
 
     >>> html_format_formula('H2O')

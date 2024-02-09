@@ -688,7 +688,7 @@ class LowDimProjectDescription(ProjectDescription):
 
     def create_column_one(self, panel, material):
         rows = panel.table_rows(material, keysfortable0)
-        doi = material.doi
+        doi = material.columns.get('doi')
         if doi:
             href = f'<a href="https://doi.org/{doi}">{doi}</a>'
             rows.append(('doi', href))

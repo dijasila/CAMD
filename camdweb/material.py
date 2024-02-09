@@ -27,6 +27,8 @@ class Material:
         self.atoms = atoms or Atoms()
         self.folder = folder or Path()
 
+        self.data = {}
+
         # Get number-of-atoms dicts:
         self.count, formula, reduced, stoichiometry = fft(self.atoms.numbers)
 
@@ -44,7 +46,12 @@ class Material:
             name = ['length', 'area', 'volume'][dims - 1]
             self.columns[name] = vol
 
+    def __repr__(self):
+        return f'Material({self.uid}, {self.atoms}, {self.folder})'
+
     def __getattr__(self, name):
+        if name.startswith('_'):
+            raise AttributeError
         try:
             return self.columns[name]
         except KeyError:
