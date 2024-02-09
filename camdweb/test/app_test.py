@@ -6,7 +6,7 @@ from ase.calculators.emt import EMT
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.dos import DOSPanel
-from camdweb.material import Material, Materials
+from camdweb.materials import Material, Materials
 from camdweb.web import CAMDApp
 from boddle import boddle
 

@@ -24,6 +24,7 @@ Important links
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
+* `Scaling to many users <https://workchronicles.com/white-lies/>`__
 
 
 Test URLs
@@ -105,7 +106,8 @@ Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
   ...
   oqmd123.json.gz
   convex-hulls/MoS.json
-               ...
+               Mo.json
+               S.json
 
 
 Testing the C2DB-app
@@ -149,3 +151,14 @@ On the ``fysik-cmr02`` server run uWSGI like this::
     $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
     $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
     $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log
+
+
+How it works
+============
+
+::
+
+   APP bottle-app
+   Materials Material Panel Index
+   col_descs
+   html_fters

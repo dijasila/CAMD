@@ -15,12 +15,11 @@ HTML = """
 
 class BaderPanel(Panel):
     title = 'Bader-charge analysis'
+    datafiles = ['bader.json']
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        path = material.folder / 'bader.json'
-        if not path.is_file():
-            return
+        path = material.folder / self.datafiles[0]
         charges = json.loads(path.read_text())['charges']
         html = HTML.format(
             table=table(['#', 'Chemical symbol', 'Charges [|e|]'],

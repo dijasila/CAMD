@@ -6,6 +6,7 @@ from contextlib import contextmanager
 
 import numpy as np
 from ase.data import chemical_symbols
+from camdweb import ColVal
 
 
 def formula_dict_to_string(count: dict[str, int]) -> str:
@@ -66,28 +67,32 @@ COD = 'https://www.crystallography.net/cod/'
 ICSD = 'https://icsd.products.fiz-karlsruhe.de/en/'
 
 
-def doi(id: str | None) -> str | None:
+def doi(id: ColVal, link: bool = False) -> str:
     """Create HTML anchor link to DOI.
 
-    >>> doi('10.1103/ABC.95.216')
+    >>> doi('10.1103/ABC.95.216', True)
     '<a href="https://doi.org/10.1103/ABC.95.216">10.1103/ABC.95.216</a>'
+    >>> doi('10.1103/ABC.95.216', False)
+    '10.1103/ABC.95.216'
     """
-    if id is None:
-        return None
     assert isinstance(id, str)
-    return f'<a href="https://doi.org/{id}">{id}</a>'
+    if link:
+        return f'<a href="https://doi.org/{id}">{id}</a>'
+    return id
 
 
-def cod(id: str | int | None) -> str | None:
-    if id is None:
-        return None
-    return f'<a href="{COD}/{id}.html">COD {id}</a>'
+def cod(id: ColVal, link: bool = False) -> str:
+    assert isinstance(id, str | int)
+    if link:
+        return f'<a href="{COD}/{id}.html">COD {id}</a>'
+    return str(id)
 
 
-def icsd(id: str | int | None) -> str | None:
-    if id is None:
-        return None
-    return f'<a href="{ICSD}">ICSD {id}</a>'
+def icsd(id: ColVal, link: bool = False) -> str:
+    assert isinstance(id, str | int)
+    if link:
+        return f'<a href="{ICSD}">ICSD {id}</a>'
+    return str(id)
 
 
 class NoPool:

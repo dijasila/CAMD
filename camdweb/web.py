@@ -11,7 +11,7 @@ from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
 from camdweb.html import FormPart, Select
-from camdweb.material import Materials
+from camdweb.materials import Materials
 from camdweb.session import Sessions
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
@@ -133,8 +133,12 @@ class CAMDApp:
         """Page showing one selected material."""
         material = self.materials[uid]
         titles = []
+        info_strings = []
         generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
+            if not all((material.folder / datafile).is_file()
+                       for datafile in panel.datafiles):
+                continue
             generator = panel.get_html(material)
             try:
                 html = next(generator)
@@ -145,13 +149,14 @@ class CAMDApp:
             else:
                 generators.append(iter([html]))
             titles.append(panel.title)
+            info_strings.append(panel.info)
 
         panels = []
         scripts = []
-        for gen, title in zip(generators, titles):
+        for gen, title, info in zip(generators, titles, info_strings):
             html = next(gen)
             html, script = cut_out_script(html)
-            panels.append((title, html))
+            panels.append((title, info, html))
             scripts.append(script)
 
         return template('material.html',

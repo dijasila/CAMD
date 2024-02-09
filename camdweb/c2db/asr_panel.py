@@ -44,9 +44,7 @@ class Row:
     """Fake row object."""
     def __init__(self, material: Material):
         self.data = Data(material.folder)
-        self.__dict__.update(
-            {key: val for key, val in material.__dict__.items()
-             if val is not None})
+        self.__dict__.update(material.columns)
         self.atoms = material.atoms
         self.cell = self.atoms.cell
         self.pbc = self.atoms.pbc

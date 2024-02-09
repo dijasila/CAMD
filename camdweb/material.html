@@ -148,7 +148,7 @@
         <!--  Sidebar Collapse Buttons  -->
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
-            % for p, (panel_title, html) in enumerate(panels):
+            % for p, (panel_title, info, html) in enumerate(panels):
               <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
                  href="#sec{{ p }}" style="color: #00ABE4">
                 <span class="d-none d-sm-inline">{{ panel_title }}</span>
@@ -164,7 +164,7 @@
     <!--  Information Viewing Area  -->
     <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
-      % for p, (panel_title, html) in enumerate(panels):
+      % for p, (panel_title, info, html) in enumerate(panels):
         % if panel_title == 'Atoms':
           <!-- Logo (header) Area -->
           <section id="materialHeader" class="py-2 sticky-top">
@@ -194,7 +194,10 @@
             <div class="accordion-collapse {{'collapse show' if panel_title=='Atoms' else 'collapse'}}"
                  id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
                  aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
-              <div class="panel accordion-body">{{ !html }}</div>
+              <div class="panel accordion-body">
+                {{ !html }}
+                {{ !info }}
+              </div>
             </div>
           </div>
         </div>

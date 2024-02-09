@@ -49,38 +49,25 @@ Plotly.newPlot('{id}', graphs, {{}});
 """
 
 
-class ConvexHullMaterial(Material):
-    sources: dict[str, tuple[str, str]]
-
-    def __init__(self, folder, uid, atoms, hform, ehull):
-        super().__init__(folder, uid, atoms)
-        self.hform = hform
-        self.ehull = ehull
-
-    def get_columns(self):
-        columns = super().get_columns()
-        columns.update(hform=self.hform, ehull=self.ehull)
-        return columns
-
-
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
+    def __init__(self, sources: dict[str, tuple[str, str]] | None = None):
+        self.sources = sources
+
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        assert isinstance(material, ConvexHullMaterial)
         tbl = table(
             None,
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
              ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
         root = material.folder.parents[2] / 'convex-hulls'
-        print(root, material.folder)
         name = ''.join(sorted(material.count))
         ch_file = root / f'{name}.json'
         refs = read_result_file(ch_file)
         chull, tables = make_figure_and_tables(refs,
                                                higlight_uid=material.uid,
-                                               sources=material.sources,
+                                               sources=self.sources,
                                                verbose=False)
         html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
