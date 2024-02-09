@@ -68,7 +68,6 @@ class BiDBAtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: Material) -> str:
         rows = self.table_rows(material, COLUMN_DESCRIPTIONS)
-        print(rows)
         return table(None, rows)
 
 

@@ -44,7 +44,6 @@ class MyAtomsPanel(AtomsPanel):
             material,
             ['formula', 'energy', 'fmax', 'smax', 'magmom',
              'length', 'area', 'volume'])
-        print(material, rows, self.column_descriptions)
         return table(None, rows)
 
 

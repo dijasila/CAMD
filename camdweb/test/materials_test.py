@@ -62,6 +62,7 @@ def test_row(material):
     assert row.toatoms().pbc.all()
     assert 'sadkjhads' not in row
     assert row.get('pbc').all()
+    assert row['pbc'] is row.pbc
 
 
 def test_no_bs(material):
