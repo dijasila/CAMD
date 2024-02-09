@@ -85,21 +85,23 @@ class CMRProjectApp(CAMDApp):
 class CMRAtomsPanel(AtomsPanel):
     def __init__(self,
                  columnd_descriptions,
-                 create_column_one: Callable[[Material], str],
-                 create_column_two: Callable[[Material], str]):
+                 create_column_one: Callable[[Panel, Material], str],
+                 create_column_two: Callable[[Panel, Material], str]):
         super().__init__()
         self.column_descriptions = columnd_descriptions
         self._create_column_one = create_column_one
         self._create_column_two = create_column_two
 
     def create_column_one(self, material):
-        col1 = self._create_column_one(material)
+        col1 = self._create_column_one(self, material)
         if not col1:
-            return table(None, table_rows(material, self.column_descriptions))
+            return table(None, self.table_rows(material,
+                                               self.column_descriptions))
         return col1
 
     def create_column_two(self, material):
-        col2 = self._create_column_two(material)
+        """Used by lowdim-project to not show atoms from ICSD."""
+        col2 = self._create_column_two(self, material)
         if not col2:
             return super().create_column_two(material)
         return col2

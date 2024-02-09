@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 from math import nan
-from typing import Generator, Sequence
+from typing import Callable, Generator, Sequence
 
 from camdweb.filter import Index
-from camdweb.parse import parse
 from camdweb.material import Material
 from camdweb.paging import get_pages
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, default_formatter
+from camdweb.parse import parse
 from camdweb.session import Session
 from camdweb.utils import html_format_formula
+from camdweb import ColVal
 
 
 class Materials:
@@ -35,13 +36,13 @@ class Materials:
             'area': 'Unit cell area [Å<sup>2</sup>]',
             'volume': 'Unit cell volume [Å<sup>3</sup>]'}
 
-        self.html_formaters = {
+        self.html_formatters: dict[str, Callable[[ColVal, bool], str]] = {
             name: html_format_formula
             for name in ['formula', 'reduced', 'stoichiometry']}
 
         self._update_panels()
 
-    def _update_panels(self):
+    def _update_panels(self) -> None:
         for panel in self.panels:
             panel.update_column_descriptions(self.column_descriptions)
             panel.update_html_formatters(self.html_formatters)
@@ -50,7 +51,7 @@ class Materials:
         for material in self:
             keys.update(material.columns)
 
-        for name in self.column_descriptions - keys:
+        for name in self.column_descriptions.keys() - keys:
             del self.column_descriptions[name]
 
     def __iter__(self) -> Generator[Material, None, None]:
@@ -59,7 +60,7 @@ class Materials:
     def __len__(self) -> int:
         return len(self._materials)
 
-    def get_callbacks(self):
+    def get_callbacks(self) -> dict[str, Callable[[Material, int], str]]:
         callbacks = {}
         for panel in self.panels:
             callbacks.update(panel.callbacks)
@@ -111,16 +112,18 @@ class Materials:
             func = parse(filter)
         except SyntaxError as ex:
             error = ex.args[0]
-            rows = []
+            col_numbers = []
         else:
-            rows = list(func(self.index))
+            col_numbers = list(func(self.index))
             error = ''
+
+        rows = [self[self.i2uid[i]] for i in col_numbers]
 
         if rows and session.sort:
             missing = '' if session.sort in self.index.strings else nan
 
-            def key(i):
-                return self.index.columns[i].get(session.sort, missing)
+            def key(material: Material) -> ColVal:
+                return material.columns.get(session.sort, missing)
 
             rows = sorted(rows, key=key, reverse=session.direction == -1)
 
@@ -128,20 +131,25 @@ class Materials:
         n = session.rows_per_page
         pages = get_pages(page, len(rows), n)
         rows = rows[n * page:n * (page + 1)]
+
+        formatters = [self.html_formatters.get(name, default_formatter)
+                      for name in session.columns]
         table = []
-        for i in rows:
-            uid = self.i2uid[i]
-            material = self._materials[uid]
-            columns = self.index.columns[i]
-            table.append(
-                (uid,
-                 [material.html_format_column(name, columns.get(name, ''))
-                  for name in session.columns]))
-        return (table,
-                [(name, self.column_descriptions.get(name, name))
-                 for name in session.columns],
-                pages,
-                [(name, value)
-                 for name, value in self.column_descriptions.items()
-                 if name not in session.columns],
-                error)
+        for material in rows:
+            columns = []
+            for name, formatter in zip(session.columns, formatters):
+                value = material.columns.get(name)
+                if value is None:
+                    columns.append('')
+                else:
+                    columns.append(formatter(value))
+            table.append((material.uid, columns))
+
+        headers = [(name, self.column_descriptions.get(name, name))
+                   for name in session.columns]
+
+        new_columns = [(name, value)
+                       for name, value in self.column_descriptions.items()
+                       if name not in session.columns]
+
+        return (table, headers, pages, new_columns, error)

@@ -1,6 +1,7 @@
 """Panel base class."""
 from __future__ import annotations
 from typing import Callable, TYPE_CHECKING, Generator
+from camdweb import ColVal
 if TYPE_CHECKING:
     from camdweb.material import Material
 
@@ -8,14 +9,14 @@ if TYPE_CHECKING:
 class Panel:
     title: str
     info = ''
-    datafiles = []
-    column_descriptions = {}
-    html_formatters = {}
+    datafiles: list[str] = []
+    column_descriptions: dict[str, str] = {}
+    html_formatters: dict[str, Callable[[ColVal, bool], str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        return
+        yield 'hello'
 
     def get_columns(self, material):
         return {}

@@ -44,7 +44,7 @@ def create_project_description(name: str) -> ProjectDescription:
 
 class ProjectDescription:
     title: str
-    column_names: dict[str, str] = {}
+    column_descriptions: dict[str, str] = {}
     initial_columns: list[str] = ['formula', 'uid']
     uid: str = 'id'
     pbc: list[bool] | None = None  # periodic boundary conditions
@@ -55,17 +55,17 @@ class ProjectDescription:
     def postprocess(self, material: Material) -> None:
         pass
 
-    def create_column_one(self, material: Material):
+    def create_column_one(self, panel: Panel, material: Material):
         return ''
 
-    def create_column_two(self, material: Material):
+    def create_column_two(self, panel: Panel, material: Material):
         return ''
 
 
 @project('solar')
 class SolarProjectDescription(ProjectDescription):
     title = 'Organic Donor-Acceptor molecules'
-    column_names = {
+    column_descriptions = {
         'rho': 'Packing density',
         'dip': 'Dipole moment [Debye]',
         'KS_gap': 'HOMO-LUMO gap (B3LYP) [eV]',
@@ -78,7 +78,6 @@ class SolarProjectDescription(ProjectDescription):
         'E_lumo_TB': 'LUMO (Tight-binding) [eV]',
         'D_homo': 'Dimer-monomer HOMO difference (B3LYP) [eV]',
         'D_lumo': 'Dimer-monomer LUMO difference (B3LYP) [eV]',
-        'DeltaU': 'DeltaU [eV]',
         'Energy': 'GS Energy [eV]',
         'V_oc': 'V_oc for PCBM acceptor [V]'}
     initial_columns = ['uid', 'formula', 'Unit', 'KS_gap', 'E_homo',
@@ -89,7 +88,7 @@ class SolarProjectDescription(ProjectDescription):
 @project('adsorption')
 class AdsorptionProjectDescription(ProjectDescription):
     title = 'Adsorption energy database'
-    column_names = {
+    column_descriptions = {
         'surf_mat': 'Surface Material',
         'adsorbate': 'Adsorbate',
         'mol': 'Reference molecule 1',
@@ -120,7 +119,7 @@ class AdsorptionProjectDescription(ProjectDescription):
 @project('absorption_perovskites')
 class AbsorptionPerovskitesProjectDescription(ProjectDescription):
     title = 'Absorption spectra of perovskites'
-    column_names = {
+    column_descriptions = {
         'name': 'Name of the structure',
         'phase': 'Perovskite phase',
         'gllbsc_dir_gap': 'Direct bandgap GLLB-SC [eV]',
@@ -136,7 +135,7 @@ class AbsorptionPerovskitesProjectDescription(ProjectDescription):
 @project('abse3')
 class ABSe3ProjectDescription(ProjectDescription):
     title = 'Ternary Selenides ABSe3'
-    column_names = {
+    column_descriptions = {
         'prototype': 'name of the prototype',
         'name': 'name of the system',
         'space_group': 'Space group',
@@ -185,7 +184,7 @@ def abs3_bs(d: dict, path: Path) -> bool:
 @project('abs3')
 class ABS3ProjectDescription(ProjectDescription):
     title = 'Database of ABS3 materials'
-    column_names = {
+    column_descriptions = {
         'E_hull': 'E-hull [eV]',
         'm_e': 'Effective electron mass [m<sub>e</sub>]',
         'm_h': 'Effective hole mass [m<sub>e</sub>]',
@@ -213,7 +212,7 @@ class ABS3ProjectDescription(ProjectDescription):
 @project('abx2')
 class ABX2ProjectDescription(ProjectDescription):
     title = 'Database of ABX2 materials'
-    column_names = {
+    column_descriptions = {
         'E_hull': 'E-hull [eV]',
         'KS_gap': 'Kohn Sham band gap [eV]',
         'm_e': 'Effective electron mass [m<sub>e</sub>]',
@@ -248,7 +247,7 @@ class AgAu309ProjectDescription(ProjectDescription):
 @project('a2bcx4')
 class A2BCX4ProjectDescription(ProjectDescription):
     title = 'Database of A2BCX4 materials'
-    column_names = {
+    column_descriptions = {
         'E_relative_per_atom': 'Energy per atom [meV]',
         'E_uncertainty_per_atom': 'Uncertainty of the total energy [meV]',
         'GLLB_dir': 'Direct band gap (GLLB-SC) [eV]',
@@ -272,7 +271,7 @@ class A2BCX4ProjectDescription(ProjectDescription):
 @project('catapp')
 class CatAppProjectDescription(ProjectDescription):
     title = 'CatApp database'
-    column_names = {
+    column_descriptions = {
         'a': 'Reactant A',
         'b': 'Reactant B',
         'ab': 'Product AB',
@@ -294,7 +293,7 @@ class CatAppProjectDescription(ProjectDescription):
 @project('cubic_perovskites')
 class CubicPerovskitesProjectDescription(ProjectDescription):
     title = 'Perovskite water-splitting'
-    column_names = {
+    column_descriptions = {
         'A_ion': 'A-ion in the cubic perovskite',
         'B_ion': 'B-ion in the cubic perovskite',
         'anion': 'Anion combination in the perovskite',
@@ -316,7 +315,7 @@ class CubicPerovskitesProjectDescription(ProjectDescription):
 @project('dssc')
 class DSSCProjectDescription(ProjectDescription):
     title = 'Porphyrin based dyes'
-    column_names = {
+    column_descriptions = {
         'M': 'Metal center',
         'A': 'Anchor group',
         'R1': 'First side group',
@@ -348,7 +347,7 @@ class DSSCProjectDescription(ProjectDescription):
 @project('funct_perovskites')
 class FunctPerovskitesProjectDescription(ProjectDescription):
     title = 'Functional Perovskites'
-    column_names = {
+    column_descriptions = {
         'gllbsc_dir_gap': 'Direct bandgap GLLB-SC [eV]',
         'gllbsc_ind_gap': 'Indirect bandgap GLLB-SC [eV]',
         'gllbsc_disc': 'Derivative discontinuity GLLB-SC [eV]',
@@ -366,7 +365,7 @@ class FunctPerovskitesProjectDescription(ProjectDescription):
 @project('low_symmetry_perovskites')
 class LowSymmetryPerovskitesProjectDescription(ProjectDescription):
     title = 'Low symmetry perovskites'
-    column_names = {
+    column_descriptions = {
         'gllbsc_dir_gap': 'Direct bandgap GLLB-SC [eV]',
         'gllbsc_ind_gap': 'Indirect bandgap GLLB-SC [eV]',
         'gllbsc_disc': 'Derivative discontinuity GLLB-SC [eV]',
@@ -382,7 +381,7 @@ class LowSymmetryPerovskitesProjectDescription(ProjectDescription):
 @project('mp_gllbsc')
 class MPGLLBSCProjectDescription(ProjectDescription):
     title = 'New Light Harvesting Materials'
-    column_names = {
+    column_descriptions = {
         'gllbsc_dir_gap': 'Direct bandgap GLLB-SC. [eV]',
         'gllbsc_ind_gap': 'Indirect bandgap GLLB-SC. [eV]',
         'gllbsc_disc': 'Derivative discontinuity GLLB-SC. [eV]',
@@ -403,7 +402,7 @@ class MPGLLBSCProjectDescription(ProjectDescription):
 @project('oqmd123')
 class OQMD123ProjectDescription(ProjectDescription):
     title = 'One, two and three component references from OQMD'
-    column_names = {
+    column_descriptions = {
         'hform': 'Heat of formation [eV/atom]',
         'oqmd_id': 'OQMD ID'}  # really?
     initial_columns = [
@@ -415,7 +414,7 @@ class OQMD123ProjectDescription(ProjectDescription):
 @project('organometal')
 class OrganometalProjectDescription(ProjectDescription):
     title = 'Organometal Halide Perovskites'
-    column_names = {
+    column_descriptions = {
         'gllbsc_dir_gap': 'Direct GLLB-SC+SOC bandgap [eV]',
         'gllbsc_ind_gap': 'Indirect GLLB-SC+SOC bandgap [eV]',
         'gllbsc_disc': 'GLLB-SC Derivative discontinuity [eV]',
@@ -430,7 +429,7 @@ class OrganometalProjectDescription(ProjectDescription):
 @project('pv_pec_oqmd')
 class PVPECOQMDProjectDescription(ProjectDescription):
     title = 'Screening for PV and PEC materials using the OQMD database'
-    column_names = {
+    column_descriptions = {
         'm_e': 'Effective electron mass [m<sub>e</sub>]',
         'm_h': 'Effective hole mass [m<sub>e</sub>]',
         'GLLB_dir': 'Direct band gap (GLLB-SC) [eV]',
@@ -452,7 +451,7 @@ class PVPECOQMDProjectDescription(ProjectDescription):
 @project('imp2d')
 class Imp2DProjectDescription(ProjectDescription):
     title = 'Impurities in 2D Materials Database'
-    column_names = {
+    column_descriptions = {
         'host': 'Host chemical formula',
         'dopant': 'Impurity species',
         'defecttype': 'Impurity type',
@@ -485,12 +484,10 @@ class Imp2DProjectDescription(ProjectDescription):
         Input('Host spacegroup number', 'host_spacegroup', 'e.g. 187')]
 
     def create_column_one(self,
+                          panel,
                           material: Material) -> str:
         return '\n'.join(
-            table([header, ''],
-                  table_rows(material,
-                             {name: self.column_names[name]
-                              for name in names}))
+            table([header, ''], panel.table_rows(material, names))
             for header, names in [
                 ('Host properties',
                  ['host',
@@ -514,7 +511,7 @@ class Imp2DProjectDescription(ProjectDescription):
 @project('ads1d')
 class Ads1DProjectDescription(ProjectDescription):
     title = 'Chemisorption of gas atoms on 1D transition-metal halides'
-    column_names = {
+    column_descriptions = {
         'x': 'X',
         'y': 'Y',
         'n': 'XY3 formula units',
@@ -531,7 +528,7 @@ class Ads1DProjectDescription(ProjectDescription):
 @project('bidb')
 class BiDBProjectDescription(ProjectDescription):
     title = 'Bilayer database'
-    column_names = {
+    column_descriptions = {
         'binding_energy_zscan': 'Binding energy (zscan) [meV/Å<sup>2</sup>]',
         'number_of_layers': 'nlayers',
         'monolayer_uid': 'Monolayer ID',
@@ -567,9 +564,9 @@ class BiDBProjectDescription(ProjectDescription):
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
-    def create_column_one(self, material):
+    def create_column_one(self, panel, material):
         def tab(names):
-            return table_rows(material, self.column_names, names)
+            return panel.table_rows(material, names)
 
         if material.number_of_layers == 1:
             tables = [
@@ -615,7 +612,7 @@ class LowDimProjectDescription(ProjectDescription):
     title = ('Definition of a scoring parameter to'
              ' identify low-dimensional materials components')
     uid = 'dbid'
-    column_names = {
+    column_descriptions = {
         's_0': '0D score',
         's_1': '1D score',
         's_2': '2D score',
@@ -689,8 +686,8 @@ class LowDimProjectDescription(ProjectDescription):
         Select('Database source', 'source', ['', 'COD', 'ICSD'])]
     panels = [LowDimPanel()]
 
-    def create_column_one(self, material):
-        rows = table_rows(material, self.column_names, keysfortable0)
+    def create_column_one(self, panel, material):
+        rows = panel.table_rows(material, keysfortable0)
         doi = material.doi
         if doi:
             href = f'<a href="https://doi.org/{doi}">{doi}</a>'
@@ -705,7 +702,7 @@ class LowDimProjectDescription(ProjectDescription):
             rows.insert(0, ('ICSD Number', material.dbid))
         return table(['Basic properties', ''], rows)
 
-    def create_column_two(self, material):
+    def create_column_two(self, panel, material):
         if material.source == 'ICSD':
             return 'not allowed to show atoms'
         return ''  # use default AtomsPanel behavior
@@ -714,7 +711,7 @@ class LowDimProjectDescription(ProjectDescription):
 @project('c1db')
 class C1DBProjectDescription(ProjectDescription):
     title = 'Computational 1D materials database'
-    column_names = {
+    column_descriptions = {
         'PBE_1D': 'uid for 1D material calculated using PBE',
         'PBED3_1D': 'uid for 1D material calculated using PBE-D3',
         'PBED3_3D': 'uid for 3D material calculated using PBE-D3',
@@ -744,8 +741,8 @@ class C1DBProjectDescription(ProjectDescription):
         RangeX('Band gap range [eV]', 'xc',
                ['gap', 'gap_hse'], ['PBE', 'HSE06@PBE'])]
 
-    def create_column_one(self, material):
-        rows = table_rows(material, self.column_names)
+    def create_column_one(self, panel, material):
+        rows = panel.table_rows(material, self.column_descriptions)
         source = material.source
         df = material.derived_from
         if source == 'COD':

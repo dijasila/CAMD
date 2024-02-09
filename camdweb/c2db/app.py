@@ -18,7 +18,6 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-from ase.io import read
 
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.html import Range, RangeX, Select, table
@@ -26,7 +25,7 @@ from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.bandstructure import BandStructurePanel
-from camdweb.panels.convex_hull import ConvexHullMaterial, ConvexHullPanel
+from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
@@ -39,21 +38,23 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 class C2DBAtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: Material) -> str:
-        old = material.olduid
         html1 = table(['Structure info', ''],
-                      self.table_rows(['layergroup', 'lgnum', 'lable',
+                      self.table_rows(material,
+                                      ['layergroup', 'lgnum', 'lable',
                                        'cod_id', 'icsd_id', 'doi', 'olduid']))
         html2 = table(['Stability', ''],
-                      self.table_rows(['ehull', 'hform', 'dyn_stab']))
+                      self.table_rows(material,
+                                      ['ehull', 'hform', 'dyn_stab']))
         html3 = table(['Basic properties', ''],
-                      self.table_rows(['magstate', 'gap', 'gap_hse',
+                      self.table_rows(material,
+                                      ['magstate', 'gap', 'gap_hse',
                                        'gap_gw']))
         return '\n'.join([html1, html2, html3])
 
 
 def olduid(uid, link=False):
     if link:
-        return f'<a href={OLD}/{old}>{old}</a>'
+        return f'<a href={OLD}/{uid}>{uid}</a>'
     return uid
 
 
@@ -66,7 +67,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         '"AB2/1MoS2" (same as "AB2/1MoS2/*/") or "AB2/1MoS2/1".')
     args = parser.parse_args(argv)
 
-    mlist: list[C2DBMaterial] = []
+    mlist: list[Material] = []
     folders = []
     for path in args.path:
         p = Path(path)
@@ -95,10 +96,10 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     panels: list[Panel] = [
         C2DBAtomsPanel(),
         ConvexHullPanel(
-            sources= {'OQMD': ('Bulk crystals from OQMD123',
-                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
-                      'C2DB': ('Monolayers from C2DB',
-                               '<a href={uid}>{formula:html}</a>')}),
+            sources={'OQMD': ('Bulk crystals from OQMD123',
+                              f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
+                     'C2DB': ('Monolayers from C2DB',
+                              '<a href={uid}>{formula:html}</a>')}),
         asr_panel('stiffness'),
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
@@ -117,11 +118,10 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('piezoelectrictensor'),
         ShiftCurrentPanel()]
 
-    materials = Materials(mlist, panels, column_names)
+    materials = Materials(mlist, panels)
 
     materials.column_descriptions.update(
         has_inversion_symmetry='Inversion symmetry',
-        gap='Band gap (PBE) [eV]',
         evac='Vacuum level [eV]',
         hform='Heat of formation [eV/atom]',
         olduid='Old uid',
@@ -130,16 +130,15 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         energy='Energy [eV]',
         spin_axis='Spin axis',
         efermi='Fermi level [eV]',
-        dyn_stab='Dynamically stable')
-            ('COD id of parent bulk structure', cod(material.cod_id)),
-            ('ICSD id of parent bulk structure', icsd(material.icsd_id)),
-            ('Reported DOI', doi(material.doi)),
-            ('Layer group number', material.
-            ('Structure origin', material.label),
-            ('Dynamically stable', 'Yes' if material.dyn_stab else 'No')]
-            ('Band gap [eV]', material.gap),
-            ('Band gap (HSE06) [eV]', material.gap_hse),
-            ('Band gap (G₀W₀) [eV]', material.gap_gw)]
+        dyn_stab='Dynamically stable',
+        cod_id='COD id of parent bulk structure',
+        iscd_id='ICSD id of parent bulk structure',
+        doi='Reported DOI',
+        lgnum='Layer group number',
+        label='Structure origin',
+        gap='Band gap [eV]',
+        gap_hse='Band gap (HSE06) [eV]',
+        gap_gw='Band gap (G₀W₀) [eV]')
 
     materials.html_formatters.update(
         cod_id=cod,

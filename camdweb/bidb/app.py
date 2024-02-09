@@ -60,31 +60,15 @@ def expand(db_file: str) -> None:
         (folder / 'data.json').write_text(json.dumps(row.key_value_pairs))
 
 
-class BiDBMaterial(Material):
-    binding_energy_zscan: float
-
-    def __init__(self,
-                 folder: Path,
-                 uid: str,
-                 bilayers: dict[str, BiDBMaterial] | None = None):
-        atoms = read(folder / 'structure.xyz')
-        assert isinstance(atoms, Atoms)
-        super().__init__(folder, uid, atoms)
-        data = json.loads((folder / 'data.json').read_text())
-        for key in COLUMN_DESCRIPTIONS:
-            setattr(self, key, data.get(key))
-        self.bilayers = bilayers
-
-    def get_columns(self):
-        columns = super().get_columns()
-        for key in COLUMN_DESCRIPTIONS:
-            value = getattr(self, key)
-            if value is not None:
-                columns[key] = value
-        return columns
-
 
 class BiDBAtomsPanel(AtomsPanel):
+    def update_column_descriptions(self, column_descriptions):
+        column_descriptions.update(COLUMN_DESCRIPTIONS)
+
+    def update_material(self, material):
+        data = json.loads((material.folder / 'data.json').read_text())
+        material.columns.update(data)
+
     def create_column_one(self,
                           material: Material) -> str:
         rows = []
@@ -101,7 +85,7 @@ class StackingsPanel(Panel):
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
         assert isinstance(material, BiDBMaterial)
-        bilayers = material.bilayers
+        bilayers = material.data.get('bilayers')
         if bilayers is None:
             return
         rows = []
@@ -123,16 +107,18 @@ def main(root: Path) -> CAMDApp:
             for f2 in f1.parent.glob('*/'):
                 if f2.name != 'monolayer':
                     uid2 = f'{f2.parent.name}-{f2.name}'
-                    bilayer = BiDBMaterial(f2, uid2)
+                    bilayer = Material.from_file(f2 / 'structure.xyz', uid2)
                     bilayers[uid2] = bilayer
                     mlist.append(bilayer)
-            mlist.append(BiDBMaterial(f1, uid1, bilayers))
+            monolayer = Material.from_file(f1 / 'structure.xyz', uid1)
+            monolayer.data['bilayer'] = bilayers
+            mlist.append(monolayer)
         pb.advance(pid)
 
     panels = [BiDBAtomsPanel(),
               StackingsPanel()]
 
-    materials = Materials(mlist, panels, COLUMN_DESCRIPTIONS)
+    materials = Materials(mlist, panels)
 
     initial_columns = ['uid', 'area', 'formula']
 

@@ -17,42 +17,36 @@ COLUMN_DESCRIPTIONS = dict(
     magmom='Total magnetic moment [μ<sub>B</sub>]')
 
 
-class MyMaterial(Material):
-    def __init__(self, folder, uid, atoms):
-        super().__init__(folder, uid, atoms)
-        try:
-            results = atoms.calc.results
-        except AttributeError:
-            results = {}
-        self.energy = results.get('energy')
-        forces = results.get('forces')
-        self.fmax = (None if forces is None else
-                     (forces**2).sum(axis=1).max()**0.5)
-        stress = results.get('stress')
-        self.smax = None if stress is None else abs(stress).max()
-        self.magmom = results.get('magmom')
-
-    def get_columns(self):
-        columns = super().get_columns()
-        for key in ['energy', 'fmax', 'smax', 'magmom']:
-            value = getattr(self, key, None)
-            if value is not None:
-                columns[key] = value
-        return columns
-
-
 class MyAtomsPanel(AtomsPanel):
+    def update_column_descriptions(self,
+                                   column_descriptions: dict[str, str]
+                                   ) -> None:
+        column_descriptions.update(COLUMN_DESCRIPTIONS)
+
+    def update_material(self, material: Material) -> None:
+        try:
+            results = material.atoms.calc.results
+        except AttributeError:
+            return
+        energy = results.get('energy')
+        if energy is not None:
+            material.columns['energy'] = energy
+        forces = results.get('forces')
+        if forces is not None:
+            material.columns['fmax'] = (forces**2).sum(axis=1).max()**0.5
+        stress = results.get('stress')
+        if stress is not None:
+            material.columns['smax'] = abs(stress).max()
+        magmom = results.get('magmom')
+        if magmom is not None:
+            material.columns['magmom'] = magmom
+
     def create_column_one(self,
                           material: Material) -> str:
-        rows = []
-        for key in ['formula', 'energy', 'fmax', 'smax', 'magmom',
-                    'length', 'area', 'volume']:
-            value = getattr(material, key, None)
-            if value is not None:
-                desc = COLUMN_DESCRIPTIONS.get(key)
-                desc = desc or COMMON_COLUMN_DESCRIPTIONS.get(key, key)
-                rows.append([desc, material.html_format_column(key, value)])
-        print(rows)
+        rows = self.table_rows(
+            material,
+            ['formula', 'energy', 'fmax', 'smax', 'magmom',
+             'length', 'area', 'volume'])
         return table(None, rows)
 
 
@@ -67,10 +61,10 @@ def main(argv: list[str] | None = None,
         path = Path(filename)
         atoms = read(path)
         assert isinstance(atoms, Atoms)
-        rows.append(MyMaterial(path.parent, str(i), atoms))
+        rows.append(Material(str(i), atoms))
 
     panels = [MyAtomsPanel()]
-    materials = Materials(rows, panels, COLUMN_DESCRIPTIONS)
+    materials = Materials(rows, panels)
 
     initial_columns = ['uid', 'formula', 'energy', 'fmax', 'smax', 'magmom']
     for key in ['length', 'area', 'volume']:

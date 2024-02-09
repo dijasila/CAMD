@@ -24,6 +24,7 @@ Important links
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
+* `Scaling to many users <https://workchronicles.com/white-lies/>`__
 
 
 Test URLs

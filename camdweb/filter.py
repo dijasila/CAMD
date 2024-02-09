@@ -52,11 +52,9 @@ class Index:
         self.ids = set()
 
         for i, (count, keys) in enumerate(rows):
-            reduced = keys.get('reduced')
-            if reduced is None:
-                nunits = np.gcd.reduce(list(count.values()))
-                reduced = formula_dict_to_string(
-                    {symbol: n // nunits for symbol, n in count.items()})
+            nunits = np.gcd.reduce(list(count.values()))
+            reduced = formula_dict_to_string(
+                {symbol: n // nunits for symbol, n in count.items()})
             self.reduced[reduced].add(i)
             self.natoms[i] = sum(count.values())
             self.ids.add(i)

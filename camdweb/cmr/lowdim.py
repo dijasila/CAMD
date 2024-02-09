@@ -118,7 +118,7 @@ class LowDimPanel(Panel):
             score(material, path)
 
         descriptions = {key: all_keydescs[key].long for key in keysfortable2}
-        col1 = table(['Item', ''], table_rows(material, descriptions))
+        col1 = table(['Item', ''], self.table_rows(material, descriptions))
         col2 = (f'<img alt="Dim. analysis for {uid}" '
                 f'src="/png/lowdim/{uid}.png" />')
         yield HTML.format(col1, col2)

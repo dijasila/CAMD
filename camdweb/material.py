@@ -7,13 +7,14 @@ from ase import Atoms
 from ase.io import read
 
 from camdweb.utils import fft
+from camdweb import ColVal
 
 
 class Material:
     def __init__(self,
                  uid: str,
-                 folder: Path | None = None,
-                 atoms: Atoms | None = None):
+                 atoms: Atoms | None = None,
+                 folder: Path | None = None):
         """Object representing a material and associated data.
 
         >>> mat = Material('x1', atoms=Atoms('H2O'))
@@ -23,13 +24,13 @@ class Material:
         'AB2'
         """
         self.uid = uid
-        self.folder = folder or Path()
         self.atoms = atoms or Atoms()
+        self.folder = folder or Path()
 
         # Get number-of-atoms dicts:
         self.count, formula, reduced, stoichiometry = fft(self.atoms.numbers)
 
-        self.columns = {
+        self.columns: dict[str, ColVal] = {
             'uid': uid,
             'natoms': sum(self.count.values()),
             'nspecies': len(self.count),
@@ -44,10 +45,13 @@ class Material:
             self.columns[name] = vol
 
     def __getattr__(self, name):
-        return self.columns[name]
+        try:
+            return self.columns[name]
+        except KeyError:
+            raise AttributeError(f'Material object has no attribute {name!r}')
 
     @classmethod
     def from_file(cls, file: Path, uid: str) -> Material:
         atoms = read(file)
         assert isinstance(atoms, Atoms)
-        return cls(uid, file.parent, atoms)
+        return cls(uid, atoms, file.parent)
