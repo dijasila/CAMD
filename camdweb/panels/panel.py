@@ -1,6 +1,7 @@
 """Panel base class."""
 from __future__ import annotations
 
+import abc
 from typing import TYPE_CHECKING, Callable, Generator, Iterable
 
 from camdweb import ColVal
@@ -9,17 +10,18 @@ if TYPE_CHECKING:
     from camdweb.material import Material
 
 
-class Panel:
+class Panel(abc.ABC):
     title: str
     info = ''
     datafiles: list[str] = []
     column_descriptions: dict[str, str] = {}
-    html_formatters: dict[str, Callable[[ColVal, bool], str]] = {}
+    html_formatters: dict[str, Callable[[ColVal, ...], str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
+    @abc.abstractmethod
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        yield 'hello'
+        raise NotImplementedError
 
     def update_material(self, material: Material) -> None:
         pass

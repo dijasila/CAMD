@@ -23,7 +23,7 @@ def formula_dict_to_string(count: dict[str, int]) -> str:
     return s
 
 
-def html_format_formula(f: str, link: bool = False) -> str:
+def html_format_formula(f: str) -> str:
     """Convert formula string to HTML.
 
     >>> html_format_formula('H2O')
@@ -72,6 +72,8 @@ def doi(id: ColVal, link: bool = False) -> str:
 
     >>> doi('10.1103/ABC.95.216', True)
     '<a href="https://doi.org/10.1103/ABC.95.216">10.1103/ABC.95.216</a>'
+    >>> doi('10.1103/ABC.95.216', False)
+    '10.1103/ABC.95.216'
     """
     assert isinstance(id, str)
     if link:

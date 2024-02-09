@@ -52,7 +52,7 @@ class C2DBAtomsPanel(AtomsPanel):
         return '\n'.join([html1, html2, html3])
 
 
-def olduid(uid, link=False):
+def olduid(uid, link=False):  # pragma: no cover
     if link:
         return f'<a href={OLD}/{uid}>{uid}</a>'
     return uid

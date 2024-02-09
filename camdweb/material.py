@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from ase import Atoms
 from ase.io import read
 
-from camdweb.utils import fft
 from camdweb import ColVal
+from camdweb.utils import fft
 
 
 class Material:
@@ -27,7 +28,7 @@ class Material:
         self.atoms = atoms or Atoms()
         self.folder = folder or Path()
 
-        self.data = {}
+        self.data: dict[str, Any] = {}
 
         # Get number-of-atoms dicts:
         self.count, formula, reduced, stoichiometry = fft(self.atoms.numbers)

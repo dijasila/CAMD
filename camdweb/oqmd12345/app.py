@@ -13,8 +13,6 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-from ase import Atoms
-from ase.io import read
 
 from camdweb.html import table
 from camdweb.materials import Material, Materials

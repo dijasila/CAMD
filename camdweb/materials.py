@@ -13,6 +13,11 @@ from camdweb.utils import html_format_formula
 from camdweb import ColVal
 
 
+def formula_formatter(value: ColVal, link: bool = False) -> str:
+    assert isinstance(value, str)
+    return html_format_formula(value)
+
+
 class Materials:
     def __init__(self,
                  materials: Sequence[Material],
@@ -36,8 +41,8 @@ class Materials:
             'area': 'Unit cell area [Å<sup>2</sup>]',
             'volume': 'Unit cell volume [Å<sup>3</sup>]'}
 
-        self.html_formatters: dict[str, Callable[[ColVal, bool], str]] = {
-            name: html_format_formula
+        self.html_formatters: dict[str, Callable[[ColVal, ...], str]] = {
+            name: formula_formatter
             for name in ['formula', 'reduced', 'stoichiometry']}
 
         self._update_panels()

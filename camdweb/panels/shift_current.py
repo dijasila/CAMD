@@ -16,12 +16,11 @@ HTML = """
 
 class ShiftCurrentPanel(Panel):
     title = 'Shift current spectrum (RPA)'
+    datafiles = ['results-asr.shift.json']
 
     def get_html(self,
                  material: Material) -> Generator[str, None, None]:
-        result_file = material.folder / 'results-asr.shift.json'
-        if not result_file.is_file():
-            return
+        result_file = material.folder / self.datafiles[0]
         self.make_figures(result_file)
         yield HTML.format(uid=material.uid)
 
