@@ -41,7 +41,7 @@ class Materials:
             'area': 'Unit cell area [Å<sup>2</sup>]',
             'volume': 'Unit cell volume [Å<sup>3</sup>]'}
 
-        self.html_formatters: dict[str, Callable[[ColVal, ...], str]] = {
+        self.html_formatters: dict[str, Callable[..., str]] = {
             name: formula_formatter
             for name in ['formula', 'reduced', 'stoichiometry']}
 
@@ -125,7 +125,8 @@ class Materials:
         rows = [self[self.i2uid[i]] for i in col_numbers]
 
         if rows and session.sort:
-            missing = '' if session.sort in self.index.strings else nan
+            missing: str | float = ('' if session.sort in self.index.strings
+                                    else nan)
 
             def key(material: Material) -> ColVal:
                 return material.columns.get(session.sort, missing)

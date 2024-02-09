@@ -15,7 +15,7 @@ class Panel(abc.ABC):
     info = ''
     datafiles: list[str] = []
     column_descriptions: dict[str, str] = {}
-    html_formatters: dict[str, Callable[[ColVal, ...], str]] = {}
+    html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
     @abc.abstractmethod
@@ -35,7 +35,7 @@ class Panel(abc.ABC):
     def update_html_formatters(self,
                                html_formatters: dict[
                                    str,
-                                   Callable[[ColVal, bool], str]]
+                                   Callable[..., str]]
                                ) -> None:
         html_formatters.update(self.html_formatters)
         self.html_formatters = html_formatters
