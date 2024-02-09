@@ -11,6 +11,8 @@ Web-apps for:
 * CRYSP
 * OQMD12345
 
+.. contents::
+
 
 Important links
 ===============
@@ -20,6 +22,7 @@ Important links
 * `Plotly <https://plotly.com/python/>`__
 * `Bootstrap
   <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
+* `WSGI <blabla>`_
 * `ASE <https://wiki.fysik.dtu.dk/ase/index.html>`__
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
@@ -156,9 +159,65 @@ On the ``fysik-cmr02`` server run uWSGI like this::
 How it works
 ============
 
-::
+In the picture below, ``camd.app`` is the WSGI_ app::
 
-   APP bottle-app
-   Materials Material Panel Index
-   col_descs
-   html_fters
+  camd
+    |
+    v
+  +---------+
+  | CAMDApp |   app   +------------+
+  |         |-------->| bottle.App |
+  |   and   |         +------------+
+  |   sub-  |
+  | classes |   sessions   +----------+
+  |         |------------->| Sessions |
+  |         |              +----------+
+  +---------+
+     |
+     |materials
+     |
+     v
+  +------------+  index   +-------+
+  |Materials   |--------->| Index |
+  |            |          +-------+
+  |  --------  |
+  | |Material| |
+  |  --------  |   panels   +--------------+
+  | |Material| |----------->| list[Panel]  |
+  |  --------  |            |              |
+  |     :      |            | ----------   |
+  |     :      |            ||AtomsPanel|  |
+  +------------+            | ----------   |
+                            ||OtherPanel|  |
+                            | ----------   |
+                            |      :       |
+                            |      :       |
+                            +--------------+
+
+
+Objects
+-------
+
+:bottle.App:
+    WSGI_ app.  Defines the end-points ``/`` and ``/material/<uid>/``.
+
+:Sessions:
+    Handles ``Session`` objects for clients (on for each browser-tab).
+
+:Session:
+    Remembers selected columns, sorting information, ...
+    (not quite sure we need this).
+
+:Material:
+    Attributes: ``uid: str``, ``atoms: Atoms``, ``folder: Path``
+    and ``columns: dict[str, bool | int | float | str]``.
+    The ``columns`` dictionary stores key-value pairs for displaying
+    in the landing-page table.
+
+:Panel:
+    Has a ``get_html(material)`` method that can produce a snippet of HTML
+    to assembled in the ``/material/<uid>/`` endpoint.
+
+:Index:
+    Handles efficient filtering of materials using the values in
+    ``Material.columns`` and ``Material.atoms``.
