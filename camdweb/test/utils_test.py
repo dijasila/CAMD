@@ -19,6 +19,11 @@ def test_range(r, query, result):
     assert ','.join(r.get_filter_strings(query)) == result
 
 
+def test_range_positive():
+    r = Range('ABC', 'x', nonnegative=True)
+    assert r.get_filter_strings({'from_x': '0'}) == []
+
+
 def test_range_x():
     r = RangeX('ABC', 'x', ['A', 'B'])
     assert r.get_filter_strings(

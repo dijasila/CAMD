@@ -66,7 +66,7 @@ class FormPart(abc.ABC):
         self.name = name
 
     @abc.abstractmethod
-    def render(self, query: dict) -> str:
+    def render(self) -> str:
         raise NotImplementedError
 
     def get_filter_strings(self, query: dict) -> list[str]:
