@@ -223,7 +223,7 @@ Objects
     Also handles two dictionaries that it shares with the panels:
 
     * ``column_descriptions: dict[str, str]`` for longer descriptions of the
-      short (always lower case) column names.
+      short column names.
     * ``html_column_formatters: dict[str, Callable[..., str]]`` for converting
       bool, int, float and str values to HTML strings.
 
