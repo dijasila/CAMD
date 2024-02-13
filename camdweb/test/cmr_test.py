@@ -52,7 +52,7 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
 
     if name == 'abx2':
         mat = papp.materials['1']
-        gap = mat.ks_gap
+        gap = mat.KS_gap
         assert isinstance(gap, float)
         with pytest.raises(AttributeError):
             mat.e_hull
