@@ -232,6 +232,13 @@ def copy_material(fro: Path,
             data[f'cbm_{x}'] = r.get(f'cbm_{x}')
 
     try:
+        bse = rrf('bse')
+    except FileNotFoundError:
+        pass
+    else:  # pragma: no cover
+        data['E_B'] = bse['E_B']
+
+    try:
         pol = rrf('polarizability')
     except FileNotFoundError:
         pass
@@ -240,12 +247,15 @@ def copy_material(fro: Path,
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
 
     try:
-        pol = rrf('infraredpolarizability')
+        irpol = rrf('infraredpolarizability')
     except FileNotFoundError:
         pass
     else:  # pragma: no cover
         for a in 'xyz':
-            data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')
+            data[f'alpha{a}_lat'] = irpol.get(f'alpha{a}_lat')
+            if f'alpha{a}_el' in data:
+                data[f'alpha{a}'] = (data[f'alpha{a}_el'] +
+                                     data[f'alpha{a}_lat'])
 
     data['energy'] = atoms.get_potential_energy()
 
