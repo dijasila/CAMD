@@ -82,14 +82,14 @@ def doi(id: ColVal, link: bool = False) -> str:
 
 
 def cod(id: ColVal, link: bool = False) -> str:
-    assert isinstance(id, str | int)
+    assert isinstance(id, (str, int))
     if link:
         return f'<a href="{COD}/{id}.html">COD {id}</a>'
     return str(id)
 
 
 def icsd(id: ColVal, link: bool = False) -> str:
-    assert isinstance(id, str | int)
+    assert isinstance(id, (str, int))
     if link:
         return f'<a href="{ICSD}">ICSD {id}</a>'
     return str(id)
