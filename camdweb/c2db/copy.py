@@ -15,7 +15,7 @@ Build tree like this::
     $ cd /tmp
     $ mkdir tree
     $ cd tree
-    $ python -m camdweb.c2db.copy_files <root-dir> <pattern> <pattern> ...
+    $ python -m camdweb.c2db.copy <root-dir> <pattern> <pattern> ...
 
 """
 from __future__ import annotations
@@ -238,6 +238,13 @@ def copy_material(fro: Path,
     else:  # pragma: no cover
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
+
+    try:
+        pol = rrf('infraredpolarizability')
+    except FileNotFoundError:
+        pass
+    else:  # pragma: no cover
+        for a in 'xyz':
             data[f'alpha{a}_lat'] = pol.get(f'alpha{a}_lat')
 
     data['energy'] = atoms.get_potential_energy()

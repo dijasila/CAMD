@@ -6,7 +6,7 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
 from camdweb.c2db.app import main
-from camdweb.c2db.copy_files import copy_materials, main as copymain
+from camdweb.c2db.copy import copy_materials, main as copymain
 from camdweb.test.c2db import create_tree
 from camdweb.c2db.oqmd123 import db2json
 
