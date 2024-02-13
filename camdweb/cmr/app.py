@@ -69,17 +69,15 @@ class CMRProjectApp(CAMDApp):
         self.title = title
         self.form_parts += form_parts
 
-    def get_table(self, session) -> tuple[str, str]:
-        html, error = super().get_table(session)
+    def table_html(self, session=None) -> str:
+        html = super().table_html(session)
         html = html.replace('/material/', f'/{self.name}/material/')
         html = html.replace('/table?', f'/{self.name}/table?')
-        return html, error
+        return html
 
     def material_page(self, uid: str) -> str:
         html = super().material_page(uid)
-        html = html.replace('/callback', f'/{self.name}/callback')
-        return html.replace('href="/">Search<',
-                            f'href="/{self.name}">Search<', 1)
+        return html.replace('/callback', f'/{self.name}/callback')
 
 
 class CMRAtomsPanel(AtomsPanel):

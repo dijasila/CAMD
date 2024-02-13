@@ -4,7 +4,7 @@ The camdweb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
 folders and friends (see PATTERNS variable below) to a canonical tree
 layout.
 
-Also contains simple web-app that can run off the tree of folders.
+Also contains web-app that can run off the tree of folders.
 
 The goal is to have the code decoupled from ASE, GPAW, CMR and ASR.
 Right now ASR webpanel() functions are still used
@@ -154,7 +154,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     app.form_parts += [
         Select('Dynamically stable', 'dyn_stab',
                ['', 'True', 'False'], ['', 'Yes', 'No']),
-        Range('Energy above convex hull [eV/atom]', 'ehull'),
+        Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
         Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['', 'No', 'Yes']),
         RangeX('Band gap range [eV]', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
@@ -163,7 +163,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material_page('1MoS2-2')
+    app.material_page('1MoS2-3')
 
 
 def create_app():  # pragma: no cover

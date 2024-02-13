@@ -66,7 +66,7 @@ class FormPart(abc.ABC):
         self.name = name
 
     @abc.abstractmethod
-    def render(self, query: dict) -> str:
+    def render(self) -> str:
         raise NotImplementedError
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -82,25 +82,25 @@ class Select(FormPart):
         self.options = options
         self.names = names
 
-    def render(self, query: dict) -> str:
+    def render(self) -> str:
         """Render select block.
 
         >>> s = Select('Bla-bla', 'xyz', ['A', 'B', 'C'])
-        >>> print(s.render({'xyz': 'B'}))
+        >>> print(s.render())
         <label class="form-label">Bla-bla</label>
         <select name="xyz" class="form-select">
-          <option value="A">A</option>
-          <option value="B" selected>B</option>
+          <option value="A" selected>A</option>
+          <option value="B">B</option>
           <option value="C">C</option>
         </select>
         """
-        selection = query.get(self.name)
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
+        selected = ' selected'
         for val, txt in zip(self.options, names):
-            selected = ' selected' if selection == val else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
+            selected = ''
         parts.append('</select>')
         return '\n'.join(parts)
 
@@ -110,70 +110,73 @@ class Input(FormPart):
         super().__init__(text, name)
         self.placeholder = placeholder
 
-    def render(self, query: dict) -> str:
+    def render(self) -> str:
         """Render input block.
 
         >>> s = Input('Bla-bla', 'xyz')
-        >>> print(s.render({'xyz': 'abc'}))
+        >>> print(s.render())
         <label class="form-label">Bla-bla</label>
         <input
           class="form-control"
           type="text"
           name="xyz"
-          value="abc"
+          value=""
           placeholder="..." />
         """
-        value = query.get(self.name, '')
         parts = [
             f'<label class="form-label">{self.text}</label>',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="{self.name}"',
-            f'  value="{value}"',
+            '  value=""',
             f'  placeholder="{self.placeholder}" />']
         return '\n'.join(parts)
 
 
 class Range(FormPart):
-    def render(self, query: dict) -> str:
+    def __init__(self, text: str, name: str, nonnegative=False):
+        super().__init__(text, name)
+        self.nonnegative = nonnegative
+
+    def render(self) -> str:
         """Render range block.
 
         >>> s = Range('Band gap', 'gap')
-        >>> print(s.render({'from_gap': '1.2'}))
+        >>> print(s.render())
         <label class="form-label">Band gap</label>
         <input
           class="form-control"
           type="text"
           name="from_gap"
-          value="1.2" />
+          value="" />
         <input
           class="form-control"
           type="text"
           name="to_gap"
           value="" />
         """
-        fro = query.get(f'from_{self.name}', '')
-        to = query.get(f'to_{self.name}', '')
         parts = [
             f'<label class="form-label">{self.text}</label>',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
-            f'  value="{fro}" />',
+            '  value="" />',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
-            f'  value="{to}" />']
+            '  value="" />']
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
         filters = []
         fro = query.get(f'from_{self.name}', '')
         if fro:
-            filters.append(f'{self.name}>={fro}')
+            limit = float(fro)
+            if not self.nonnegative or limit > 0.0:
+                filters.append(f'{self.name}>={fro}')
         to = query.get(f'to_{self.name}', '')
         if to:
             filters.append(f'{self.name}<={to}')
@@ -186,26 +189,23 @@ class RangeX(Range):
         self.options = options
         self.names = names
 
-    def render(self, query: dict) -> str:
-        fro = query.get(f'from_{self.name}', '')
-        to = query.get(f'to_{self.name}', '')
+    def render(self) -> str:
         parts = [
             f'<label class="form-label">{self.text}</label>',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
-            f'  value="{fro}" />',
+            '  value="" />',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
-            f'  value="{to}" />']
-        selection = query.get(self.name)
+            '  value="" />']
         parts += [f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
         for val, txt in zip(self.options, names):
-            selected = ' selected' if selection == val else ''
+            selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
         parts.append('</select>')
         return '\n'.join(parts)
@@ -228,21 +228,18 @@ class RangeS(Range):
         self.options = options
         self.names = names
 
-    def render(self, query: dict) -> str:
-        fro = query.get(f'from_{self.name}', '')
-        to = query.get(f'to_{self.name}', '')
-
+    def render(self) -> str:
         names = self.names or self.options
 
         parts = [f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
-            selected = ' selected' if fro == val else ''
+            selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
         parts.append('</select>')
 
         parts = [f'<select name="to_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
-            selected = ' selected' if to == val else ''
+            selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
         parts.append('</select>')
 
