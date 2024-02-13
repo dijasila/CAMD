@@ -86,20 +86,21 @@ class Select(FormPart):
         """Render select block.
 
         >>> s = Select('Bla-bla', 'xyz', ['A', 'B', 'C'])
-        >>> print(s.render({'xyz': 'B'}))
+        >>> print(s.render())
         <label class="form-label">Bla-bla</label>
         <select name="xyz" class="form-select">
-          <option value="A">A</option>
-          <option value="B" selected>B</option>
+          <option value="A" selected>A</option>
+          <option value="B">B</option>
           <option value="C">C</option>
         </select>
         """
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
+        selected = ' selected'
         for val, txt in zip(self.options, names):
-            selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
+            selected = ''
         parts.append('</select>')
         return '\n'.join(parts)
 
@@ -113,13 +114,13 @@ class Input(FormPart):
         """Render input block.
 
         >>> s = Input('Bla-bla', 'xyz')
-        >>> print(s.render({'xyz': 'abc'}))
+        >>> print(s.render())
         <label class="form-label">Bla-bla</label>
         <input
           class="form-control"
           type="text"
           name="xyz"
-          value="abc"
+          value=""
           placeholder="..." />
         """
         parts = [
@@ -142,13 +143,13 @@ class Range(FormPart):
         """Render range block.
 
         >>> s = Range('Band gap', 'gap')
-        >>> print(s.render({'from_gap': '1.2'}))
+        >>> print(s.render())
         <label class="form-label">Band gap</label>
         <input
           class="form-control"
           type="text"
           name="from_gap"
-          value="1.2" />
+          value="" />
         <input
           class="form-control"
           type="text"
