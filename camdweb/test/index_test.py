@@ -35,7 +35,8 @@ def index():
      ('i1>=42', {0}),
      ('b1=False', {0}),
      ('b1=0', {0}),
-     ('Source=COD', SyntaxError),
+     ('Source=COD', set()),
+     ('+a', SyntaxError),
      ('b1235=0', set())] +
     [(f, set()) for f in ['N', 'N=1', 'N!=0', 'N>0', 'N>=1', 'N<0']] +
     [(f, {0, 1, 2}) for f in ['N=0', 'N!=1', 'N<1', 'N<=0', 'N<=1']])

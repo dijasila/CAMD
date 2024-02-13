@@ -61,7 +61,6 @@ class Index:
             for symbol, n in count.items():
                 integers[symbol].append((n, i))
             for name, value in keys.items():
-                assert name.islower(), name
                 if isinstance(value, str):
                     dct = self.strings[name]
                     if value not in dct:
