@@ -177,18 +177,18 @@ In the picture below, ``camd.app`` is the WSGI_ app::
      |
      v
   +------------+  index   +-------+
-  |Materials   |--------->| Index |
+  | Materials  |--------->| Index |
   |            |          +-------+
   |  --------  |
   | |Material| |
   |  --------  |   panels   +--------------+
   | |Material| |----------->| list[Panel]  |
   |  --------  |            |              |
-  |     :      |            | ----------   |
-  |     :      |            ||AtomsPanel|  |
-  +------------+            | ----------   |
-                            ||OtherPanel|  |
-                            | ----------   |
+  |     :      |            |  ----------  |
+  |     :      |            | |AtomsPanel| |
+  +------------+            |  ----------  |
+                            | |OtherPanel| |
+                            |  ----------  |
                             |      :       |
                             |      :       |
                             +--------------+
@@ -218,7 +218,7 @@ Objects
 
 :Materials:
     Keeps track of all the ``Panel`` and ``Material`` objects
-    (``materials[uid]`` will give you the material with the give ``uid``
+    (``materials[uid]`` will give you the material with the given ``uid``
     and ``for material in materials:`` will loop over them all).
     Also handles two dictionaries that it shares with the panels:
 
@@ -232,4 +232,3 @@ Objects
 
 :Session:
     Remembers selected columns, sorting information, ...
-    (not quite sure we need this).
