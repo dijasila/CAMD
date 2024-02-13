@@ -743,7 +743,7 @@ class C1DBProjectDescription(ProjectDescription):
 
     def create_column_one(self, panel, material):
         rows = panel.table_rows(material, self.column_descriptions)
-        source = material.source
+        source = material.Source
         df = material.derived_from
         if source == 'COD':
             rows.append(['Source', cod(df)])
@@ -758,9 +758,9 @@ class C1DBProjectDescription(ProjectDescription):
                 ['Derived form',
                  f'<a href={df}>{df}</a>']]
 
-        for key, text in [('pbed3_1d', '1D (PBE-D3)'),
-                          ('pbe_1d', '1D (PBE)'),
-                          ('pbed3_3d', '3D (PBE-D3)')]:
+        for key, text in [('PBED3_1D', '1D (PBE-D3)'),
+                          ('PBE_1D', '1D (PBE)'),
+                          ('PBED3_3D', '3D (PBE-D3)')]:
             uid = getattr(material, key, '')
             if uid:
                 rows.append(

@@ -92,7 +92,7 @@ C2DB-app
 
 ::
 
-    $ python -m camdweb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
+    $ python -m camdweb.c2db.copy ~cmr/C2DB-ASR "tree/*/*/*/" ...
     $ python -m camdweb.c2db.app A*/
 
 Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
@@ -127,7 +127,7 @@ to your local machine::
 Then you can play with those files like this::
 
     $ cd C2DB-test
-    $ python -m camdweb.c2db.copy_files . "MoS2*/"
+    $ python -m camdweb.c2db.copy . "MoS2*/"
     $ python -m camdweb.c2db.app AB2
 
 
@@ -223,7 +223,7 @@ Objects
     Also handles two dictionaries that it shares with the panels:
 
     * ``column_descriptions: dict[str, str]`` for longer descriptions of the
-      short (always lower case) column names.
+      short column names.
     * ``html_column_formatters: dict[str, Callable[..., str]]`` for converting
       bool, int, float and str values to HTML strings.
 

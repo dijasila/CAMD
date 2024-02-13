@@ -1,6 +1,6 @@
 """C2DB web-app.
 
-The camdweb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
+The camdweb.c2db.copy module has code to convert ~cmr/C2DB-ASR/tree/
 folders and friends (see PATTERNS variable below) to a canonical tree
 layout.
 

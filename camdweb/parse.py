@@ -81,8 +81,6 @@ def parse1(q: str) -> str:
         for m in matches:
             i, j = m.span()
             k, v = m[1].split(x)
-            if not k.islower():
-                raise SyntaxError(f'Illegal key: "{k}"')
             v = repr(str2obj(v))
             q = q[:i] + f'(i.key({k!r}, {x!r}, #{len(h)}))' + q[j:]
             h.append(v)
@@ -92,7 +90,7 @@ def parse1(q: str) -> str:
     matches = reversed(list(re.finditer(r'([A-Z][a-z]?[0-9]*)+', q)))
     for m in matches:
         i, j = m.span()
-        if j < len(q) and q[j] == "'":
+        if j < len(q) and q[j] == "'" or i > 0 and q[i - 1] == "'":
             continue  # we already dealt with this one
         q = q[:i] + f'(i.formula({m[0]!r}))' + q[j:]
         n += j - i

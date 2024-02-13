@@ -122,9 +122,7 @@ def app_from_db(dbpath: Path,
                 rows.append(row2material(row, pd, root))
                 pb.advance(pid)
 
-        column_descriptions = {
-            key.lower(): value
-            for key, value in pd.column_descriptions.items()}
+        column_descriptions = pd.column_descriptions.copy()
         column_descriptions.update(COLUMN_DESCRIPTIONS)
         panels: list[Panel] = [
             CMRAtomsPanel(
@@ -134,9 +132,8 @@ def app_from_db(dbpath: Path,
         panels += pd.panels
         materials = Materials(rows, panels)
 
-    initial_columns = [name.lower() for name in pd.initial_columns]
     return CMRProjectApp(
-        materials, initial_columns,
+        materials, pd.initial_columns,
         dbpath, pd.title, pd.form_parts)
 
 
@@ -170,7 +167,7 @@ def row2material(row: AtomsRow,
             # "Description ... [unit]".  This means we
             # have an integer with a unit!
             value = float(value)
-        material.columns[name.lower()] = value
+        material.columns[name] = value
     pd.postprocess(material)
     return material
 
