@@ -78,18 +78,14 @@ class CAMDApp:
     def index_page(self) -> str:
         """Page showing table of selected materials."""
         query = request.query
-        filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
-        session.update(filter_string, query)
-        search = '\n'.join(fp.render(query) for fp in self.form_parts)
-        table, error = self.get_table(session)
+        search = '\n'.join(fp.render() for fp in self.form_parts)
+        table = self.get_table(session)
         return template('index.html',
                         title=self.title,
-                        query=query,
                         search=search,
                         session=session,
-                        table=table,
-                        error=error)
+                        table=table)
 
     def get_table(self, session) -> tuple[str, str]:
         """Get HTML and error message (if there was one) for table."""
@@ -100,15 +96,16 @@ class CAMDApp:
                         pages=pages,
                         rows=rows,
                         header=header,
-                        new_columns=new_columns), error
+                        new_columns=new_columns,
+                        error=error)
 
     def table_html(self) -> str:
         """Get HTML for table."""
         query = request.query
+        filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
-        filter_string = session.filter
         session.update(filter_string, query)
-        return self.get_table(session)[0]
+        return self.get_table(session)
 
     def get_filter_string(self, query: dict) -> str:
         """Generate filter string from URL query.

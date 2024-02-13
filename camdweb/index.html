@@ -88,16 +88,19 @@
         <div class="row">
           <div class="col d-flex justify-content-center">
             <div class="card text-bg-light p-3 shadow-sm">
-              <form>
+              <form                  hx-get="/table"
+                 hx-target="#table-div"
+                 hx-swap="outerHTML">
                 <div class="row">
                   <div class="col">
                     <input class="shadow-sm form-control" type="hidden" name="sid" value="{{ session.sid }}">
                     <div class="mb-3">
                       <div class="input-group">
                         <input class="form-control shadow-sm" type="text"
-                               name="filter" value="{{ query.get('filter', '') }}"
+                               name="filter" value=""
                                placeholder="MoS2, ...">
-                        <button class="btn btn-primary shadow-sm" type="submit">Search</button>
+                        <button class="btn btn-primary shadow-sm" type="submit"
+>Search</button>
                       </div>
                     </div>
                   </div>
@@ -119,16 +122,6 @@
           <!--  can add a 2nd card here  -->
         </div>
     </div>
-
-      <!--  show the error message  -->
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-1"></div>
-          <div class="col">
-            <p style="color: red;">{{ error }}</p>
-          </div>
-        </div>
-      </div>
 
       <!--  Results Table  -->
       {{ !table }}
