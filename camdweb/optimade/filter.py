@@ -11,6 +11,7 @@ from lark.lexer import Token  # type: ignore
 from lark.tree import Tree  # type: ignore
 
 from optimade.filterparser import LarkParser  # type: ignore
+from camdweb.filter import Index
 
 OPS = {
     '=': operator.eq,
@@ -42,8 +43,9 @@ LENGTH_ALIASES = {
     'species_at_sites': 'nsites',
 }
 
+
 def select(node: Any,
-           index):
+           index: Index):
     """Create SELECT SQL-statement."""
     if len(node) == 3:
         n1, n2, n3 = node
@@ -52,16 +54,18 @@ def select(node: Any,
             op = n2[1]
             value = n1
             op = REVERSE_OPS.get(op, op)
-            return index.compare(key, op, value)
+            return index.key(key, op, value)
         raise ValueError
 
     n1, n2 = node
     if n1 == 'OR':
-        return or_(*(self.select(value) for value in n2))
+        v1, v2 = n2
+        return select(v1, index) | select(v2, index)
     if n1 == 'AND':
-        return and_(*(self.select(value) for value in n2))
+        v1, v2 = n2
+        return select(v1, index) & select(v2, index)
     if n1 == ('NOT', 'NOT'):
-        return not_(self.select(n2))
+        return index.ids - select(n2, index)
     if n1[0] == 'IDENTIFIER':
         key = n1[1]
         *n3, n4 = n2
