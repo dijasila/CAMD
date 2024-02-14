@@ -70,51 +70,35 @@ def select(node: Any,
         key = n1[1]
         *n3, n4 = n2
         name = ' '.join(n[0] for n in n3)
-        if name == 'HAS':
-            value = n4
-            return self.has(key, value)
-        if name == 'HAS ALL':
+        if name.startswith('HAS'):
+            if key not in ['elements', 'species_at_sites']:
+                raise ValueError
+            if name == 'HAS':
+                value = n4
+                return index.key(value, '>', 0)
+            if name == 'HAS ALL':
+                values = n4 if isinstance(n4, list) else [n4]
+                return functools.reduce(
+                    (operator.and_,
+                     index.key(value, '>', 0) for value in values))
+            assert name == 'HAS ANY', name
             values = n4 if isinstance(n4, list) else [n4]
-            return and_(*(self.has(key, value) for value in values))
-        if name == 'HAS ANY':
-            values = n4 if isinstance(n4, list) else [n4]
-            return or_(*(self.has(key, value) for value in values))
-        if name in {'ENDS WITH', 'ENDS'}:
-            value = n4
-            assert isinstance(value, str)
-            return self.endswith(key, value)
-        if name in {'STARTS WITH', 'STARTS'}:
-            value = n4
-            assert isinstance(value, str)
-            return self.startswith(key, value)
-        if name == 'CONTAINS':
-            value = n4
-            assert isinstance(value, str)
-            return self.contains(key, value)
+            return functools.reduce(
+                (operator.or_,
+                 index.key(value, '>', 0) for value in values))
         if name.startswith('LENGTH'):
             value = n4
             op = "="
-            if name.endswith("OPERATOR"):
+            if name.endswith('OPERATOR'):
                 op = n3[1][1]
-            return self.length(key, op, value)
+            if key in LENGTH_ALIASES:
+                return self.key(LENGTH_ALIASES[key], op, value)
+            raise NotImplementedError(
+            f'Length filter not supported on field {key!r}')
         if n3[0][0] == 'OPERATOR':
             op = n3[0][1]
             value = n4
             return self.compare(key, op, value)
-
-    raise ValueError
-
-    def length(self, key: str, op: str, value: int) -> Clauses:
-        """Implements "key LENGTH <op> value" via the pre-defined
-        `LENGTH_ALIASES`, e.g., when querying for the LENGTH of
-        `elements`, use the auxiliary `nelements` field.
-
-        """
-        if key in LENGTH_ALIASES:
-            return self.compare(LENGTH_ALIASES[key], op, value)
-        raise NotImplementedError(
-            f"Length filter not supported on field {key!r}"
-        )
 
 
 def parse_lark_tree(node: Tree | Token) -> Any:
