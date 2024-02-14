@@ -32,6 +32,8 @@ test = [
     "coverage",
     "pytest",
     "boddle"]
+optimade = [
+    "optimade>=0.22.2"]
 
 [tool.mypy]
 packages = "camdweb"
