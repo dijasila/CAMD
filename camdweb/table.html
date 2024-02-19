@@ -18,6 +18,7 @@
           <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
 
           <div class="input-group">
+          <label class="form-label">Add column</label>
             <select
               hx-get="/table?sid={{ session.sid }}"
               hx-trigger="change"
@@ -27,9 +28,6 @@
                 <option value="{{ name }}">{{ !value }}</option>
               % end
             </select>
-            <button class="btn btn-sm btn-outline-secondary save-scroll"
-                    type="submit" onclick="storeScrollPosition(event)">Add column
-            </button>
           </div>
         </form>
       </div>

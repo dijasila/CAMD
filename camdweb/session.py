@@ -59,8 +59,8 @@ class Session:
         self.rows_per_page = 25
 
     def update(self,
-               filter: str,
-               query: dict) -> None:
+               query: dict | None = None,
+               filter: str | None = None) -> None:
         """Update session object.
 
         toggle:
@@ -72,11 +72,12 @@ class Session:
         page:
             go to another page
         """
-        if filter != self.filter:
+        if filter is not None:
             self.filter = filter
             self.page = 0
             return
 
+        assert query is not None
         column = query.get('toggle')
         if column:
             if column in self.columns:
