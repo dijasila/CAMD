@@ -112,6 +112,8 @@ class ASRPanel(Panel):
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
             return
+        if self.name == 'deformationpotentials' and 'defpots_soc' not in dct:
+            return
         result = self.result_class(dct)
         print(self.name)
         (p, *_) = self.webpanel(result, row, self.key_descriptions)

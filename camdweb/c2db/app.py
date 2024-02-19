@@ -179,5 +179,16 @@ def check_all(pattern: str):  # pragma: no cover
         c2db.material_page(material.uid)
 
 
+def check_def_pot():
+    from .asr_panel import read_result_file
+    for path in Path().glob('A*/*/*/results-asr.deformationpotentials.json'):
+        r = read_result_file(path)
+        try:
+            r['defpots_soc']
+        except KeyError:
+            f = json.loads(path.with_name('data.json').read_text())['folder']
+            print(f)
+
+
 if __name__ == '__main__':
     main().app.run(host='0.0.0.0', port=8081, debug=True)
