@@ -49,6 +49,7 @@ class Row:
         self.cell = self.atoms.cell
         self.pbc = self.atoms.pbc
         self.symbols = self.atoms.symbols
+        self.is_magnetic = getattr(material, 'magstate', '??') == 'FM'
 
     def toatoms(self):
         return self.atoms
@@ -57,7 +58,6 @@ class Row:
         if hasattr(self, name):
             return getattr(self, name)
         else:  # pragma: no cover
-            print('MISSING:', name, default)
             return default
 
     def __contains__(self, key):
@@ -112,6 +112,8 @@ class ASRPanel(Panel):
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
             return
+        if self.name == 'deformationpotentials' and 'defpots_soc' not in dct:
+            return  # pragma: no cover
         result = self.result_class(dct)
         print(self.name)
         (p, *_) = self.webpanel(result, row, self.key_descriptions)

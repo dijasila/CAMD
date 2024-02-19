@@ -18,13 +18,12 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-
 from camdweb.c2db.asr_panel import ASRPanel
+from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
 from camdweb.html import Range, RangeX, Select, table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
-from camdweb.panels.bandstructure import BandStructurePanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
@@ -103,8 +102,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('stiffness'),
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
-        BandStructurePanel(),
-        asr_panel('pdos'),
+        BSDOSBZPanel(),
         asr_panel('effective_masses'),
         asr_panel('hse'),
         asr_panel('gw'),
@@ -177,6 +175,17 @@ def check_all(pattern: str):  # pragma: no cover
     for material in c2db.materials:
         print(material.uid)
         c2db.material_page(material.uid)
+
+
+def check_def_pot():  # pragma: no cover
+    from .asr_panel import read_result_file
+    for path in Path().glob('A*/*/*/results-asr.deformationpotentials.json'):
+        r = read_result_file(path)
+        try:
+            r['defpots_soc']
+        except KeyError:
+            f = json.loads(path.with_name('data.json').read_text())['folder']
+            print(f)
 
 
 if __name__ == '__main__':

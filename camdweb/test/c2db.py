@@ -27,13 +27,20 @@ def create_data(dir: Path, atoms: Atoms) -> None:
     (dir / 'results-asr.magnetic_anisotropy.json').write_text(
         '{"spin_axis": "z"}')
     (dir / 'results-asr.structureinfo.json').write_text(
-        """{"kwargs": {"data": {"has_inversion_symmetry": false,
-                                "layergroup": "p-6m2",
-                                "lgnum": 78}}}""")
+        """{"has_inversion_symmetry": false,
+            "layergroup": "p-6m2",
+            "lgnum": 78,
+            "spglib_dataset":
+                {"rotations":{"__ndarray__":[
+                                  [1, 3, 3],
+                                  "int32",
+                                  [1,0,0,0,1,0,0,0,1]]}}}""")
     (dir / 'results-asr.gs.json').write_text(
         """{"kwargs": {"data": {"gap": 1.8,
                                 "gap_dir": 1.8,
                                 "gap_dir_nosoc": 1.9,
+                                "k_cbm_c": [0.0, 0.0, 0.0],
+                                "k_vbm_c": [0.1, 0.0, 0.0],
                                 "evac": 4.5,
                                 "efermi": 1.5,
                                 "gaps_nosoc": {"vbm": 0.5, "cbm": 2.5}}}}""")

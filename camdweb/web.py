@@ -55,6 +55,7 @@ class CAMDApp:
         self.app.route('/material/<uid>')(self.material_page)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
+        self.app.route('/favicon.ico')(self.favicon)
 
         for fmt in ['xyz', 'cif', 'json']:
             self.app.route(f'/material/<uid>/download/{fmt}')(
@@ -171,6 +172,10 @@ class CAMDApp:
     def png(self, path: str) -> bytes:
         """Return binary data for png-figures."""
         return static_file(path, self.root)
+
+    def favicon(self) -> bytes:
+        path = self.root / 'favicon.ico'
+        return static_file(path.name, path.parent)
 
 
 def cut_out_script(html: str) -> tuple[str, str]:

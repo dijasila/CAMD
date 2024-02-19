@@ -55,7 +55,8 @@ RESULT_FILES = [
     'piezoelectrictensor',
     'gs',
     'gs@calculate',
-    'shift']
+    'shift',
+    'structureinfo']
 
 ROOT = Path('/home/niflheim2/cmr/C2DB-ASR')
 
@@ -181,10 +182,11 @@ def copy_material(fro: Path,
 
     structure = rrf('structureinfo')
     for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
-        if key not in structure:
+        value = structure.get(key)
+        if value is None:
             print(fro)
             return
-        data[key] = structure[key]
+        data[key] = value
 
     try:
         data['label'] = rrf('c2db.labels')['label']
@@ -236,7 +238,7 @@ def copy_material(fro: Path,
     except FileNotFoundError:
         pass
     else:  # pragma: no cover
-        data['E_B'] = bse['E_B']
+        data['E_B'] = bse.get('E_B')
 
     try:
         pol = rrf('polarizability')
@@ -310,7 +312,7 @@ def main(argv: list[str] | None = None):
         help='Glob pattern like "tree/A*/*/*/". '
         f'Use "ALL" to get all the standard patterns: {patterns}.')
     parser.add_argument('-s', '--skip-convex-hulls', action='store_true')
-    parser.add_argument('-p', '--processes', default=1)
+    parser.add_argument('-p', '--processes', type=int, default=1)
     args = parser.parse_args(argv)
     if args.pattern == ['ALL']:  # pragma: no cover
         args.pattern = PATTERNS
