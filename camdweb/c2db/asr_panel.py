@@ -57,7 +57,6 @@ class Row:
         if hasattr(self, name):
             return getattr(self, name)
         else:  # pragma: no cover
-            print('MISSING:', name, default)
             return default
 
     def __contains__(self, key):
