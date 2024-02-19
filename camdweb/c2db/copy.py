@@ -55,7 +55,8 @@ RESULT_FILES = [
     'piezoelectrictensor',
     'gs',
     'gs@calculate',
-    'shift']
+    'shift',
+    'structureinfo']
 
 ROOT = Path('/home/niflheim2/cmr/C2DB-ASR')
 

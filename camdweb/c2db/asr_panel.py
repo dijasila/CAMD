@@ -49,6 +49,7 @@ class Row:
         self.cell = self.atoms.cell
         self.pbc = self.atoms.pbc
         self.symbols = self.atoms.symbols
+        self.is_magnetic = material.magstate == 'FM'
 
     def toatoms(self):
         return self.atoms
