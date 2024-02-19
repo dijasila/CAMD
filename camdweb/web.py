@@ -90,10 +90,14 @@ class CAMDApp:
 
     def table_html(self, session=None) -> str:
         """Get HTML for table."""
-        query = request.query
-        filter_string = self.get_filter_string(query)
-        session = session or self.sessions.get(int(query.get('sid', '-1')))
-        session.update(filter_string, query)
+        if session is None:
+            query = request.query
+            session = self.sessions.get(int(query.get('sid')))
+            if 'filter' in query:
+                filter_string = self.get_filter_string(query)
+            else:
+                filter_string = ''
+            session.update(filter_string, query)
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
         return template('table.html',

@@ -59,7 +59,7 @@ class Session:
         self.rows_per_page = 25
 
     def update(self,
-               filter: str,
+               filter_string: str,
                query: dict) -> None:
         """Update session object.
 
@@ -72,8 +72,8 @@ class Session:
         page:
             go to another page
         """
-        if filter != self.filter:
-            self.filter = filter
+        if 'filter' in query:
+            self.filter = filter_string
             self.page = 0
             return
 
