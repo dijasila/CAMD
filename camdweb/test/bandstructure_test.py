@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from ase.lattice import BCT
 
-from camdweb.panels.bandstructure import PlotUtil, prettify_labels
+from camdweb.bandstructure import PlotUtil, prettify_labels
 
 
 def test_plotutil():

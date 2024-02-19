@@ -113,7 +113,7 @@ class ASRPanel(Panel):
         if dct is None:
             return
         if self.name == 'deformationpotentials' and 'defpots_soc' not in dct:
-            return
+            return  # pragma: no cover
         result = self.result_class(dct)
         print(self.name)
         (p, *_) = self.webpanel(result, row, self.key_descriptions)

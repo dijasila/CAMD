@@ -177,7 +177,7 @@ def check_all(pattern: str):  # pragma: no cover
         c2db.material_page(material.uid)
 
 
-def check_def_pot():
+def check_def_pot():  # pragma: no cover
     from .asr_panel import read_result_file
     for path in Path().glob('A*/*/*/results-asr.deformationpotentials.json'):
         r = read_result_file(path)

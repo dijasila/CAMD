@@ -3,11 +3,12 @@ import json
 import plotly
 from asr.pdos import plot_pdos
 from asr.gs import bz_with_band_extremums
+import numpy as np
 
 from camdweb.panels.panel import Panel
 from camdweb.c2db.asr_panel import Row
-from camdweb.panels.bandstructure import plotter_from_row
 from camdweb.html import image
+from camdweb.bandstructure import PlotUtil
 
 HTML = """
 <div class="row">
@@ -25,6 +26,28 @@ var graphs = {bs_data};
 Plotly.newPlot('bandstructure', graphs, {{}});
 </script>
 """
+
+
+def plotter_from_row(row):
+    dct = row.data.get('results-asr.bandstructure.json')
+    gaps = row.data['results-asr.gs.json']['gaps_nosoc']
+    fermilevel_soc = dct['bs_soc']['efermi']
+
+    assert np.allclose(dct['bs_soc']['path'].kpts,
+                       dct['bs_nosoc']['path'].kpts)
+
+    vbm = gaps['vbm']
+    cbm = gaps['cbm']
+    return PlotUtil(
+        energy_soc_mk=dct['bs_soc']['energies'],
+        energy_nosoc_skn=dct['bs_nosoc']['energies'],
+        spin_zprojection_soc_mk=dct['bs_soc']['sz_mk'],
+        path=dct['bs_nosoc']['path'],
+        fermilevel=fermilevel_soc,
+        emin=(fermilevel_soc if vbm is None else vbm) - 3,
+        emax=(fermilevel_soc if cbm is None else cbm) + 3,
+        spin_axisname=row.get('spin_axis', 'z')  # XXX crazy to have a default
+    ).subtract_reference_energy(row.get('evac'))
 
 
 class BSDOSBZPanel(Panel):
