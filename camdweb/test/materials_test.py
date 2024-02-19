@@ -33,16 +33,16 @@ def test_materials(material):
          ('natoms', 'Number of atoms'),
          ('volume', 'Unit cell volume [Å<sup>3</sup>]')],
         '')
-    s.update('volume>1,stoichiometry=A', {})
+    s.update(filter='volume>1,stoichiometry=A')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
-    s.update('stoichiometry=A', {})
+    s.update(filter='stoichiometry=A')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
-    s.update('stoichiometry=AB', {})
+    s.update(filter='stoichiometry=AB')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 0
-    s.update('Ha>100', {})
+    s.update(filter='Ha>100')
     rows, _, _, _, error = materials.get_rows(s)
     assert len(rows) == 0
     assert error == 'Unknown chemical symbol "Ha"'

@@ -10,10 +10,10 @@ def test_sessions():
 
 def test_session():
     s = Session(1, ['a', 'b'])
-    s.update('', {'toggle': 'a'})
+    s.update({'toggle': 'a'})
     assert s.columns == ['b']
-    s.update('', {'toggle': 'a'})
+    s.update({'toggle': 'a'})
     assert s.columns == ['b', 'a']
-    s.update('', {'sort': 'a'})
-    s.update('', {'sort': 'a'})
+    s.update({'sort': 'a'})
+    s.update({'sort': 'a'})
     assert s.direction == -1

@@ -95,9 +95,9 @@ class CAMDApp:
             session = self.sessions.get(int(query.get('sid')))
             if 'filter' in query:
                 filter_string = self.get_filter_string(query)
+                session.update(filter=filter_string)
             else:
-                filter_string = ''
-            session.update(filter_string, query)
+                session.update(query=query)
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
         return template('table.html',
