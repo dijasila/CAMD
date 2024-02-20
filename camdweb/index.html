@@ -88,12 +88,11 @@
         <div class="row">
           <div class="col d-flex justify-content-center">
             <div class="card text-bg-light p-3 shadow-sm">
-              <form                  hx-get="/table"
+              <form hx-get="/table?sid={{ session.sid }}"
                  hx-target="#table-div"
                  hx-swap="outerHTML">
                 <div class="row">
                   <div class="col">
-                    <input class="shadow-sm form-control" type="hidden" name="sid" value="{{ session.sid }}">
                     <div class="mb-3">
                       <div class="input-group">
                         <input class="form-control shadow-sm" type="text"
