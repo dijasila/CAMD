@@ -3,6 +3,7 @@ from camdweb.session import Sessions, Session
 
 def test_sessions():
     s = Sessions(['a', 'b'], 5)
+    print(s)
     for _ in range(20):
         s.get(-1)
     assert len(s.sessions) <= 5

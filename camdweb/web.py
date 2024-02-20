@@ -10,7 +10,7 @@ from typing import Iterator
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
-from camdweb.html import FormPart, Select
+from camdweb.html import FormPart, Select, StoichiometryInput
 from camdweb.materials import Materials
 from camdweb.session import Sessions
 
@@ -38,9 +38,14 @@ class CAMDApp:
         self.form_parts: list[FormPart] = []
 
         # For selecting materials (A, AB, AB2, ...):
-        self.form_parts.append(
-            Select('Stoichiometry', 'stoichiometry',
-                   [''] + self.materials.stoichiometries()))
+        stoichiometries = self.materials.stoichiometries()
+        if len(stoichiometries) > 20:
+            # too many to list them all
+            self.form_parts.append(StoichiometryInput())
+        else:
+            self.form_parts.append(
+                Select('Stoichiometry', 'stoichiometry',
+                       [''] + stoichiometries))
 
         # For nspecies selection:
         maxnspecies = max(len(material.count) for material in self.materials)

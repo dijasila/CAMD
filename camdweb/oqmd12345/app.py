@@ -50,10 +50,11 @@ def oqmd(id, link=False):
 def main(root: Path) -> CAMDApp:
     """Create CRYSP app."""
     mlist: list[Material] = []
-    files = list(root.glob('A*/*/*/'))
+    files = list(root.glob('A*/*/*/structure.xyz'))
     with progress.Progress() as pb:
         pid = pb.add_task('Reading materials:', total=len(files))
         for f in files:
+            f = f.parent
             uid = f'{f.parent.name}-{f.name}'
             material = Material.from_file(f / 'structure.xyz', uid)
             data = json.loads((f / 'data.json').read_text())
@@ -69,7 +70,9 @@ def main(root: Path) -> CAMDApp:
 
     initial_columns = ['formula', 'gap', 'gap_dir',
                        'magstate', 'etot', 'volume']
-    return CAMDApp(materials, initial_columns, root)
+    app = CAMDApp(materials, initial_columns, root)
+    app.title = 'OQMD12345'
+    return app
 
 
 def create_app():  # pragma: no cover

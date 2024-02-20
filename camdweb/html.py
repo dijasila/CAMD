@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 from pathlib import Path
 from typing import Iterable, Sequence
+from ase.formula import Formula
 
 
 def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
@@ -93,6 +94,8 @@ class Select(FormPart):
           <option value="B">B</option>
           <option value="C">C</option>
         </select>
+        >>> s.get_filter_strings({'xyz': 'C'})
+        ['xyz=C']
         """
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
@@ -132,6 +135,34 @@ class Input(FormPart):
             '  value=""',
             f'  placeholder="{self.placeholder}" />']
         return '\n'.join(parts)
+
+
+class StoichiometryInput(Input):
+    def __init__(self):
+        super().__init__('Stoichiometry:', 'stoichiometry', 'A, AB2, ABC, ...')
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        """Make sure A2B and AB2 both work.
+
+        >>> s = StoichiometryInput()
+        >>> s.get_filter_strings({'stoichiometry': 'A2B'})
+        ['stoichiometry=AB2']
+        >>> s.get_filter_strings({})
+        []
+        >>> s.get_filter_strings({'stoichiometry': 'garbage'})
+        ['stoichiometry=garbage']
+        """
+        val = query.get(self.name, '')
+        if not val:
+            return []
+        # Reduce A2B2 to AB and so on.
+        try:
+            f = Formula(val)
+        except ValueError:
+            pass
+        else:
+            val = f.reduce()[0].stoichiometry()[0].format('ab2')
+        return [f'{self.name}={val}']
 
 
 class Range(FormPart):

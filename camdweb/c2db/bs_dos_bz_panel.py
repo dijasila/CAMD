@@ -51,7 +51,7 @@ def plotter_from_row(row):
 
 
 class BSDOSBZPanel(Panel):
-    title = 'Band structure and density of states'
+    title = 'Electronic band structure and density of states'
 
     def get_html(self, material):
         bs = material.folder / 'results-asr.bandstructure.json'

@@ -35,6 +35,8 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
 class C2DBAtomsPanel(AtomsPanel):
+    title = 'Summary'
+
     def create_column_one(self,
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
@@ -151,11 +153,12 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     app = CAMDApp(materials, initial_columns, root)
     app.form_parts += [
         Select('Dynamically stable', 'dyn_stab',
-               ['', 'True', 'False'], ['', 'Yes', 'No']),
+               ['', 'True', 'False'], ['-', 'Yes', 'No']),
         Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
-        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['', 'No', 'Yes']),
+        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         RangeX('Band gap range [eV]', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
+    app.title = 'C2DB'
     return app
 
 
