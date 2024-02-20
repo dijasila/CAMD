@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 from pathlib import Path
 from typing import Iterable, Sequence
+from ase.forrmula import Formula
 
 
 def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
@@ -132,6 +133,24 @@ class Input(FormPart):
             '  value=""',
             f'  placeholder="{self.placeholder}" />']
         return '\n'.join(parts)
+
+
+class StoichiometryInput(Input):
+    def __init__(self):
+        super().__init__('Stoichiometry:', 'stoichiometry', 'A, AB2, ABC, ...')
+
+    def get_filter_strings(self, query: dict) -> list[str]:
+        val = query.get(self.name, '')
+        if not val:
+            return []
+        # Reduce A2B2 to AB and so on.
+        try:
+            f = Formula(val)
+        except ValueError:
+            pass
+        else:
+            val = f.reduce()[0].stoichiometry()[0].format('ab2')
+        return [f'{self.name}={val}']
 
 
 class Range(FormPart):
