@@ -158,6 +158,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         RangeX('Band gap range [eV]', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
+    app.title = 'C2DB'
     return app
 
 

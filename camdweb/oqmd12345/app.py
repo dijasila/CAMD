@@ -70,7 +70,9 @@ def main(root: Path) -> CAMDApp:
 
     initial_columns = ['formula', 'gap', 'gap_dir',
                        'magstate', 'etot', 'volume']
-    return CAMDApp(materials, initial_columns, root)
+    app = CAMDApp(materials, initial_columns, root)
+    app.title = 'OQMD12345'
+    return app
 
 
 def create_app():  # pragma: no cover

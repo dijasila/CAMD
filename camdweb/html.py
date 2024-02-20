@@ -3,7 +3,7 @@ from __future__ import annotations
 import abc
 from pathlib import Path
 from typing import Iterable, Sequence
-from ase.forrmula import Formula
+from ase.formula import Formula
 
 
 def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
@@ -140,6 +140,16 @@ class StoichiometryInput(Input):
         super().__init__('Stoichiometry:', 'stoichiometry', 'A, AB2, ABC, ...')
 
     def get_filter_strings(self, query: dict) -> list[str]:
+        """Make sure A2B and AB2 both work.
+
+        >>> s = StoichiometryInput()
+        >>> s.get_filter_strings({'stoichiometry': 'A2B'})
+        ['stoichiometry=AB2']
+        >>> s.get_filter_strings({})
+        []
+        >>> s.get_filter_strings({'stoichiometry': 'garbage'})
+        ['stoichiometry=garbage']
+        """
         val = query.get(self.name, '')
         if not val:
             return []

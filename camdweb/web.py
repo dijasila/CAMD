@@ -40,11 +40,12 @@ class CAMDApp:
         # For selecting materials (A, AB, AB2, ...):
         stoichiometries = self.materials.stoichiometries()
         if len(stoichiometries) > 20:
-            s = StoichiometryInput()
+            # too many to list them all
+            self.form_parts.append(StoichiometryInput())
         else:
-            s = Select('Stoichiometry', 'stoichiometry',
-                       [''] + stoichiometries)
-        self.form_parts.append(s)
+            self.form_parts.append(
+                Select('Stoichiometry', 'stoichiometry',
+                       [''] + stoichiometries))
 
         # For nspecies selection:
         maxnspecies = max(len(material.count) for material in self.materials)
