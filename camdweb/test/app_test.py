@@ -54,7 +54,7 @@ def test_query_stoichiometry_h2(c2db):
      {'sort': 'volume'},
      {'page': '0'}])
 def test_various_queries(c2db, query):
-    with boddle(query=query | {'sid': '0'}):
+    with boddle(query=query | {'sid': '-1'}):
         c2db.table_html()
 
 

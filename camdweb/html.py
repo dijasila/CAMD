@@ -94,6 +94,8 @@ class Select(FormPart):
           <option value="B">B</option>
           <option value="C">C</option>
         </select>
+        >>> s.get_filter_strings({'xyz': 'C'})
+        ['xyz=C']
         """
         parts = [f'<label class="form-label">{self.text}</label>\n'
                  f'<select name="{self.name}" class="form-select">']
