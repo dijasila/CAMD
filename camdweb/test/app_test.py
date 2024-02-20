@@ -48,14 +48,14 @@ def test_query_stoichiometry_h2(c2db):
     assert 'H<sub>2' in out
 
 
-def test_various_queries(c2db):
-    for query in [{'toggle': 'volume'},
-                  {'toggle': 'volume'},
-                  {'sort': 'volume'},
-                  {'sort': 'volume'},
-                  {'page': '0'}]:
-        with boddle(query=query):
-            c2db.index_page()
+@pytest.mark.parametrize(
+    'query',
+    [{'toggle': 'volume'},
+     {'sort': 'volume'},
+     {'page': '0'}])
+def test_various_queries(c2db, query):
+    with boddle(query=query | {'sid': '0'}):
+        c2db.table_html()
 
 
 def test_material(c2db):

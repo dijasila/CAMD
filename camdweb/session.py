@@ -58,6 +58,11 @@ class Session:
         self.direction = 1
         self.rows_per_page = 25
 
+    def __repr__(self):
+        return (
+            f'Session({self.sid}, {self.columns}, {self.filter!r}, '
+            f'{self.page}, {self.sort!r}, {self.direction})')
+
     def update(self,
                query: dict | None = None,
                filter: str | None = None) -> None:
