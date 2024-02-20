@@ -165,7 +165,7 @@
     <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
       % for p, (panel_title, info, html) in enumerate(panels):
-        % if panel_title == 'Atoms':
+        % if p == 0:
           <!-- Logo (header) Area -->
           <section id="materialHeader" class="py-2 sticky-top">
             <!-- expand/collapse all -->
@@ -191,7 +191,7 @@
             </h2>
 
             <!--  Accordion Content (Panel info)  -->
-            <div class="accordion-collapse {{'collapse show' if panel_title=='Atoms' else 'collapse'}}"
+            <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
                  id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
                  aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
               <div class="panel accordion-body">

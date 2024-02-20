@@ -35,6 +35,8 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
 class C2DBAtomsPanel(AtomsPanel):
+    title = 'Summary'
+
     def create_column_one(self,
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
