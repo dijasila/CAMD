@@ -3,7 +3,8 @@ from pathlib import Path
 from ase.formula import Formula
 from camdweb.c2db.copy import PATTERNS, read_result_file
 
-fro = Path('/home/niflheim/joaso/paper_calcs/htp-spiral_paper/n1-magnets/tree')
+# fro = Path('/home/niflheim/joaso/paper_calcs/htp-spiral_paper/n1-magnets/tree')
+fro = Path('/home/niflheim/jensj/spin-spiral/')
 to = Path('/home/niflheim2/cmr/C2DB-ASR/')
 
 
