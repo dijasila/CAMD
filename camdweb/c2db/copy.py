@@ -71,8 +71,8 @@ PATTERNS = [
     'tree_LDP/A*/*/*/',
     'tree_CDVAE/A*/*/*/',
     'tree_intercalated/A*/*/*/',
-    'push-manti-tree/A*/*/*/']
-# '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
+    'push-manti-tree/A*/*/*/',
+    'tree_Wang23/A*/*/*/']
 
 
 def copy_materials(root: Path,
