@@ -9,6 +9,7 @@ from ase.io.jsonio import encode
 from ase.io.trajectory import write_atoms
 from ase.spectrum.band_structure import BandStructure
 from asr.bandstructure import Result
+from ase.calculators.singlepoint import SinglePointCalculator
 
 
 def create_data(dir: Path, atoms: Atoms) -> None:
@@ -21,6 +22,8 @@ def create_data(dir: Path, atoms: Atoms) -> None:
         writer.child('results').write(energy=-5.9)
         wfs = writer.child('wave_functions')
         wfs.write(fermi_levels=np.array([-0.123]))
+
+    atoms.write(dir / 'structure.json')
 
     # Create fake ASR result-files:
     (dir / 'results-asr.magstate.json').write_text('{"magstate": "NM"}')
@@ -93,6 +96,7 @@ def create_tree(dir: Path):
     path.mkdir()
     atoms = mx2('MoS2')
     atoms.center(vacuum=5, axis=2)
+    atoms.calc = SinglePointCalculator(atoms, energy=-5.9)
     create_data(path, atoms)
 
 
