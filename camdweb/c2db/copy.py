@@ -156,10 +156,10 @@ def copy_material(fro: Path,
                   to: Path,
                   olduid: str,
                   uid: str) -> None:  # pragma: no cover
-    structure = fro / 'structure.json'
-    if not structure.is_file():
+    structure_file = fro / 'structure.json'
+    if not structure_file.is_file():
         return
-    atoms = read(structure)
+    atoms = read(structure_file)
     assert isinstance(atoms, Atoms)
 
     def rrf(name: str) -> dict:
