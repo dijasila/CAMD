@@ -17,6 +17,9 @@ tests:
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase
     - pip install git+https://gitlab.com/asr-dev/asr.git@om_dmispiral
+    - python3 -c "import asr; print(asr)"
+    - python3 -c "import asr.collect_spiral"
+    - python3 -c "import importlib; importlib.import_module('asr.collect_spiral')"
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --skip-covered
