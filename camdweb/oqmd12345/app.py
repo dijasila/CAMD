@@ -23,7 +23,7 @@ from camdweb.web import CAMDApp
 COLUMN_DESCRIPTIONS = dict(
     etot='Total Energy [eV]',
     magstate='Magnetic state',
-    fmax='Maximum Force [eV/A²]',
+    fmax='Maximum Force [eV/A]',
     smax='Maximum Stress',
     gap='Band gap (PBE) [eV]',
     gap_dir='Direct Band Gap (PBE) [eV]',

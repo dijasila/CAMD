@@ -85,7 +85,7 @@ def copy_material(record: Repository) -> None:  # pragma: no cover
     if Path(node.name).name == 'postprocess':
         oqmd = Path(node.name).parts[1]
         data = {
-            'fmax': np.linalg.norm(output['forces']).max(),
+            'fmax': np.linalg.norm(output['forces'], axis=1).max(),
             'smax': abs(output['stresses']).max()}
         atoms = output['atoms']
     if Path(node.name).name == 'groundstate':
