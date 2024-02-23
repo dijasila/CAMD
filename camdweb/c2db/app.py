@@ -116,7 +116,10 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('bse'),
         BaderPanel(),
         asr_panel('piezoelectrictensor'),
-        ShiftCurrentPanel()]
+        ShiftCurrentPanel(),
+        asr_panel('collect_spiral'),
+        asr_panel('dmi'),
+        asr_panel('spinorbit')]
 
     materials = Materials(mlist, panels)
 

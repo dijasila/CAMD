@@ -56,7 +56,11 @@ RESULT_FILES = [
     'gs',
     'gs@calculate',
     'shift',
-    'structureinfo']
+    'structureinfo',
+    'collect_spiral',
+    'dmi',
+    'spinorbit',
+    'spinorbit@calculate']
 
 ROOT = Path('/home/niflheim2/cmr/C2DB-ASR')
 
@@ -67,8 +71,8 @@ PATTERNS = [
     'tree_LDP/A*/*/*/',
     'tree_CDVAE/A*/*/*/',
     'tree_intercalated/A*/*/*/',
-    'push-manti-tree/A*/*/*/']
-# '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
+    'push-manti-tree/A*/*/*/',
+    'tree_Wang23/A*/*/*/']
 
 
 def copy_materials(root: Path,
@@ -101,7 +105,7 @@ def copy_materials(root: Path,
             try:
                 olduid = read_result_file(fp)['uid']
             except FileNotFoundError:  # pragma: no cover
-                print(fp)
+                print('No fingerprint:', fp)
                 continue
             f = Formula(olduid.split('-')[0])
             stoi, reduced, nunits = f.stoichiometry()
@@ -180,12 +184,9 @@ def copy_material(fro: Path,
         pass
 
     structure = rrf('structureinfo')
-    for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
-        value = structure.get(key)
-        if value is None:
-            print(fro)
-            return
-        data[key] = value
+    data['has_inversion_symmetry'] = structure['has_inversion_symmetry']
+    data['layergroup'] = structure.get('layergroup', '?')
+    data['lgnum'] = structure.get('lgnum', -1)
 
     try:
         data['label'] = rrf('c2db.labels')['label']
