@@ -114,6 +114,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         defectinfo = rrf('defectinfo')     # Maybe take data from json directly at some later point
         data['host_name'] = defectinfo['host_name']
         data['defect_name'] = defectinfo['defect_name']
+        data['charge_state'] = defectinfo['charge_state']
         data['host_gap_pbe'] = defectinfo['host_gap_pbe']
         data['host_gap_hse'] = defectinfo['host_gap_hse']
         data['host_hof'] = defectinfo['host_hof']

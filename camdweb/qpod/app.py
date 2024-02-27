@@ -20,6 +20,7 @@ from camdweb.c2db.asr_panel import ASRPanel, read_result_file
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
+from camdweb.panels.charge_neutrality import ChargeNeutralityPanel
 from camdweb.web import CAMDApp
 
 
@@ -28,8 +29,9 @@ class QPODAtomsPanel(AtomsPanel):
         super().__init__()
         self.column_names.update(
             magstate='Magnetic state',
-            host_name='Material',
+            host_name='Host crystal',
             defect_name='Defect',
+            charge_state='Charge',
             host_crystal='Host crystal type',
             host_uid='Host C2DB link',
             host_spacegroup='Host space group',
@@ -68,16 +70,17 @@ def main(root: Path) -> CAMDApp:
                         or not readable in {f}''')
             pb.advance(pid)
 
-    panels: list[Panel] = [QPODAtomsPanel()]
+    panels: list[Panel] = [QPODAtomsPanel(),
+                           ChargeNeutralityPanel()]
     # for name in ['bandstructure',
     #              'phonons',
     #              'bader']:
     #     panels.append(ASRPanel(name))
-    panels.append(ShiftCurrentPanel())
+    #panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['host_name', 'defect_name', 'formula', 'uid']
+    initial_columns = ['host_name', 'defect_name', 'charge_state', 'formula', 'uid']
 
     return CAMDApp(materials, initial_columns, root)
 
