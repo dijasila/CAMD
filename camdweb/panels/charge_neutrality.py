@@ -27,7 +27,7 @@ import plotly.graph_objects as go
 HTML = """
 <div class="row">
   <div class="col-6">
-    <div id='charge_neutrality' class='charge_neutrality'></div>
+    <div id='{div_id}' class='charge_neutrality'></div>
     {tbl0}
   </div>
   <div class="col-6">
@@ -38,14 +38,12 @@ HTML = """
 
 SCRIPT = """
 <script type='text/javascript'>
-var graphs = {charge_neutrality_json};
-Plotly.newPlot('charge_neutrality', graphs, {{}});
+{graphs}
 </script>
 """
 
 class ChargeNeutralityPanel(Panel):
-    title = 'Equilibrium energetics: All defects'
-
+    title = f'Equilibrium energetics: All defects'
     def get_html(self,
                  material: Material,
                  materials: Materials) -> Generator[str, None, None]:
@@ -55,20 +53,26 @@ class ChargeNeutralityPanel(Panel):
         result = read_result_file(cn_file)
         
         html=''
+        graphs_js = ''
         # Iterate over each "condition" in "scresults"
         for i, scresult in enumerate(result['scresults']):
             scresult = scresult['kwargs']['data']
             condition = scresult['condition']
-            # Update the title for each condition
-            self.title = f'Equilibrium energetics: All defects ({condition})'
 
             charge_neutrality_fig, tbl0, tbl1 = make_figure_and_tables(scresult, 
                                                                        result, 
                                                                        verbose=False)
-            html += HTML.format(tbl0=tbl0, tbl1=tbl1)
             
-        yield html + SCRIPT.format(charge_neutrality_json=charge_neutrality_fig)
+            charge_neutrality_json = json.dumps(charge_neutrality_fig,
+                                               cls=plotly.utils.PlotlyJSONEncoder)
+            html += f'<h3>{condition}</h3>'
+            html += HTML.format(div_id=f'charge_neutrality{i}', tbl0=tbl0, tbl1=tbl1)
 
+            graphs_js = f"var graph{i} = {charge_neutrality_json};\n"
+            graphs_js += f"Plotly.newPlot('charge_neutrality{i}', graph{i}, {{}});\n"
+            
+            html += SCRIPT.format(graphs=graphs_js) + '<br>'
+        yield html
 
 # Make equilibrium defects energetics plot (from asr.charge_neutrality), //
 # an overview table for SCF results, and a table for each defect's equilibrium concentration
@@ -87,7 +91,6 @@ def make_figure_and_tables(scresult: dict[str, tuple[dict[str, int],
     condition = scresult['condition']
     plotname = f'neutrality-{condition}.png'
     fig = plot_formation_scf(scresult, result, plotname)
-    charge_neutrality_fig = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
     tbl0 = get_overview_table(scresult, result, unitstring)
     
@@ -117,7 +120,7 @@ def make_figure_and_tables(scresult: dict[str, tuple[dict[str, int],
     for header, rows in zip(conc_headers, conc_rows):
         html1 += table(header, rows)
 
-    return charge_neutrality_fig, html0, html1
+    return fig, html0, html1
 
 def get_overview_table(scresult, result, unitstring):
     ef = scresult['efermi_sc']
@@ -192,50 +195,51 @@ def plot_formation_scf(scresult, result, fname) -> go.Figure:
     gap = result['gap']
     comparison = fname.split('neutrality-')[-1].split('.png')[0]
     fig = go.Figure()
-    for condition in scresult['condition']:
-        if comparison == condition:
-            ef = scresult['efermi_sc']
-            for i, defect in enumerate(scresult['defect_concentrations']):
-                name = defect['defect_name']
-                def_type = name.split('_')[0]
-                def_name = name.split('_')[-1]
-                if def_type == 'v':
-                    def_type = 'V'
-                namestring = f"{def_type}$_\\{'mathrm{'}{def_name}{'}'}$"
-                array = np.zeros((len(defect['concentrations']), 2))
-                for num, conc_tuple in enumerate(defect['concentrations']):
-                    q = conc_tuple[1]
-                    eform = conc_tuple[2]
-                    array[num, 0] = eform + q * (-ef)
-                    array[num, 1] = q
-                array = array[array[:, 1].argsort()[::-1]]
-                plot_lowest_lying(fig, array, ef, gap, name=namestring, color=f'C{i}')
-            draw_band_edges(fig, gap)
-            set_limits(fig, gap)
-            draw_ef(fig, ef)
-            set_labels_and_legend(fig, comparison)
 
+    if comparison == scresult['condition']:
+        ef = scresult['efermi_sc']
+        for i, defect in enumerate(scresult['defect_concentrations']):
+            defect = defect['kwargs']['data']
+            # if isinstance(defect, str):
+            #     defect = json.loads(defect)
+            name = defect['defect_name']
+            def_type = name.split('_')[0]
+            def_name = name.split('_')[-1]
+            if def_type == 'v':
+                def_type = 'V'
+            namestring = f"{def_type}<sub>{def_name}</sub>"
+            array = np.zeros((len(defect['concentrations']), 2))
+            for num, conc_tuple in enumerate(defect['concentrations']):
+                q = conc_tuple[1]
+                eform = conc_tuple[2]
+                array[num, 0] = eform + q * (-ef)
+                array[num, 1] = q
+            array = array[array[:, 1].argsort()[::-1]]
+            plot_lowest_lying(fig, array, gap, name=namestring)
+        draw_band_edges(fig, gap)
+        set_limits(fig, gap)
+        draw_ef(fig, ef)
+        set_labels_and_legend(fig, comparison)
     return fig
 
 # Helper functions for plotting
 def set_labels_and_legend(fig, title):
     fig.update_layout(
-        xaxis=dict(title=r'$E_\mathrm{F} - E_{\mathrm{VBM}}$ [eV]'),
-        yaxis=dict(title='$E^f$ [eV]'),
+        xaxis=dict(title='E<sub>F</sub> - E<sub>VBM</sub> [eV]'),
+        yaxis=dict(title='E<sup>f</sup> [eV]'),
         title=title,
-        legend=dict(x=0.5, y=1.1, orientation='h', xanchor='center', yanchor='bottom', bgcolor='rgba(0,0,0,0)')
-    )
+        legend=dict(x=0.5, y=1.1, orientation='h',
+                    xanchor='center', yanchor='bottom',
+                    bgcolor='rgba(0,0,0,0)'))
 
 def draw_ef(fig, ef):
     fig.add_shape(
-        type="line",
-        x0=ef,
-        y0=fig.layout.yaxis.range[0],
-        x1=ef,
-        y1=fig.layout.yaxis.range[1],
+        type="line", x0=ef, y0=0, x1=ef, y1=1,
+        yref="paper", # y in normalized coordinates with respect to the paper
         line=dict(color="red", dash="dot"),
-        name=r"$E_\mathrm{F}^{\mathrm{sc}}$",
+        name="E<sub>F</sub><sup>sc</sup>",
     )
+    fig.update_yaxes(autorange=True)
 
 def set_limits(fig, gap):
     fig.update_layout(
@@ -307,7 +311,7 @@ def get_line_segment(array, index, x_axis, y_axis, gap):
 
     return min_index, x_axis, y_axis
 
-def plot_lowest_lying(array_in, ef, gap, name, color):
+def plot_lowest_lying(fig, array_in, gap, name):
     array_tmp = array_in.copy()
     array_tmp = clean_array(array_tmp)
     xs = [0]
@@ -319,15 +323,13 @@ def plot_lowest_lying(array_in, ef, gap, name, color):
             break
     xs, ys = get_last_element(array_tmp, xs, ys, gap)
     
-    fig = go.Figure(data=go.Scatter(x=xs, y=ys, mode='lines', name=name, line=dict(color=color)))
-    fig.update_layout(xaxis_title=r'$E_\mathrm{F}$ [eV]')
-    fig.show()
+    fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name))
+    fig.update_layout(xaxis_title="E<sub>F</sub> [eV]")
+    fig.write_html('plt_lowest_lying.html')
 
-
-def draw_band_edges(gap):
+def draw_band_edges(fig, gap):
     fig = go.Figure()
     fig.add_shape(type="line", x0=0, y0=0, x1=0, y1=1, line=dict(color='black'))
     fig.add_shape(type="line", x0=gap, y0=0, x1=gap, y1=1, line=dict(color='black'))
     fig.add_shape(type="rect", x0=-100, y0=0, x1=0, y1=1, fillcolor='grey', opacity=0.5)
     fig.add_shape(type="rect", x0=gap, y0=0, x1=100, y1=1, fillcolor='grey', opacity=0.5)
-    fig.show()
