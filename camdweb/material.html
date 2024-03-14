@@ -204,20 +204,19 @@ $(function(){
                 <button class="accordion-button collapsed"
                    type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
                    aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                    <i class="fa-solid fa-question" tabindex="0"
-                       data-toggle="popover"
-                       data-trigger="focus" data-popover-content="#a2"
-                       title="Your Popover Title" data-placement="top" ></i>
+
                     <span class="d-none d-sm-inline">{{ panel_title }}</span>
                 </button>
-                <!-- Content for Popover #2 -->
-                <div id="a2" class="hidden">
-                    <div class="popover-heading">This is the heading for #2</div>
+                <button type="button" class="btn btn-lg btn-danger"
+                        data-bs-toggle="popover" title="Popover title"
+                        data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover
+                </button>
+                <i class="fa-solid fa-question" tabindex="0"
+                       data-toggle="popover"
+                       data-trigger="focus" data-popover-content="#a2"
+                       title="Your Popover Title" data-placement="top"
+                       data-bs-content="With <b>html</b> content"></i>
 
-                    <div class="popover-body">This is the body for #2<br>
-                        With <b>html</b> content
-                    </div>
-                </div>
             </h2>
 
             <!--  Accordion Content (Panel info)  -->
