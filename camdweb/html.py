@@ -279,17 +279,22 @@ class RangeS(Range):
     def render(self) -> str:
         names = self.names or self.options
 
-        parts = [f'<select name="from_{self.name}" class="form-select">']
+        parts = [
+            '<div class="row">',
+            '<div class="col">',
+            f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select>')
+        parts.append('</select></div>')
 
-        parts = [f'<select name="to_{self.name}" class="form-select">']
+        parts += [
+            '<div class="col">',
+            f'<select name="to_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select>')
+        parts.append('</select></div></div>')
 
         return '\n'.join(parts)
 
