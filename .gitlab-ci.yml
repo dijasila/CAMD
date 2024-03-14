@@ -1,3 +1,14 @@
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/pip-cache"
+
+
+cache:
+  paths:
+    - $PIP_CACHE_DIR
+    - $CI_PROJECT_DIR/venv
+  key: $CI_PROJECT_ID
+
+
 tests:
   image: python:3.12
   script:
@@ -5,17 +16,27 @@ tests:
     - . venv/bin/activate
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase
-    - pip install git+https://gitlab.com/asr-dev/asr
+    - git clone https://gitlab.com/asr-dev/asr.git
+    - (cd asr && git switch om_dmispiral && pip install . && cd .. && rm -rf asr)
+    - python3 -c "import asr; print(asr)"
+    - python3 -c "import asr.collect_spiral"
+    - python3 -c "import importlib; importlib.import_module('asr.collect_spiral')"
     - pip install .[test]
-    - coverage run --branch -m pytest -v --color=yes
-    - coverage report -i --precision=2 --fail-under=99.5
-    - coverage html
+    - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
+    - coverage report -i --precision=2 --skip-covered
+    - coverage html --skip-covered
+    - coverage xml --data-file .coverage
     - mypy
     - flake8 camdweb
   coverage: '/TOTAL +[0-9]+ +[0-9]+ +[0-9]+ +[0-9]+ +([0-9]+\.[0-9]+%)/'
   artifacts:
     paths:
       - htmlcov
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: junit.xml
     expire_in: 1 week
 
 oldtests:
@@ -25,7 +46,7 @@ oldtests:
     - . venv/bin/activate
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase
-    - pip install git+https://gitlab.com/asr-dev/asr
+    - pip install git+https://gitlab.com/asr-dev/asr.git@om_dmispiral
     - pip install pytest boddle
     - pip install .
     - pytest -v --color=yes

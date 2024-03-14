@@ -12,9 +12,10 @@ from ase.db import connect
 from ase.db.row import AtomsRow
 from bottle import Bottle, static_file, template
 
+from camdweb.cli import COLUMN_DESCRIPTIONS
 from camdweb.cmr.projects import ProjectDescription, create_project_description
 from camdweb.html import FormPart, table
-from camdweb.material import Material, Materials
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
@@ -68,45 +69,44 @@ class CMRProjectApp(CAMDApp):
         self.title = title
         self.form_parts += form_parts
 
-    def index(self) -> str:
-        html = super().index()
-        return html.replace('/material/', f'/{self.name}/material/')
+    def index_page(self) -> str:
+        html = super().index_page()
+        html = html.replace('/table?', f'/{self.name}/table?')
+        return html
 
-    def material(self, uid: str) -> str:
-        html = super().material(uid)
-        html = html.replace('/callback', f'/{self.name}/callback')
-        return html.replace('href="/">Search<',
-                            f'href="/{self.name}">Search<', 1)
+    def table_html(self, session=None) -> str:
+        html = super().table_html(session)
+        html = html.replace('/material/', f'/{self.name}/material/')
+        html = html.replace('/table?', f'/{self.name}/table?')
+        return html
+
+    def material_page(self, uid: str) -> str:
+        html = super().material_page(uid)
+        return html.replace('/callback', f'/{self.name}/callback')
 
 
 class CMRAtomsPanel(AtomsPanel):
     def __init__(self,
-                 column_names: dict[str, str],
-                 create_column_one: Callable[[Material, Materials],
-                                             tuple[str, str]],
-                 create_column_two: Callable[[Material, Materials],
-                                             tuple[str, str]]):
+                 column_descriptions,
+                 create_column_one: Callable[[Panel, Material], str],
+                 create_column_two: Callable[[Panel, Material], str]):
         super().__init__()
-        self.column_names.update(column_names)
-        self.column_names.update(
-            energy='Energy [eV]',
-            fmax='Maximum force [eV/Å]',
-            smax='Maximum stress component [eV/Å<sup>3</sup>]',
-            magmom='Total magnetic moment [μ<sub>B</sub>]')
-        self.columns = list(self.column_names)
+        self.column_descriptions = column_descriptions
         self._create_column_one = create_column_one
         self._create_column_two = create_column_two
 
-    def create_column_one(self, material, materials):
-        col1 = self._create_column_one(material, materials)
+    def create_column_one(self, material):
+        col1 = self._create_column_one(self, material)
         if not col1:
-            return super().create_column_one(material, materials)
+            return table(None, self.table_rows(material,
+                                               self.column_descriptions))
         return col1
 
-    def create_column_two(self, material, materials):
-        col2 = self._create_column_two(material, materials)
+    def create_column_two(self, material):
+        """Used by lowdim-project to not show atoms from ICSD."""
+        col2 = self._create_column_two(self, material)
         if not col2:
-            return super().create_column_two(material, materials)
+            return super().create_column_two(material)
         return col2
 
 
@@ -127,19 +127,18 @@ def app_from_db(dbpath: Path,
                 rows.append(row2material(row, pd, root))
                 pb.advance(pid)
 
+        column_descriptions = pd.column_descriptions.copy()
+        column_descriptions.update(COLUMN_DESCRIPTIONS)
         panels: list[Panel] = [
             CMRAtomsPanel(
-                {name.lower(): desc
-                 for name, desc in pd.column_names.items()},
+                column_descriptions,
                 pd.create_column_one,
                 pd.create_column_two)]
         panels += pd.panels
         materials = Materials(rows, panels)
 
-    initial_columns = [name.lower() for name in pd.initial_columns
-                       if name in materials.column_names]
     return CMRProjectApp(
-        materials, initial_columns,
+        materials, pd.initial_columns,
         dbpath, pd.title, pd.form_parts)
 
 
@@ -149,32 +148,31 @@ def row2material(row: AtomsRow,
     atoms = row.toatoms()
     if pd.pbc is not None:
         atoms.pbc = pd.pbc
-    material = Material(root, str(row[pd.uid]), atoms)
+    material = Material(str(row[pd.uid]), atoms, root)
 
     energy = row.get('energy')
     if energy is not None:
-        material.add_column('energy', energy)
+        material.columns['energy'] = energy
     forces = row.get('forces')
     if forces is not None:
-        material.add_column('fmax', (forces**2).sum(axis=1).max()**0.5)
+        material.columns['fmax'] = (forces**2).sum(axis=1).max()**0.5
     stress = row.get('stress')
     if stress is not None:
-        material.add_column('smax', abs(stress).max())
+        material.columns['smax'] = abs(stress).max()
     magmom = row.get('magmom')
     if magmom is not None:
-        material.add_column('magmom', magmom)
+        material.columns['magmom'] = magmom
 
-    for name in pd.column_names:
+    for name in pd.column_descriptions:
         value = row.get(name)
-        if value is not None:
-            if isinstance(value, int) and pd.column_names[name][-1] == ']':
-                # Column description is something like
-                # "Description ... [unit]".  This means we
-                # have an integer with a unit!
-                value = float(value)
-            elif isinstance(value, float) and not isfinite(value):
-                continue
-            material.add_column(name.lower(), value)
+        if value is None or isinstance(value, float) and not isfinite(value):
+            continue
+        if isinstance(value, int) and pd.column_descriptions[name][-1] == ']':
+            # Column description is something like
+            # "Description ... [unit]".  This means we
+            # have an integer with a unit!
+            value = float(value)
+        material.columns[name] = value
     pd.postprocess(material)
     return material
 

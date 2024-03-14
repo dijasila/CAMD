@@ -11,6 +11,8 @@ Web-apps for:
 * CRYSP
 * OQMD12345
 
+.. contents::
+
 
 Important links
 ===============
@@ -20,10 +22,12 @@ Important links
 * `Plotly <https://plotly.com/python/>`__
 * `Bootstrap
   <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
+* `WSGI <https://peps.python.org/pep-3333/>`_
 * `ASE <https://wiki.fysik.dtu.dk/ase/index.html>`__
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
+* `Scaling to many users <https://workchronicles.com/white-lies/>`__
 
 
 Test URLs
@@ -88,7 +92,7 @@ C2DB-app
 
 ::
 
-    $ python -m camdweb.c2db.copy_files ~cmr/C2DB-ASR "tree/*/*/*/" ...
+    $ python -m camdweb.c2db.copy ~cmr/C2DB-ASR "tree/*/*/*/" ...
     $ python -m camdweb.c2db.app A*/
 
 Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
@@ -102,10 +106,10 @@ Folder structure for UIDs ``1MoS2-1`` and ``1MoS2-2``::
             2/data.json
               structure.xyz
               ...
-  ...
   oqmd123.json.gz
   convex-hulls/MoS.json
-               ...
+               Mo.json
+               S.json
 
 
 Testing the C2DB-app
@@ -123,7 +127,7 @@ to your local machine::
 Then you can play with those files like this::
 
     $ cd C2DB-test
-    $ python -m camdweb.c2db.copy_files . "MoS2*/"
+    $ python -m camdweb.c2db.copy . "MoS2*/"
     $ python -m camdweb.c2db.app AB2
 
 
@@ -149,3 +153,82 @@ On the ``fysik-cmr02`` server run uWSGI like this::
     $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
     $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
     $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log
+
+
+How it works
+============
+
+In the picture below, ``camd.app`` is the WSGI_ app::
+
+  camd
+    |
+    v
+  +---------+
+  | CAMDApp |   app   +------------+
+  |         |-------->| bottle.App |
+  |   and   |         +------------+
+  |   sub-  |
+  | classes |   sessions   +----------+
+  |         |------------->| Sessions |
+  |         |              +----------+
+  +---------+
+     |
+     |materials
+     |
+     v
+  +------------+  index   +-------+
+  | Materials  |--------->| Index |
+  |            |          +-------+
+  |  --------  |
+  | |Material| |
+  |  --------  |   panels   +--------------+
+  | |Material| |----------->| list[Panel]  |
+  |  --------  |            |              |
+  |     :      |            |  ----------  |
+  |     :      |            | |AtomsPanel| |
+  +------------+            |  ----------  |
+                            | |OtherPanel| |
+                            |  ----------  |
+                            |      :       |
+                            |      :       |
+                            +--------------+
+
+
+Objects
+-------
+
+:bottle.App:
+    WSGI_ app.  Defines the end-points ``/`` and ``/material/<uid>/``.
+
+:Material:
+    Attributes: ``uid: str``, ``atoms: Atoms``, ``folder: Path``
+    ``columns: dict[str, bool | int | float | str]`` and
+    ``count: dict[str, int]``.
+    The ``columns`` dictionary stores key-value pairs for displaying
+    in the landing-page table.  The ``count`` dictionary stores the
+    number of each species present.
+
+:Panel:
+    Has a ``get_html(material)`` method that can produce a snippet of HTML
+    to be assembled in the ``/material/<uid>/`` end-point.
+
+:Index:
+    Handles efficient filtering of materials using the values in
+    ``Material.columns`` and ``Material.count``.
+
+:Materials:
+    Keeps track of all the ``Panel`` and ``Material`` objects
+    (``materials[uid]`` will give you the material with the given ``uid``
+    and ``for material in materials:`` will loop over them all).
+    Also handles two dictionaries that it shares with the panels:
+
+    * ``column_descriptions: dict[str, str]`` for longer descriptions of the
+      short column names.
+    * ``html_column_formatters: dict[str, Callable[..., str]]`` for converting
+      bool, int, float and str values to HTML strings.
+
+:Sessions:
+    Handles ``Session`` objects for clients (one for each browser-tab).
+
+:Session:
+    Remembers selected columns, sorting information, ...

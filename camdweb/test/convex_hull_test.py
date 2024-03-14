@@ -28,8 +28,10 @@ def test_3d():
 def test_1234(n):
     refs = {s: ({s: 1}, 0.0, 'OQMD') for s in 'ABCD'[:n]}
     refs['x'] = ({X: 1 for X in 'ABCD'[:n]}, -0.5 * n, 'C2DB')
-    chull, oqmd, c2db = make_figure_and_tables(refs)
-    assert '-0.50' in c2db
+    sources = {'OQMD': ('From OQMD', '{uid}, {formula:html}'),
+               'C2DB': ('From C2DB', '{uid}, {formula:html}')}
+    chull, tables = make_figure_and_tables(refs, 'A', sources)
+    assert '-0.50' in tables
 
 
 def test_group_err():

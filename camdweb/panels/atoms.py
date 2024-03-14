@@ -34,8 +34,9 @@ from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
+from camdweb.utils import html_format_formula
 
 HTML = """
 <h4>{formula}</h4>
@@ -99,41 +100,21 @@ class AtomsPanel(Panel):
 
     def __init__(self) -> None:
         self.callbacks = {'atoms': self.plot}
-        self.column_names = {}
-        self.columns = ['stoichiometry', 'uid']
-
-    def update_data(self, material):
-        pbc = material.atoms.pbc
-        dims = pbc.sum()
-        if dims > 0:
-            vol = abs(np.linalg.det(material.atoms.cell[pbc][:, pbc]))
-            name = DIMS[dims]
-            if name not in self.column_names:
-                if dims == 1:
-                    unit = 'Å'
-                else:
-                    unit = f'Å<sup>{dims}</sup>'
-                self.column_names[name] = f'{name.title()} [{unit}]'
-                self.columns.append(name)
-            material.add_column(name, vol)
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        col1 = self.create_column_one(material, materials)
-        col2 = self.create_column_two(material, materials)
+                 material: Material) -> Generator[str, None, None]:
+        col1 = self.create_column_one(material)
+        col2 = self.create_column_two(material)
         yield HTML.format(column1=col1,
                           column2=col2,
-                          formula=material['formula'])
+                          formula=html_format_formula(material.formula))
 
     def create_column_one(self,
-                          material: Material,
-                          materials: Materials) -> str:
-        return table(None, materials.table(material, self.columns))
+                          material: Material) -> str:
+        return ''
 
     def create_column_two(self,
-                          material: Material,
-                          materials: Materials) -> str:
+                          material: Material) -> str:
         defrep = default_repeat(material)
         return COLUMN2.format(
             axes=self.axes(material),
@@ -158,8 +139,14 @@ class AtomsPanel(Panel):
         assert repeat < 5, 'DOS!'
         atoms = material.atoms
         unitcell = atoms.cell.copy()
-        atoms = material.atoms.repeat([repeat if p else 1 for p in atoms.pbc])
-        fig = plot_atoms(atoms, unitcell)
+        atoms2 = atoms.copy()
+        show_magmoms = True
+        try:
+            atoms2.set_initial_magnetic_moments(atoms.calc.results['magmoms'])
+        except (AttributeError, KeyError):
+            show_magmoms = False
+        atoms2 = atoms2.repeat([repeat if p else 1 for p in atoms.pbc])
+        fig = plot_atoms(atoms2, unitcell, show_magmoms=show_magmoms)
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
@@ -172,8 +159,8 @@ UNITCELL = [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0], [0, 0, 0],
 
 
 def get_bonds(atoms):
-    i, j, D, S = neighbor_list('ijDS', atoms,
-                               cutoff=covalent_radii[atoms.numbers] * 1.2)
+    i, j, D, S, d = neighbor_list('ijDSd', atoms,
+                                  cutoff=covalent_radii[atoms.numbers] * 1.2)
 
     # For bonds inside the cell (i.e., cell displacement S==(0, 0, 0)),
     # bonds are double-counted.  This mask un-doublecounts them:
@@ -182,38 +169,62 @@ def get_bonds(atoms):
     j = j[doublecount_mask]
     D = D[doublecount_mask]
     S = S[doublecount_mask]
-    return i, j, D, S
+    d = d[doublecount_mask]
+    return i, j, D, S, d
 
 
 def plot_atoms(atoms: Atoms,
-               unitcell: np.ndarray | None = None) -> go.Figure:
+               unitcell: np.ndarray | None = None,
+               show_magmoms: bool = False) -> go.Figure:
     """Ball and stick plotly figure."""
     data = []
-
     # Atoms:
-    points = SPHERE_POINTS
-    triangles = triangulate_sphere()
+    points, triangles = triangulate_sphere(len(atoms) > 50)
     i, j, k = triangles.T
-    for Z, xyz in zip(atoms.numbers, atoms.positions):
+    for Z, symbol, xyz, magmom in zip(atoms.numbers,
+                                      atoms.symbols,
+                                      atoms.positions,
+                                      atoms.get_initial_magnetic_moments()):
         x, y, z = (points * covalent_radii[Z] * 0.5 + xyz).T
+        magmoms = f'<i>Magmom</i> {magmom:.2f}' if show_magmoms else ''
+        hovertemplate = (
+            f'<b>{symbol}</b><br><i>Coord.</i>'
+            f'{xyz[0]:.2f} {xyz[1]:.2f} {xyz[2]:.2f}<br>{magmoms}')
+
         mesh = go.Mesh3d(x=x, y=y, z=z,
                          i=i, j=j, k=k, opacity=1,
-                         color=color(Z))
+                         color=color(Z),
+                         text=symbol,
+                         name='',
+                         hovertemplate=hovertemplate)
         data.append(mesh)
 
     # Bonds:
-    i, j, D, S = get_bonds(atoms)
+    i, j, D, S, d = get_bonds(atoms)
     p = atoms.positions
 
-    xyz = np.empty((3, len(i) * 3))
-    xyz[:, 0::3] = p[i].T
-    D[S.any(1)] *= 0.5
-    xyz[:, 1::3] = (p[i] + D).T
-    xyz[:, 2::3] = np.nan
+    # Only add hover text to bond center
+    text = []
+    for L in d:
+        bond_txt = f'{L:.2f} Å'
+        text += ['', bond_txt, '', '']
+
+    xyz = np.empty((3, len(i) * 4))
+
+    # bond consists of 3 actual points (0, 1 and 2) and final nan value (3)
+    # to break the line, and this is repeated in sequence for each bond
+    xyz[:, 0::4] = p[i].T
+    xyz[:, 1::4] = (p[i] + D * 0.5).T
+    xyz[:, 2::4] = (p[i] + D).T
+    # If bond exits supercell, shorten it by half
+    xyz[:, 2::4][:, S.any(1)] = np.nan
+    xyz[:, 3::4] = np.nan
 
     x, y, z = xyz
-    data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
-                             line=dict(color='grey', width=10),
+    data.append(go.Scatter3d(x=x, y=y, z=z, text=text, mode='lines',
+                             hovertemplate='%{text}',
+                             name='',
+                             line=dict(color='grey', width=5),
                              showlegend=False))
 
     # Unit cell:
@@ -221,7 +232,10 @@ def plot_atoms(atoms: Atoms,
         unitcell = atoms.cell
     x, y, z = (UNITCELL @ unitcell).T
     data.append(go.Scatter3d(x=x, y=y, z=z, mode='lines',
-                             line=dict(color='#fa9fb5', width=6),
+                             hovertemplate='',
+                             hoverinfo='skip',
+                             name='',
+                             line=dict(color='#fa9fb5', width=10),
                              showlegend=False))
 
     fig = go.Figure(data=data)
@@ -286,20 +300,134 @@ SPHERE_POINTS = np.array(
      [0.30151134457776357, -0.30151134457776357, 0.90453403373329089],
      [0.30151134457776357, 0.30151134457776357, 0.90453403373329089]])
 
+# 110 Lebedev quadrature points:
+SPHERE_POINTS_fine = np.array(
+    [[1.000000000000000, 0.000000000000000, 0.000000000000000],
+     [-1.000000000000000, 0.000000000000000, 0.000000000000000],
+     [0.000000000000000, 1.000000000000000, 0.000000000000000],
+     [0.000000000000000, -1.000000000000000, 0.000000000000000],
+     [0.000000000000000, 0.000000000000000, 1.000000000000000],
+     [0.000000000000000, 0.000000000000000, -1.000000000000000],
+     [0.577350269189626, 0.577350269189626, 0.577350269189626],
+     [-0.577350269189626, 0.577350269189626, 0.577350269189626],
+     [0.577350269189626, -0.577350269189626, 0.577350269189626],
+     [0.577350269189626, 0.577350269189626, -0.577350269189626],
+     [-0.577350269189626, -0.577350269189626, 0.577350269189626],
+     [0.577350269189626, -0.577350269189626, -0.577350269189626],
+     [-0.577350269189626, 0.577350269189626, -0.577350269189626],
+     [-0.577350269189626, -0.577350269189626, -0.577350269189626],
+     [0.185115635344736, 0.185115635344736, 0.965124035086594],
+     [-0.185115635344736, 0.185115635344736, 0.965124035086594],
+     [0.185115635344736, -0.185115635344736, 0.965124035086594],
+     [0.185115635344736, 0.185115635344736, -0.965124035086594],
+     [-0.185115635344736, -0.185115635344736, 0.965124035086594],
+     [-0.185115635344736, 0.185115635344736, -0.965124035086594],
+     [0.185115635344736, -0.185115635344736, -0.965124035086594],
+     [-0.185115635344736, -0.185115635344736, -0.965124035086594],
+     [-0.185115635344736, 0.965124035086594, 0.185115635344736],
+     [0.185115635344736, -0.965124035086594, 0.185115635344736],
+     [0.185115635344736, 0.965124035086594, -0.185115635344736],
+     [-0.185115635344736, -0.965124035086594, 0.185115635344736],
+     [-0.185115635344736, 0.965124035086594, -0.185115635344736],
+     [0.185115635344736, -0.965124035086594, -0.185115635344736],
+     [-0.185115635344736, -0.965124035086594, -0.185115635344736],
+     [0.185115635344736, 0.965124035086594, 0.185115635344736],
+     [0.965124035086594, 0.185115635344736, 0.185115635344736],
+     [-0.965124035086594, 0.185115635344736, 0.185115635344736],
+     [0.965124035086594, -0.185115635344736, 0.185115635344736],
+     [0.965124035086594, 0.185115635344736, -0.185115635344736],
+     [-0.965124035086594, -0.185115635344736, 0.185115635344736],
+     [-0.965124035086594, 0.185115635344736, -0.185115635344736],
+     [0.965124035086594, -0.185115635344736, -0.185115635344736],
+     [-0.965124035086594, -0.185115635344736, -0.185115635344736],
+     [0.690421048382292, 0.690421048382292, 0.215957291845848],
+     [-0.690421048382292, 0.690421048382292, 0.215957291845848],
+     [0.690421048382292, -0.690421048382292, 0.215957291845848],
+     [0.690421048382292, 0.690421048382292, -0.215957291845848],
+     [-0.690421048382292, -0.690421048382292, 0.215957291845848],
+     [-0.690421048382292, 0.690421048382292, -0.215957291845848],
+     [0.690421048382292, -0.690421048382292, -0.215957291845848],
+     [-0.690421048382292, -0.690421048382292, -0.215957291845848],
+     [-0.690421048382292, 0.215957291845848, 0.690421048382292],
+     [0.690421048382292, -0.215957291845848, 0.690421048382292],
+     [0.690421048382292, 0.215957291845848, -0.690421048382292],
+     [-0.690421048382292, -0.215957291845848, 0.690421048382292],
+     [-0.690421048382292, 0.215957291845848, -0.690421048382292],
+     [0.690421048382292, -0.215957291845848, -0.690421048382292],
+     [-0.690421048382292, -0.215957291845848, -0.690421048382292],
+     [0.690421048382292, 0.215957291845848, 0.690421048382292],
+     [0.215957291845848, 0.690421048382292, 0.690421048382292],
+     [-0.215957291845848, 0.690421048382292, 0.690421048382292],
+     [0.215957291845848, -0.690421048382292, 0.690421048382292],
+     [0.215957291845848, 0.690421048382292, -0.690421048382292],
+     [-0.215957291845848, -0.690421048382292, 0.690421048382292],
+     [-0.215957291845848, 0.690421048382292, -0.690421048382292],
+     [0.215957291845848, -0.690421048382292, -0.690421048382292],
+     [-0.215957291845848, -0.690421048382292, -0.690421048382292],
+     [0.395689473055942, 0.395689473055942, 0.828769981252592],
+     [-0.395689473055942, 0.395689473055942, 0.828769981252592],
+     [0.395689473055942, -0.395689473055942, 0.828769981252592],
+     [0.395689473055942, 0.395689473055942, -0.828769981252592],
+     [-0.395689473055942, -0.395689473055942, 0.828769981252592],
+     [-0.395689473055942, 0.395689473055942, -0.828769981252592],
+     [0.395689473055942, -0.395689473055942, -0.828769981252592],
+     [-0.395689473055942, -0.395689473055942, -0.828769981252592],
+     [-0.395689473055942, 0.828769981252592, 0.395689473055942],
+     [0.395689473055942, -0.828769981252592, 0.395689473055942],
+     [0.395689473055942, 0.828769981252592, -0.395689473055942],
+     [-0.395689473055942, -0.828769981252592, 0.395689473055942],
+     [-0.395689473055942, 0.828769981252592, -0.395689473055942],
+     [0.395689473055942, -0.828769981252592, -0.395689473055942],
+     [-0.395689473055942, -0.828769981252592, -0.395689473055942],
+     [0.395689473055942, 0.828769981252592, 0.395689473055942],
+     [0.828769981252592, 0.395689473055942, 0.395689473055942],
+     [-0.828769981252592, 0.395689473055942, 0.395689473055942],
+     [0.828769981252592, -0.395689473055942, 0.395689473055942],
+     [0.828769981252592, 0.395689473055942, -0.395689473055942],
+     [-0.828769981252592, -0.395689473055942, 0.395689473055942],
+     [-0.828769981252592, 0.395689473055942, -0.395689473055942],
+     [0.828769981252592, -0.395689473055942, -0.395689473055942],
+     [-0.828769981252592, -0.395689473055942, -0.395689473055942],
+     [0.478369028812150, 0.878158910604066, 0.000000000000000],
+     [-0.478369028812150, 0.878158910604066, 0.000000000000000],
+     [0.478369028812150, -0.878158910604066, 0.000000000000000],
+     [-0.478369028812150, -0.878158910604066, 0.000000000000000],
+     [0.878158910604066, 0.478369028812150, 0.000000000000000],
+     [-0.878158910604066, 0.478369028812150, 0.000000000000000],
+     [0.878158910604066, -0.478369028812150, 0.000000000000000],
+     [-0.878158910604066, -0.478369028812150, 0.000000000000000],
+     [0.478369028812150, 0.000000000000000, 0.878158910604066],
+     [-0.478369028812150, 0.000000000000000, 0.878158910604066],
+     [0.478369028812150, 0.000000000000000, -0.878158910604066],
+     [-0.478369028812150, 0.000000000000000, -0.878158910604066],
+     [0.878158910604066, 0.000000000000000, 0.478369028812150],
+     [-0.878158910604066, 0.000000000000000, 0.478369028812150],
+     [0.878158910604066, 0.000000000000000, -0.478369028812150],
+     [-0.878158910604066, 0.000000000000000, -0.478369028812150],
+     [0.000000000000000, 0.478369028812150, 0.878158910604066],
+     [0.000000000000000, -0.478369028812150, 0.878158910604066],
+     [0.000000000000000, 0.478369028812150, -0.878158910604066],
+     [0.000000000000000, -0.478369028812150, -0.878158910604066],
+     [0.000000000000000, 0.878158910604066, 0.478369028812150],
+     [0.000000000000000, -0.878158910604066, 0.478369028812150],
+     [0.000000000000000, 0.878158910604066, -0.478369028812150],
+     [0.000000000000000, -0.878158910604066, -0.478369028812150]])
+
 
 @cache
-def triangulate_sphere() -> np.ndarray:
-    hull = ConvexHull(SPHERE_POINTS)
+def triangulate_sphere(coarse: bool) -> tuple[np.ndarray, np.ndarray]:
+    points = SPHERE_POINTS if coarse else SPHERE_POINTS_fine
+    hull = ConvexHull(points)
     tri_tv = hull.simplices.copy()
 
     # Make sure surface normals are pointing out from the sphere surface
-    tri_tvc = SPHERE_POINTS[tri_tv]
+    tri_tvc = points[tri_tv]
     n_tc = np.cross(tri_tvc[:, 1, :] - tri_tvc[:, 0, :],
                     tri_tvc[:, 2, :] - tri_tvc[:, 0, :])
     flip_n = np.sum(n_tc * tri_tvc[:, 0, :], axis=1) < 0
     tri_tv[flip_n, 1], tri_tv[flip_n, 2] = tri_tv[flip_n, 2], tri_tv[flip_n, 1]
 
-    return tri_tv
+    return points, tri_tv
 
 
 @cache

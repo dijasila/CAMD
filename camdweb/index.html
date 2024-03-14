@@ -1,32 +1,40 @@
 % rebase('base', plotly=False, callback=False)
 <body>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://kit.fontawesome.com/20e621d973.js"
+   crossorigin="anonymous">
+</script>
+<script src="https://unpkg.com/htmx.org@1.9.10"
+    integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+    crossorigin="anonymous">
+</script>
 
 <script>
-    // Function to store scroll position in sessionStorage when the anchor is clicked
-    function storeScrollPosition(event, qualifier) {
-      if (event.target.tagName === 'A' &&  qualifier === 'load') {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-      }
-      if (event.target.tagName === 'BUTTON' &&  qualifier === 'load') {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-      }
+    // Store scroll position in sessionStorage when save-scroll class is present
+    function storeScrollPosition(event) {
+        const target = event.target;
+        const isSaveScrollState = target.classList.contains('save-scroll');
+
+        if ((isSaveScrollState)) {
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+        }
     }
 
     // Function to retrieve scroll position from sessionStorage
     function restoreScrollPosition() {
-      const scrollPosition = sessionStorage.getItem('scrollPosition');
-      if (scrollPosition !== null) {
-        // Temporarily disable smooth scroll behavior
-        document.documentElement.style.scrollBehavior = 'auto';
-        // Set the scroll position without animating
-        window.scrollTo(0, scrollPosition);
-        sessionStorage.removeItem('scrollPosition');
-      }
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            // Temporarily disable smooth scroll behavior
+            document.documentElement.style.scrollBehavior = 'auto';
+            // Set the scroll position without animating
+            window.scrollTo(0, scrollPosition);
+            sessionStorage.removeItem('scrollPosition');
+        }
     }
 
-    // Attach the storeScrollPosition function to the click event of your anchor
-    document.addEventListener('click', storeScrollPosition);
+    // Attach the storeScrollPosition function to the click event
+    document.addEventListener('click', function(event) {
+        storeScrollPosition(event);
+    });
 
     // Call the restoreScrollPosition function on page load
     document.addEventListener('DOMContentLoaded', restoreScrollPosition);
@@ -35,152 +43,90 @@
     document.documentElement.style.scrollBehavior = 'smooth';
 </script>
 
-<!--  Top Navigation Banner/Bar  -->
-<nav class="navbar navbar-expand-md bg-dark border-bottom border-body" data-bs-theme="dark">
-  <div class="container-md">
-    <a class="navbar-brand"
-      href="https://cmr.fysik.dtu.dk/c2db/c2db.html">C2DB</a>
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item">
-        <a class="nav-link active" aria-current="page"
-          href="https://cmr.fysik.dtu.dk/">CMR</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="">C2DB</a>
-      </li>
-    </ul>
-  </div>
-</nav>
 
-<!--  Search Table Forum  -->
-<div class="container-fluid col-md-10 mb-1">
+<div class="container-fluid">
   <div class="row">
-    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
-      <form>
-          <input class="shadow-sm form-control"
-                 type="hidden"
-                 name="sid"
-                 value="{{ session.sid }}">
-          <div class="row">
-            <div class="col-7">
-              <div class="input-group">
-                <input class="form-control shadow-sm"
-                   type="text"
-                   name="filter"
-                   value="{{ query.get('filter', '') }}"
-                   placeholder="MoS2, ...">
-                <button class="btn btn-primary shadow-sm" type="submit">
-                   Search
-                </button>
-              </div>
-            </div>
-            {{ error }}
-            <div class="col-1">
-              <div class="input-group-append">
-                <button class="btn btn-info shadow-sm ms-2"
-                        type="button"
-                        onclick="location.href=https://cmr.fysik.dtu.dk/searching.html">Help
-                </button>
-              </div>
-            </div>
-            <div>
-              {{ !search }}
+    <!-- Sidebar -->
+    <div class="col-auto col-xl-2 px-sm-2 px-0 bg-dark">
+      <div class="sticky-top d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-10">
+        <!--  Persistent Sidebar Content  -->
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="HomePageNavigation" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="fs-5 d-none d-sm-inline">Home Pages</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="HomePageNavigation">
+              <li>
+                  <a class="dropdown-item pt-1 pb-2"
+                    aria-current="page" href="https://cmr.fysik.dtu.dk/">
+                    <span class="d-none d-sm-inline">CMR</span>
+                  </a>
+              <li>
+                <a class="dropdown-item pb-2"
+                   href="https://cmr.fysik.dtu.dk/c2db/c2db.html">
+                    <span class="d-none d-sm-inline">C2DB</span>
+                </a>
+              </li>
+              <li>
+                <a href="/" class="dropdown-item pb-2">
+                  <span class="d-none d-sm-inline">Home</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <hr>
+      </div>
+    </div>
+
+    <!--  Search Fields + Results  -->
+    <div class="col">
+      <!--  Search Table Forum  -->
+      <div class="container-fluid d-flex mt-2 mb-2 justify-content-left">
+        <div class="col-1"></div>
+
+        <div class="row">
+          <div class="col d-flex justify-content-center">
+            <div class="card text-bg-light p-3 shadow-sm">
+              <form hx-get="/table?sid={{ session.sid }}"
+                 hx-target="#table-div"
+                 hx-swap="outerHTML">
+                <div class="row">
+                  <div class="col">
+                    <div class="mb-3">
+                      <div class="input-group">
+                        <input class="form-control shadow-sm" type="text"
+                               name="filter" value=""
+                               placeholder="Example: 'MoS2'">
+                        <button class="btn btn-primary shadow-sm" type="submit"
+>Search</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-auto d-flex justify-content-end">
+                    <div class="mb-3">
+                      <div class="input-group">
+                        <button class="btn btn-info shadow-sm ms-2" type="button" onclick="javascript:window.open('https://cmr.fysik.dtu.dk/searching.html', '_blank')">Help</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  {{ !search }}
+                </div>
+              </form>
             </div>
           </div>
-      </form>
+          <!--  can add a 2nd card here  -->
+        </div>
+    </div>
+
+      <!--  Results Table  -->
+      {{ !table }}
+
     </div>
   </div>
 </div>
-
-<!--  Add Column to Search Table Results  -->
-<div class="container-fluid col-md-10">
-  <div class="row col-6 mb-3 pt-1">
-    <div class="card text-bg-light pt-2 pb-2 shadow-sm">
-      <form>
-        <input type="hidden" name="sid" value="{{ session.sid }}">
-        <select name="toggle">
-          % for name, value in new_columns:
-            <option value="{{ name }}">{{ !value }}</option>
-          % end
-        </select>
-        <button type="submit" onclick="storeScrollPosition(event, 'load')">Add column</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<!--  Search Result Table  -->
-<div class="container-fluid col-md-10 col-12" >
-  <div class="row card">
-    <table class="table table-hover">
-      <thead class="sticky-top table-light">
-        <tr>
-          % for name, column in header:
-            <th>
-              <a href="?sid={{ session.sid }}&sort={{ name }}"
-                 onclick="storeScrollPosition(event, 'load')"
-                 class="sticky-top">
-                {{ !column }}
-                % if name != session.sort:
-
-                % else:
-                  % if session.direction == 1:
-                    <a class="text-decoration-none">&#x25B2;</a>
-                  % else:
-                    <a class="text-decoration-none">&#x25BC;</a>
-                  % end
-                % end
-              </a>
-              <a href="?sid={{ session.sid }}&toggle={{ name }}"
-                 onclick="storeScrollPosition(event, 'load')"
-                 class="text-decoration-none font-size-sm"
-                 style="color:#ea8888;font-size: 10px;">
-                <i class="fa fa-trash-o" style="font-size:18px"></i>
-              </a>
-            </th>
-          % end
-        </tr>
-      </thead>
-      <tbody class="table-responsive">
-        % for uid, columns in rows:
-          <tr style="transform: rotate(0);">
-            % for column in columns:
-              <th scope="row">
-                <a href=/material/{{ uid }} target="_blank" class="stretched-link"
-                   style="text-decoration: none; color: black; font-weight: normal;">
-                  {{ !column }}
-                </a>
-              </th>
-            % end
-          </tr>
-        % end
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!--  Footer Pagination  -->
-<nav class="bg-dark border-bottom border-body sticky-bottom" data-bs-theme="dark">
-  <div class="container-fluid d-flex flex-column justify-content-center align-items-center">
-    <div class="row">
-      <ul class="pagination mb-1 mt-1">
-        % for page, text in pages:
-        <li class="page-item">
-          % if page == -1:
-            <a class="page-link">...</a>
-          % elif page == session.page:
-            <a class="page-link">{{ text }}</a>
-          % else:
-          <a class="page-link"
-             href="?sid={{ session.sid }}&page={{ page }}">
-             {{ text }}
-          </a>
-          % end
-        </li>
-        % end
-      </ul>
-    </div>
-  </div>
-</nav>
 
 </body>

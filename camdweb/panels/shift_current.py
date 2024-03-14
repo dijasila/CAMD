@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from camdweb.c2db.asr_panel import read_result_file
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.panels.panel import Panel
 
 HTML = """
@@ -16,13 +16,11 @@ HTML = """
 
 class ShiftCurrentPanel(Panel):
     title = 'Shift current spectrum (RPA)'
+    datafiles = ['results-asr.shift.json']
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
-        result_file = material.folder / 'results-asr.shift.json'
-        if not result_file.is_file():
-            return
+                 material: Material) -> Generator[str, None, None]:
+        result_file = material.folder / self.datafiles[0]
         self.make_figures(result_file)
         yield HTML.format(uid=material.uid)
 

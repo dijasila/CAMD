@@ -1,39 +1,157 @@
 % rebase('base', plotly=True, callback=True)
+
+<!-- expand and collapse all panels -->
+<script>
+  // Function to expand all accordion panels
+  function expandAll() {
+    const accordionItems = document.querySelectorAll('.accordion-collapse');
+    accordionItems.forEach(item => {
+      item.classList.add('show');
+      });
+  }
+
+  // Function to collapse all accordion panels
+  function collapseAll() {
+    const accordionItems = document.querySelectorAll('.accordion-collapse');
+    accordionItems.forEach(item => {
+      item.classList.remove('show');
+    });
+  }
+</script>
+<!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
+<script>
+  function handleAnchorEvent(event, panelIndex) {
+    // Prevent the default scroll behavior of the anchor element
+    event.preventDefault();
+
+    // Get the accordion section
+    var accordionSection = document.getElementById('sec' + panelIndex);
+
+    // Check if the anchor element is double-clicked
+    if (event.detail === 2) {
+      // Toggle between collapsing and expanding the accordion without scrolling
+      toggleAccordionWithoutScrolling(accordionSection);
+    } else {
+      // Check if the accordion button is collapsed
+      var isCollapsed = accordionSection.querySelector('.accordion-button').classList.contains('collapsed');
+
+      // If the accordion button is collapsed, always expand it
+      if (isCollapsed) {
+        expandAccordion(accordionSection, panelIndex);
+        scrollToTop(panelIndex);
+      } else {
+        // If the accordion button is expanded, scroll to the top of the accordion section
+        scrollToTop(panelIndex);
+      }
+    }
+  }
+
+  function toggleAccordionWithoutScrolling(accordionSection) {
+    // Use Bootstrap's collapse method to toggle the accordion without scrolling
+    var collapseTarget = accordionSection.querySelector('.accordion-collapse');
+    var bsCollapse = new bootstrap.Collapse(collapseTarget, { toggle: false });
+    bsCollapse.toggle();
+  }
+
+  function expandAccordion(accordionSection, panelIndex) {
+    // Use Bootstrap's collapse method to expand the accordion
+    var collapseTarget = accordionSection.querySelector('.accordion-collapse');
+    var bsCollapse = new bootstrap.Collapse(collapseTarget);
+
+    // Attach an event listener for when the accordion is fully expanded
+    collapseTarget.addEventListener('shown.bs.collapse', function () {
+      // After expansion, scroll to the top of the accordion section
+      scrollToTop(panelIndex);
+    });
+
+    bsCollapse.show();
+  }
+
+  function scrollToTop(panelIndex) {
+    // Get the position of the expanded accordion section
+    var accordionSection = document.getElementById('sec' + panelIndex);
+    var accordionPosition = accordionSection.offsetTop;
+
+    // Scroll to the top of the accordion section with smooth behavior
+    window.scrollTo({
+      top: accordionPosition,
+      behavior: 'smooth'
+    });
+  }
+
+  function isElementInViewport(element) {
+    var rect = element.getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+</script>
+<!-- accordion color style.css override -->
+<style>
+.accordion-button.collapsed {
+    color: #1B282D;
+    background-color: #AAD5E3;
+    border: 1px solid #212529;
+}
+
+.accordion-button:not(.collapsed)  {
+    color: #1B282D;
+    background-color: #FFFFFF;
+    border: 1px solid #212529;
+}
+</style>
+
+
 <body>
 
-<nav class="navbar navbar-expand-md bg-dark border-bottom border-body" data-bs-theme="dark">
-  <div class="container-md">
-    <a class="navbar-brand"
-      href="https://cmr.fysik.dtu.dk/c2db/c2db.html">C2DB</a>
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-      <li class="nav-item">
-        <a class="nav-link active" aria-current="page" href="https://cmr.fysik.dtu.dk/">CMR</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/">Search</a>
-      </li>
-    </ul>
-  </div>
-</nav>
-
+<!-- Sidebar + Panels -->
 <div class="container-fluid">
   <div class="row">
 
-    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark">
-      <!--  Sidebar  -->
-      <div class="sticky-top d-flex flex-column align-items-center align-items-sm-start px-3 pt-2 text-white min-vh-10">
-        <!--  Sidebar Content  -->
-        <a href="/" class="d-flex align-items-center pb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-          <span class="fs-5 d-none d-sm-inline">Home</span>
-        </a>
+    <!-- Sidebar -->
+    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark"
+         style="overflow-y: auto; height: 100vh; position: sticky; top: 0;">
+      <div class="sticky-top d-flex flex-column align-items-center
+                  align-items-sm-start px-3 pt-2 text-white min-vh-10">
+        <!--  Persistent Sidebar Content  -->
+        <ul class="navbar-nav">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="HomePageNavigation"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="fs-5 d-none d-sm-inline">Home Pages</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="HomePageNavigation">
+              <li>
+                <a class="dropdown-item pt-1 pb-2"
+                   aria-current="page" href="https://cmr.fysik.dtu.dk/">
+                  <span class="d-none d-sm-inline">CMR</span>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item pb-2"
+                   href="https://cmr.fysik.dtu.dk/c2db/c2db.html">
+                  <span class="d-none d-sm-inline">C2DB</span>
+                </a>
+              </li>
+              <li>
+                <a href="/" class="dropdown-item pb-2">
+                  <span class="d-none d-sm-inline">Home</span>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
 
         <!--  Sidebar Collapse Buttons  -->
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start" id="menu">
-          <li class="nav-item">
-            % for p, (panel_title, html) in enumerate(panels):
-              <a class="nav-link px-0 text-start" type="button" role="button"
-                data-bs-toggle="collapse" href="#collapse{{ p }}"
-                aria-expanded="false" aria-controls="collapseExample">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
+          <li class="nav-item nav-list affix">
+            % for p, super_panel in enumerate(panels):
+              % panel_title, info, html, sub_panels = super_panel.get_properties()
+              <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
+                 href="#sec{{ p }}" style="color: #00ABE4">
                 <span class="d-none d-sm-inline">{{ panel_title }}</span>
               </a>
             % end
@@ -44,19 +162,48 @@
       </div>
     </div>
 
-    <!--  Panel Area  -->
-    <div class="col py-3">
-      % for p, (panel_title, html) in enumerate(panels):
-        <!--  Link Each Panel with Button Anchor  -->
-        <div class="{{'collapse show' if panel_title=='Atoms' else 'collapse'}}"
-             aria-labelledby="heading{{ p }}"
-             id="collapse{{ p }}">
+    <!--  Information Viewing Area  -->
+    <div class="col">
+      <!--  Link Each Panel with Button Anchor  -->
+      % for p, super_panel in enumerate(panels):
+        % panel_title, info, html, sub_panels = super_panel.get_properties()
+        % if p == 0:
+          <!-- Logo (header) Area -->
+          <section id="materialHeader" class="py-2 sticky-top">
+            <!-- expand/collapse all -->
+            <div class="btn-toolbar justify-content-end bg-white" role="toolbar" aria-label="Toolbar with button groups">
+              <div class="btn-group me-2" role="group" aria-label="First group">
+                <button type="button" class="btn btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="expandAll()">Expand All</button>
+              </div>
+            </div>
+          </section>
+        % end
+        <section id="sec{{ p }}">
+        <div class="accordion accordion-flush" id="accordionFlush">
+          <!--  Create each Accordion Body  -->
+          <div class="accordion-item mb-1">
+            <!--  accordion button  -->
+            <h2 class="accordion-header" id="flush-heading{{ p }}">
+                <button class="accordion-button collapsed"
+                   type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
+                   aria-expanded="false" aria-controls="flush-collapse{{ p }}">
+                  <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                </button>
+            </h2>
 
-          <!--  Each Panel's Content  -->
-          <div class="card card-body">
-            {{ !html }}
+            <!--  Accordion Content (Panel info)  -->
+            <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
+                 id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
+                 aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
+              <div class="panel accordion-body">
+                {{ !html }}
+                {{ !info }}
+              </div>
+            </div>
           </div>
         </div>
+        </section>
       % end
     </div>
 

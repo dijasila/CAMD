@@ -6,7 +6,7 @@ from ase import Atoms
 from ase.calculators.singlepoint import SinglePointCalculator
 from ase.db import connect
 from camdweb.c2db.app import main
-from camdweb.c2db.copy_files import copy_materials
+from camdweb.c2db.copy import copy_materials, main as copymain
 from camdweb.test.c2db import create_tree
 from camdweb.c2db.oqmd123 import db2json
 
@@ -33,7 +33,11 @@ def test_c2db_missing_phonons(tmp_path):
     os.chdir(tmp_path)
     (tmp_path / 'MoS2/results-asr.phonons.json').unlink()
     (tmp_path / 'MoS2/results-asr.bader.json').unlink()
+
     copy_materials(tmp_path, ['MoS2*'], update_chull=False)
+    # OK to do it again:
+    copy_materials(tmp_path, ['MoS2*'], update_chull=False)
+
     with pytest.raises(FileNotFoundError):
         copy_materials(tmp_path, [])
 
@@ -42,7 +46,7 @@ def test_everything(oqmd_db_file):
     root = oqmd_db_file.parent
     create_tree(root)
     os.chdir(root)
-    copy_materials(root, ['MoS2*'])
+    copymain([str(root), 'MoS2*'])
 
     app = main(['AB2'])
     assert len(app.materials) == 1
@@ -51,7 +55,7 @@ def test_everything(oqmd_db_file):
     app = main(['AB2/1MoS2/1'])
     assert len(app.materials) == 1
 
-    app.index()
+    app.index_page()
 
     # Compress one of the result files:
     bs = root / 'AB2/1MoS2/1/results-asr.bandstructure.json'
@@ -59,10 +63,13 @@ def test_everything(oqmd_db_file):
         fd.write(bs.read_text())
     bs.unlink()
 
-    html = app.material('1MoS2-1')
-    assert '1.24' in html  # Bader charge
+    html = app.material_page('1MoS2-1')
+    key = 'Charges [|e|]'
+    passed = key in html
+    assert passed
 
     (root / 'AB2/1MoS2/1/bader.json').unlink()
     (root / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
-    html = app.material('1MoS2-1')
-    assert '1.24' not in html  # Bader charge
+    html = app.material_page('1MoS2-1')
+    passed = key not in html  # Bader charge
+    assert passed

@@ -1,10 +1,10 @@
 """C2DB web-app.
 
-The camdweb.c2db.copy_files module has code to convert ~cmr/C2DB-ASR/tree/
+The camdweb.c2db.copy module has code to convert ~cmr/C2DB-ASR/tree/
 folders and friends (see PATTERNS variable below) to a canonical tree
 layout.
 
-Also contains simple web-app that can run off the tree of folders.
+Also contains web-app that can run off the tree of folders.
 
 The goal is to have the code decoupled from ASE, GPAW, CMR and ASR.
 Right now ASR webpanel() functions are still used
@@ -14,36 +14,49 @@ from __future__ import annotations
 
 import argparse
 import json
+# import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
-from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import ASRPanel
+from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
+from camdweb.html import Range, RangeX, Select, table
+from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel
 from camdweb.panels.bader import BaderPanel
-from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.panel import Panel
+from camdweb.panels.shift_current import ShiftCurrentPanel
+from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
-from camdweb.html import Select, Range, RangeX
+
+OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
+OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
 class C2DBAtomsPanel(AtomsPanel):
-    def __init__(self):
-        super().__init__()
-        self.column_names.update(
-            has_inversion_symmetry='Inversion symmetry',
-            gap='Band gap (PBE) [eV]',
-            evac='Vacuum level [eV]',
-            hform='Heat of formation [eV/atom]',
-            uid0='Old uid',
-            magstate='Magnetic state',
-            ehull='Energy above convex hull [eV/atom]',
-            energy='Energy [eV]',
-            spin_axis='...',
-            efermi='...',
-            dyn_stab='Dynamically stable')
-        self.columns = list(self.column_names)
+    title = 'Summary'
+
+    def create_column_one(self,
+                          material: Material) -> str:
+        html1 = table(['Structure info', ''],
+                      self.table_rows(material,
+                                      ['layergroup', 'lgnum', 'lable',
+                                       'cod_id', 'icsd_id', 'doi', 'olduid']))
+        html2 = table(['Stability', ''],
+                      self.table_rows(material,
+                                      ['ehull', 'hform', 'dyn_stab']))
+        html3 = table(['Basic properties', ''],
+                      self.table_rows(material,
+                                      ['magstate', 'gap', 'gap_hse',
+                                       'gap_gw']))
+        return '\n'.join([html1, html2, html3])
+
+
+def olduid(uid, link=False):  # pragma: no cover
+    if link:
+        return f'<a href={OLD}/{uid}>{uid}</a>'
+    return uid
 
 
 def main(argv: list[str] | None = None) -> CAMDApp:
@@ -66,66 +79,119 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         else:
             folders += list(p.glob('*/'))
 
-    keys = set()
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
             uid = f'{f.parent.name}-{f.name}'
             material = Material.from_file(f / 'structure.xyz', uid)
-            mlist.append(material)
             data = json.loads((f / 'data.json').read_text())
-            for key, value in data.items():
-                if key == 'uid':
-                    assert value == uid
-                    continue  # already added
-                material.add_column(key, value)
-                keys.add(key)
+            material.columns.update(data)
+            mlist.append(material)
             pb.advance(pid)
+
+    pool = None  # mp.Pool(maxtasksperchild=100)
+
+    def asr_panel(name):
+        return ASRPanel(name, pool)
 
     panels: list[Panel] = [
         C2DBAtomsPanel(),
-        ConvexHullPanel(),
-        ASRPanel('stiffness', keys),
-        ASRPanel('phonons', keys),
-        ASRPanel('deformationpotentials', keys),
-        ASRPanel('bandstructure', keys),
-        # ASRPanel('pdos', keys),
-        ASRPanel('effective_masses', keys),
-        ASRPanel('hse', keys),
-        ASRPanel('gw', keys),
-        ASRPanel('borncharges', keys),
-        ASRPanel('shg', keys),
-        ASRPanel('polarizability', keys),
-        ASRPanel('infraredpolarizability', keys),
-        ASRPanel('raman', keys),
-        # ASRPanel('bse', keys),
+        ConvexHullPanel(
+            sources={'OQMD': ('Bulk crystals from OQMD123',
+                              f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
+                     'C2DB': ('Monolayers from C2DB',
+                              '<a href={uid}>{formula:html}</a>')}),
+        asr_panel('stiffness'),
+        asr_panel('phonons'),
+        asr_panel('deformationpotentials'),
+        BSDOSBZPanel(),
+        asr_panel('effective_masses'),
+        asr_panel('hse'),
+        asr_panel('gw'),
+        asr_panel('borncharges'),
+        asr_panel('shg'),
+        asr_panel('polarizability'),
+        asr_panel('infraredpolarizability'),
+        asr_panel('raman'),
+        asr_panel('bse'),
         BaderPanel(),
-        ASRPanel('piezoelectrictensor', keys),
-        ShiftCurrentPanel()]
+        asr_panel('piezoelectrictensor'),
+        ShiftCurrentPanel(),
+        asr_panel('collect_spiral'),
+        asr_panel('dmi'),
+        asr_panel('spinorbit')]
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate', 'area']
+    materials.column_descriptions.update(
+        has_inversion_symmetry='Inversion symmetry',
+        evac='Vacuum level [eV]',
+        hform='Heat of formation [eV/atom]',
+        olduid='Old uid',
+        magstate='Magnetic state',
+        ehull='Energy above convex hull [eV/atom]',
+        energy='Energy [eV]',
+        spin_axis='Spin axis',
+        efermi='Fermi level [eV]',
+        dyn_stab='Dynamically stable',
+        cod_id='COD id of parent bulk structure',
+        iscd_id='ICSD id of parent bulk structure',
+        doi='Reported DOI',
+        lgnum='Layer group number',
+        label='Structure origin',
+        gap='Band gap [eV]',
+        gap_hse='Band gap (HSE06) [eV]',
+        gap_gw='Band gap (G₀W₀) [eV]')
+
+    materials.html_formatters.update(
+        cod_id=cod,
+        icsd_id=icsd,
+        doi=doi,
+        olduid=olduid)
+
+    initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate',
+                       'layergroup']
 
     root = folders[0].parent.parent.parent
     app = CAMDApp(materials, initial_columns, root)
     app.form_parts += [
         Select('Dynamically stable', 'dyn_stab',
-               ['', 'True', 'False'], ['', 'Yes', 'No']),
-        Range('Energy above convex hull [eV/atom]', 'ehull'),
-        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['', 'No', 'Yes']),
+               ['', 'True', 'False'], ['-', 'Yes', 'No']),
+        Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
+        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         RangeX('Band gap range [eV]', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
+    app.title = 'C2DB'
     return app
 
 
 def test():  # pragma: no cover
     app = main(['AB2'])
-    app.material('1MoS2-2')
+    app.material_page('1MoS2-3')
 
 
 def create_app():  # pragma: no cover
-    return main([path.name for path in Path().glob('A*/')]).app
+    """Create the WSGI app."""
+    return main([str(path) for path in Path().glob('A*/')]).app
+
+
+def check_all(pattern: str):  # pragma: no cover
+    """Generate png-files."""
+    c2db = main([str(path) for path in Path().glob(pattern)])
+    for material in c2db.materials:
+        print(material.uid)
+        c2db.material_page(material.uid)
+
+
+def check_def_pot():  # pragma: no cover
+    from .asr_panel import read_result_file
+    for path in Path().glob('A*/*/*/results-asr.deformationpotentials.json'):
+        r = read_result_file(path)
+        try:
+            r['defpots_soc']
+        except KeyError:
+            f = json.loads(path.with_name('data.json').read_text())['folder']
+            print(f)
 
 
 if __name__ == '__main__':

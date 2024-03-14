@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-import sys
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
@@ -11,8 +10,8 @@ from typing import Iterator
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 
-from camdweb.html import FormPart, Select
-from camdweb.material import Materials
+from camdweb.html import FormPart, Select, StoichiometryInput
+from camdweb.materials import Materials
 from camdweb.session import Sessions
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
@@ -39,22 +38,29 @@ class CAMDApp:
         self.form_parts: list[FormPart] = []
 
         # For selecting materials (A, AB, AB2, ...):
-        self.form_parts.append(
-            Select('Stoichiometry', 'stoichiometry',
-                   [''] + self.materials.stoichiometries()))
+        stoichiometries = self.materials.stoichiometries()
+        if len(stoichiometries) > 20:
+            # too many to list them all
+            self.form_parts.append(StoichiometryInput())
+        else:
+            self.form_parts.append(
+                Select('Stoichiometry', 'stoichiometry',
+                       [''] + stoichiometries))
 
         # For nspecies selection:
-        maxnspecies = max(material.nspecies for material in self.materials)
+        maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
             Select('Number of chemical species', 'nspecies',
-                   [''] + [str(i) for i in range(1, maxnspecies)]))
+                   [''] + [str(i) for i in range(1, maxnspecies + 1)]))
 
     def route(self):
         self.app = Bottle()
-        self.app.route('/')(self.index)
-        self.app.route('/material/<uid>')(self.material)
+        self.app.route('/')(self.index_page)
+        self.app.route('/table')(self.table_html)
+        self.app.route('/material/<uid>')(self.material_page)
         self.app.route('/callback')(self.callback)
         self.app.route('/png/<path:path>')(self.png)
+        self.app.route('/favicon.ico')(self.favicon)
 
         for fmt in ['xyz', 'cif', 'json']:
             self.app.route(f'/material/<uid>/download/{fmt}')(
@@ -75,20 +81,31 @@ class CAMDApp:
         write(buf, atoms, format=ase_fmt)
         return buf.getvalue()
 
-    def index(self) -> str:
+    def index_page(self) -> str:
         """Page showing table of selected materials."""
         query = request.query
-        filter_string = self.get_filter_string(query)
         session = self.sessions.get(int(query.get('sid', '-1')))
-        session.update(filter_string, query)
-        search = '\n'.join(fp.render(query) for fp in self.form_parts)
-        rows, header, pages, new_columns, error = self.materials.get_rows(
-            session)
-
+        search = '\n'.join(fp.render() for fp in self.form_parts)
+        table = self.table_html(session)
         return template('index.html',
                         title=self.title,
-                        query=query,
                         search=search,
+                        session=session,
+                        table=table)
+
+    def table_html(self, session=None) -> str:
+        """Get HTML for table."""
+        if session is None:
+            query = request.query
+            session = self.sessions.get(int(query.get('sid')))
+            if 'filter' in query:
+                filter_string = self.get_filter_string(query)
+                session.update(filter=filter_string)
+            else:
+                session.update(query=query)
+        rows, header, pages, new_columns, error = self.materials.get_rows(
+            session)
+        return template('table.html',
                         session=session,
                         pages=pages,
                         rows=rows,
@@ -115,32 +132,28 @@ class CAMDApp:
             filters += s.get_filter_strings(query)
         return ','.join(filters)
 
-    def material(self, uid: str) -> str:
+    def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
-        if uid == 'stop':  # pragma: no cover
-            sys.stderr.close()
         material = self.materials[uid]
-
-        titles = []
-        generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
-            generator = panel.get_html(material, self.materials)
-            try:
-                html = next(generator)
-            except StopIteration:
+            if not all((material.folder / datafile).is_file()
+                    for datafile in panel.datafiles):
                 continue
-            if html == '':  # result will come next time
-                generators.append(generator)
-            else:
-                generators.append(iter([html]))
-            titles.append(panel.title)
+
+            panel.generate_webpanel(material=material)
 
         panels = []
         scripts = []
-        for gen, title in zip(generators, titles):
-            html = next(gen)
-            html, script = cut_out_script(html)
-            panels.append((title, html))
+        for panel in self.materials.panels:
+            if not all((material.folder / datafile).is_file()
+                    for datafile in panel.datafiles):
+                continue
+            
+            try:
+                webpanel, script = panel.get_webpanel()
+            except:
+                continue
+            panels.append(webpanel)
             scripts.append(script)
 
         return template('material.html',
@@ -149,6 +162,10 @@ class CAMDApp:
                         footer='\n'.join(scripts))
 
     def callback(self) -> str:
+        """Send new json data.
+
+        Currently only used for the atoms-plot.
+        """
         query = request.query
         name = query['name']
         uid = query['uid']
@@ -156,21 +173,9 @@ class CAMDApp:
         return self.callbacks[name](material, int(query['data']))
 
     def png(self, path: str) -> bytes:
+        """Return binary data for png-figures."""
         return static_file(path, self.root)
 
-
-def cut_out_script(html: str) -> tuple[str, str]:
-    r"""XXX.
-
-    >>> cut_out_script('''Hello
-    ... <script>
-    ...   ...
-    ... </script>
-    ... CAMd''')
-    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
-    """
-    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
-    if m:
-        i, j = m.span()
-        return html[:i] + html[j:], html[i:j]
-    return html, ''
+    def favicon(self) -> bytes:
+        path = self.root / 'favicon.ico'
+        return static_file(path.name, path.parent)

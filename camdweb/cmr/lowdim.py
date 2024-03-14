@@ -8,8 +8,7 @@ import numpy as np
 
 from camdweb.html import table
 from camdweb.panels.panel import Panel
-from camdweb.material import Material, Materials
-
+from camdweb.material import Material
 
 Desc = namedtuple('Desc', ['short', 'long', 'unit'])
 
@@ -48,7 +47,7 @@ def sab_key_descriptions() -> dict[str, Desc]:
 def score(material, path: Path) -> None:
     vs = []
     for k in keysforfigure:
-        v = getattr(material, k, 0)
+        v = getattr(material, k, 0) or 0
         vs.append(v)
     x = np.arange(len(keysforfigure))
     fig, ax = plt.subplots()
@@ -111,16 +110,15 @@ class LowDimPanel(Panel):
     title = 'Dimensionality analysis'
 
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None, None]:
         uid = material.uid
         path = material.folder / f'lowdim/{uid}.png'
         path.parent.mkdir(exist_ok=True)
         if not path.is_file():
             score(material, path)
 
-        col1 = table(['Item', ''],
-                     materials.table(material, keysfortable2))
+        descriptions = {key: all_keydescs[key].long for key in keysfortable2}
+        col1 = table(['Item', ''], self.table_rows(material, descriptions))
         col2 = (f'<img alt="Dim. analysis for {uid}" '
                 f'src="/png/lowdim/{uid}.png" />')
         yield HTML.format(col1, col2)

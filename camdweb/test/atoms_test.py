@@ -1,19 +1,15 @@
-from pathlib import Path
-
 from ase import Atoms
 from ase.build import bulk, molecule
 
 from camdweb.material import Material
-from camdweb.panels.atoms import AtomsPanel, plot_atoms, get_bonds
+from camdweb.panels.atoms import plot_atoms, get_bonds
 
 
 def test_1d():
-    ap = AtomsPanel()
-    mat = Material(Path(), 'x', Atoms('H', [[2.5, 2.5, 0]],
-                                      cell=[5, 5, 1],
-                                      pbc=[False, False, True]))
-    ap.update_data(mat)
-    assert ap.column_names['length'] == 'Length [Å]'
+    mat = Material('x', Atoms('H', [[2.5, 2.5, 0]],
+                              cell=[5, 5, 1],
+                              pbc=[False, False, True]))
+    assert mat.length == 1.0
 
 
 def test_plot():
