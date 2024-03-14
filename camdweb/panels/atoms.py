@@ -239,6 +239,7 @@ def plot_atoms(atoms: Atoms,
                              showlegend=False))
 
     fig = go.Figure(data=data)
+    fig.update_layout(scene=dict(xaxis_visible=False, yaxis_visible=False, zaxis_visible=False))
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     fig.update_xaxes(showgrid=False)
     fig.update_layout(template='simple_white')
