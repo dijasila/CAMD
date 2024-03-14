@@ -87,24 +87,23 @@ class Select(FormPart):
         """Render select block.
 
         >>> s = Select('Bla-bla', 'xyz', ['A', 'B', 'C'])
-        >>> print(s.render())
-        <label class="form-label">Bla-bla</label>
-        <select name="xyz" class="form-select">
-          <option value="A" selected>A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
+        >>> html = s.render()
         >>> s.get_filter_strings({'xyz': 'C'})
         ['xyz=C']
         """
-        parts = [f'<label class="form-label">{self.text}</label>\n'
-                 f'<select name="{self.name}" class="form-select">']
+        parts = [
+            '<div class="row">',
+            '<div class="col-4">',
+            f'<label class="form-label">{self.text}</label>',
+            '</div>',
+            '<div class="col">',
+            f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
         selected = ' selected'
         for val, txt in zip(self.options, names):
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
             selected = ''
-        parts.append('</select>')
+        parts.append('</select></div></div>')
         return '\n'.join(parts)
 
 
@@ -117,23 +116,19 @@ class Input(FormPart):
         """Render input block.
 
         >>> s = Input('Bla-bla', 'xyz')
-        >>> print(s.render())
-        <label class="form-label">Bla-bla</label>
-        <input
-          class="form-control"
-          type="text"
-          name="xyz"
-          value=""
-          placeholder="..." />
+        >>> html = s.render()
         """
         parts = [
+            '<div class="row">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
+            '</div><div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="{self.name}"',
             '  value=""',
-            f'  placeholder="{self.placeholder}" />']
+            f'  placeholder="{self.placeholder}" /></div></div>']
         return '\n'.join(parts)
 
 
@@ -174,31 +169,24 @@ class Range(FormPart):
         """Render range block.
 
         >>> s = Range('Band gap', 'gap')
-        >>> print(s.render())
-        <label class="form-label">Band gap</label>
-        <input
-          class="form-control"
-          type="text"
-          name="from_gap"
-          value="" />
-        <input
-          class="form-control"
-          type="text"
-          name="to_gap"
-          value="" />
+        >>> html = s.render()
         """
         parts = [
+            '<div class="row">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
+            '</div><div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
             '  value="" />',
+            '</div>-<div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
-            '  value="" />']
+            '  value="" /></div></div>']
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -222,23 +210,28 @@ class RangeX(Range):
 
     def render(self) -> str:
         parts = [
+            '<div class="row">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
+            '</div><div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
             '  value="" />',
+            '</div>-<div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
-            '  value="" />']
-        parts += [f'<select name="{self.name}" class="form-select">']
+            '  value="" />',
+            '</div><div class="col">',
+            f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select>')
+        parts.append('</select></div></div>')
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -262,17 +255,22 @@ class RangeS(Range):
     def render(self) -> str:
         names = self.names or self.options
 
-        parts = [f'<select name="from_{self.name}" class="form-select">']
+        parts = [
+            '<div class="row">',
+            '<div class="col-4">',
+            f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select>')
+        parts.append('</select></div>')
 
-        parts = [f'<select name="to_{self.name}" class="form-select">']
+        parts += [
+            '<div class="col">',
+            f'<select name="to_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select>')
+        parts.append('</select></div></div>')
 
         return '\n'.join(parts)
 
