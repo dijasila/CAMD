@@ -99,7 +99,7 @@ class Select(FormPart):
         """
         parts = [
             '<div class="row">',
-            '<div class="col">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
             '</div>',
             '<div class="col">',
@@ -133,7 +133,7 @@ class Input(FormPart):
         """
         parts = [
             '<div class="row">',
-            '<div class="col">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
             '</div><div class="col">',
             '<input',
@@ -197,7 +197,7 @@ class Range(FormPart):
         """
         parts = [
             '<div class="row">',
-            '<div class="col">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
             '</div><div class="col">',
             '<input',
@@ -235,7 +235,7 @@ class RangeX(Range):
     def render(self) -> str:
         parts = [
             '<div class="row">',
-            '<div class="col">',
+            '<div class="col-4">',
             f'<label class="form-label">{self.text}</label>',
             '</div><div class="col">',
             '<input',
@@ -243,7 +243,7 @@ class RangeX(Range):
             '  type="text"',
             f'  name="from_{self.name}"',
             '  value="" />',
-            '</div><div class="col">',
+            '</div>-<div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
@@ -281,7 +281,7 @@ class RangeS(Range):
 
         parts = [
             '<div class="row">',
-            '<div class="col">',
+            '<div class="col-4">',
             f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
