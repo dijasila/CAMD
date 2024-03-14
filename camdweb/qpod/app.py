@@ -19,8 +19,8 @@ from camdweb.material import Material, Materials
 from camdweb.c2db.asr_panel import ASRPanel, read_result_file
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
-from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.panels.charge_neutrality import ChargeNeutralityPanel
+from camdweb.panels.slater_janak import SlaterJanakPanel
 from camdweb.web import CAMDApp
 
 
@@ -71,7 +71,8 @@ def main(root: Path) -> CAMDApp:
             pb.advance(pid)
 
     panels: list[Panel] = [QPODAtomsPanel(),
-                           ChargeNeutralityPanel()]
+                           ChargeNeutralityPanel(),
+                           SlaterJanakPanel()]
     # for name in ['bandstructure',
     #              'phonons',
     #              'bader']:

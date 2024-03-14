@@ -200,8 +200,6 @@ def plot_formation_scf(scresult, result, fname) -> go.Figure:
         ef = scresult['efermi_sc']
         for i, defect in enumerate(scresult['defect_concentrations']):
             defect = defect['kwargs']['data']
-            # if isinstance(defect, str):
-            #     defect = json.loads(defect)
             name = defect['defect_name']
             def_type = name.split('_')[0]
             def_name = name.split('_')[-1]
