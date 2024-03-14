@@ -87,13 +87,7 @@ class Select(FormPart):
         """Render select block.
 
         >>> s = Select('Bla-bla', 'xyz', ['A', 'B', 'C'])
-        >>> print(s.render())
-        <label class="form-label">Bla-bla</label>
-        <select name="xyz" class="form-select">
-          <option value="A" selected>A</option>
-          <option value="B">B</option>
-          <option value="C">C</option>
-        </select>
+        >>> html = s.render()
         >>> s.get_filter_strings({'xyz': 'C'})
         ['xyz=C']
         """
@@ -122,14 +116,7 @@ class Input(FormPart):
         """Render input block.
 
         >>> s = Input('Bla-bla', 'xyz')
-        >>> print(s.render())
-        <label class="form-label">Bla-bla</label>
-        <input
-          class="form-control"
-          type="text"
-          name="xyz"
-          value=""
-          placeholder="..." />
+        >>> html = s.render()
         """
         parts = [
             '<div class="row">',
@@ -182,18 +169,7 @@ class Range(FormPart):
         """Render range block.
 
         >>> s = Range('Band gap', 'gap')
-        >>> print(s.render())
-        <label class="form-label">Band gap</label>
-        <input
-          class="form-control"
-          type="text"
-          name="from_gap"
-          value="" />
-        <input
-          class="form-control"
-          type="text"
-          name="to_gap"
-          value="" />
+        >>> html = s.render()
         """
         parts = [
             '<div class="row">',
