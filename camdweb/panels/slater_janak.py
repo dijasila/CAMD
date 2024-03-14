@@ -114,7 +114,6 @@ def plot_charge_transitions(data, transitions_data, sj_png: Path):
     plt.text(0, gap + 0.1 * gap, 'CBM', color='white',
              ha='center', va='center', weight='bold')
 
-    i = 1
     for name, trans_data in transitions_data:
         q = int(name.split('/')[-1])
         q_new = int(name.split('/')[0])
@@ -133,7 +132,6 @@ def plot_charge_transitions(data, transitions_data, sj_png: Path):
         if y <= (cbm + 0.2 * gap) and y >= (vbm - 0.2 * gap):
             plt.plot(np.linspace(-0.9, 0.5, 20), 20 * [y - vbm], label=name,
                      color=color1, mec=color2, mfc=color2, marker='s', markersize=3)
-            i += 1
 
     plt.legend(loc='center right')
     plt.ylabel(r'$E - E_{\mathrm{VBM}}$ [eV]')
