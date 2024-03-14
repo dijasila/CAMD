@@ -48,6 +48,10 @@ Plotly.newPlot('{id}', graphs, {{}});
 </script>
 """
 
+# D3 colors from plotly.express.colors.qualitative
+colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
+          '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22', '#17BECF']
+
 
 class ConvexHullPanel(Panel):
     title = 'Convex hull'
@@ -134,10 +138,6 @@ def plot_2d(pd: PhaseDiagram,
             sources: list[str] | None = None,
             uid: str | None = None) -> go.Figure:
 
-    # D3 colors from plotly.express.colors.qualitative
-    colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
-              '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22', '#17BECF']
-
     if uids is None:
         uids = [r[2] for r in pd.references]
 
@@ -208,10 +208,6 @@ def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
             uid: str | None = None) -> go.Figure:
-
-    # D3 colors from plotly.express.colors.qualitative
-    colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
-              '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22', '#17BECF']
 
     if uids is None:
         uids = [r[2] for r in pd.references]
