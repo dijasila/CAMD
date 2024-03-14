@@ -79,7 +79,8 @@ class Panel(abc.ABC):
         # Should i purge the generators here?
         self.generator = None
 
-        return WebPanel(self.title, self.info, html, script, subwebpanels)
+        return WebPanel(self.title, self.info, html, subwebpanels), script
+
 
 def cut_out_script(html: str) -> tuple[str, str]:
     r"""We need to put the script tags in the footer.
@@ -106,17 +107,17 @@ def default_formatter(value: ColVal, link: bool = False) -> str:
         return 'Yes' if value else 'No'
     return str(value)
 
+
 # Simple class for parsing panel and subpanel html info to the front end.
 class WebPanel:
-    def __init__(self, panel_title, info, html, script, subpanels = None):
+    def __init__(self, panel_title, info, html, subpanels = None):
         self.panel_title = panel_title
         self.info = info
         self.html = html
-        self.script = script
         self.subpanels = subpanels
 
     def get_properties(self):
         subpanel_properties = list()
         for subpanel in self.subpanels:
-            subpanelproperties.append(subpanel.get_properties())
-        return self.panel_title, self.info, self.html, self.script, subpanel_properties
+            subpanel_properties.append(subpanel.get_properties())
+        return self.panel_title, self.info, self.html, subpanel_properties
