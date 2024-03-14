@@ -135,32 +135,26 @@ class CAMDApp:
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
         material = self.materials[uid]
-        titles = []
-        info_strings = []
-        generators: list[Iterator[str]] = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                       for datafile in panel.datafiles):
+                    for datafile in panel.datafiles):
                 continue
-            generator = panel.get_html(material)
-            try:
-                html = next(generator)
-            except StopIteration:
-                continue
-            if html == '':  # result will come next time
-                generators.append(generator)
-            else:
-                generators.append(iter([html]))
-            titles.append(panel.title)
-            info_strings.append(panel.info)
+
+            panel.generate_webpanel(material=material)
 
         panels = []
         scripts = []
-        for gen, title, info in zip(generators, titles, info_strings):
-            html = next(gen)
-            html, script = cut_out_script(html)
-            panels.append((title, info, html))
-            scripts.append(script)
+        for panel in self.materials.panels:
+            if not all((material.folder / datafile).is_file()
+                    for datafile in panel.datafiles):
+                continue
+            
+            try:
+                webpanel = panel.get_webpanel().get_properties()
+            except:
+                continue
+            panels.append((webpanel[0], webpanel[1], webpanel[2]))
+            scripts.append(webpanel[3])
 
         return template('material.html',
                         title=uid,
@@ -185,20 +179,3 @@ class CAMDApp:
     def favicon(self) -> bytes:
         path = self.root / 'favicon.ico'
         return static_file(path.name, path.parent)
-
-
-def cut_out_script(html: str) -> tuple[str, str]:
-    r"""We need to put the script tags in the footer.
-
-    >>> cut_out_script('''Hello
-    ... <script>
-    ...   ...
-    ... </script>
-    ... CAMd''')
-    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
-    """
-    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
-    if m:
-        i, j = m.span()
-        return html[:i] + html[j:], html[i:j]
-    return html, ''
