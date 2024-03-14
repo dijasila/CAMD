@@ -5,7 +5,7 @@ import plotly
 from typing import Iterable, Generator
 
 from camdweb.html import table
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.panels.panel import Panel
 import numpy as np
@@ -42,36 +42,59 @@ SCRIPT = """
 </script>
 """
 
-class ChargeNeutralityPanel(Panel):
+class ChargeNeutralitySuperpanel(Panel):
     title = f'Equilibrium energetics: All defects'
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None]:
         
         root = material.folder.parent.parent
         cn_file = root / 'pristine_sc' / 'results-asr.charge_neutrality.json'
         result = read_result_file(cn_file)
         
         html=''
-        graphs_js = ''
+
+        self.subpanels = list()
+
         # Iterate over each "condition" in "scresults"
         for i, scresult in enumerate(result['scresults']):
             scresult = scresult['kwargs']['data']
             condition = scresult['condition']
-
-            charge_neutrality_fig, tbl0, tbl1 = make_figure_and_tables(scresult, 
-                                                                       result, 
-                                                                       verbose=False)
             
-            charge_neutrality_json = json.dumps(charge_neutrality_fig,
-                                               cls=plotly.utils.PlotlyJSONEncoder)
-            html += f'<h3>{condition}</h3>'
-            html += HTML.format(div_id=f'charge_neutrality{i}', tbl0=tbl0, tbl1=tbl1)
+            self.subpanels.append(ChargeNeutralityPanel(result, scresult, condition))
 
-            graphs_js = f"var graph{i} = {charge_neutrality_json};\n"
-            graphs_js += f"Plotly.newPlot('charge_neutrality{i}', graph{i}, {{}});\n"
-            
-            html += SCRIPT.format(graphs=graphs_js) + '<br>'
+        yield html
+
+
+class ChargeNeutralityPanel(Panel):
+    def __init__(self, result, scresult, condition) -> None:
+        super().__init__()
+        self.result = result
+        self.scresult = scresult
+        self.title = condition
+
+    def get_html(self,
+                 material: Material) -> Generator[str, None]:
+
+        html=''
+        graphs_js = ''
+        
+        result = self.result
+        scresult = self.scresult
+        title = self.title
+
+        charge_neutrality_fig, tbl0, tbl1 = make_figure_and_tables(scresult, 
+                                                                    result, 
+                                                                    verbose=False)
+        
+        charge_neutrality_json = json.dumps(charge_neutrality_fig,
+                                            cls=plotly.utils.PlotlyJSONEncoder)
+        html += f'<h3>{title}</h3>'
+        html += HTML.format(div_id=f'charge_neutrality_{title}', tbl0=tbl0, tbl1=tbl1)
+
+        graphs_js = f"var graph{title} = {charge_neutrality_json};\n"
+        graphs_js += f"Plotly.newPlot('charge_neutrality_{title}', graph{title}, {{}});\n"
+        
+        html += SCRIPT.format(graphs=graphs_js) + '<br>'
         yield html
 
 # Make equilibrium defects energetics plot (from asr.charge_neutrality), //

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 import abc
-from typing import TYPE_CHECKING, Callable, Generator, Iterable
+from typing import TYPE_CHECKING, Callable, Generator, Iterable, List
 
 from camdweb import ColVal
 
@@ -17,7 +17,7 @@ class Panel(abc.ABC):
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-    subpanels = list()
+    subpanels = None
 
     @abc.abstractmethod
     def get_html(self,
@@ -56,8 +56,9 @@ class Panel(abc.ABC):
     def generate_webpanel(self, material: Material):               
         self.generator = self.get_html(material)
 
-        for subpanel in self.subpanels:
-            subpanel.generate_panel(material = material)
+        if self.subpanels is not None:
+            for subpanel in self.subpanels:
+                subpanel.generate_webpanel(material = material)
 
         try:
             html = next(self.generator)
@@ -72,9 +73,12 @@ class Panel(abc.ABC):
         
         html = next(self.generator)
         html, script = cut_out_script(html)
-        subwebpanels = list()
-        for subpanel in self.subpanels:
-            subwebpanels.append(subpanel.get_webpanel())
+        subwebpanels = None
+
+        if self.subpanels is not None:
+            subwebpanels = list()
+            for subpanel in self.subpanels:
+                subwebpanels.append(subpanel.get_webpanel())
 
         # Should i purge the generators here?
         self.generator = None
@@ -115,7 +119,9 @@ class WebPanel:
         self.subpanels = subpanels
 
     def get_properties(self):
-        subpanel_properties = list()
-        for subpanel in self.subpanels:
-            subpanelproperties.append(subpanel.get_properties())
+        subpanel_properties = None
+        if self.subpanels is not None:
+            subpanel_properties = list()
+            for subpanel in self.subpanels:
+                subpanel_properties.append(subpanel.get_properties())
         return self.panel_title, self.info, self.html, subpanel_properties

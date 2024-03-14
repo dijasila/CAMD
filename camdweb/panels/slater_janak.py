@@ -6,7 +6,7 @@ from pathlib import Path
 
 from camdweb.html import table
 from camdweb.html import image
-from camdweb.material import Material, Materials
+from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file
 import numpy as np
 from camdweb.panels.panel import Panel
@@ -39,8 +39,7 @@ HTML = """
 class SlaterJanakPanel(Panel):
     title = f'Formation energies and charge transition levels'
     def get_html(self,
-                 material: Material,
-                 materials: Materials) -> Generator[str, None, None]:
+                 material: Material) -> Generator[str, None]:
         
         root = material.folder.parent
         sj_file = root / 'charge_0' / 'results-asr.sj_analyze.json'
