@@ -30,7 +30,7 @@ import rich.progress as progress
 from ase import Atoms
 from ase.formula import Formula
 from ase.io import read
-from asr.effective_masses import get_webpanel_data
+from camdweb.c2db.emass import get_emass_data
 import numpy as np
 
 from camdweb import ColVal
@@ -299,7 +299,7 @@ def copy_material(fro: Path,
     except FileNotFoundError:
         pass
     else:
-        emass_webpanel_data = get_webpanel_data(emass_data, atoms)
+        emass_webpanel_data = get_emass_data(emass_data, atoms)
         with open(to / 'emass.json', 'w') as file:
             json.dump(emass_webpanel_data, file, indent=4, cls=NumpyEncoder)
 
