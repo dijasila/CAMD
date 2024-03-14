@@ -172,8 +172,7 @@ def plot_2d(pd: PhaseDiagram,
             name=source,
             hovertemplate=hovertemplate,
             mode='markers',
-            marker=dict(color=colors[i], size=8),
-           ))
+            marker=dict(color=colors[i], size=8)))
 
     delta = y.ptp() / 30
     ymin = y.min() - 2.5 * delta
