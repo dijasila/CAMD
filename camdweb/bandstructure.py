@@ -187,5 +187,4 @@ def prettify_labels(orig_labels, label_xcoords):
         else:
             i += 1
 
-    fancylabels = [rf'$\mathrm{{{label}}}$' for label in labels]
-    return fancylabels, label_xcoords
+    return labels, label_xcoords
