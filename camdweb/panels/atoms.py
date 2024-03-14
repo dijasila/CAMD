@@ -76,11 +76,11 @@ COLUMN2 = """
     &emsp;
 
     <label>Download:</label>
-    <a download="atoms.xyz"
+    <a download="{uid}.xyz"
        class="btn btn-info btn-sm" href={uid}/download/xyz>XYZ</a>
-    <a download="atoms.cif"
+    <a download="{uid}.cif"
        class="btn btn-info btn-sm" href={uid}/download/cif>CIF</a>
-    <a download="atoms.json"
+    <a download="{uid}.json"
        class="btn btn-info btn-sm" href={uid}/download/json>JSON</a>
 
     <div id='atoms' class='atoms'></div>
