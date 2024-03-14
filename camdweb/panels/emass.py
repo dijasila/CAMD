@@ -69,7 +69,7 @@ class EmassPanel(Panel):
         vbmfig = material.folder / 'emass_vbm.png'
         cbmfig = material.folder / 'emass_cbm.png'
         if not (vbmfig.is_file() and cbmfig.is_file()):
-            make_figure(data, folder=material.folder)
+            make_figure(band_data, folder=material.folder)
 
         html = HTML.format(vbmfig=image(vbmfig, 'VBM'),
                            vbmtable=vbmtable,
