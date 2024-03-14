@@ -150,11 +150,11 @@ class CAMDApp:
                 continue
             
             try:
-                webpanel, script = panel.get_webpanel()
+                webpanel = panel.get_webpanel().get_properties()
             except:
                 continue
-            panels.append(webpanel)
-            scripts.append(script)
+            panels.append((webpanel[0], webpanel[1], webpanel[2]))
+            scripts.append(webpanel[3])
 
         return template('material.html',
                         title=uid,

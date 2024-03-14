@@ -148,8 +148,7 @@
         <!--  Sidebar Collapse Buttons  -->
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
-            % for p, super_panel in enumerate(panels):
-              % panel_title, info, html, sub_panels = super_panel.get_properties()
+            % for p, (panel_title, info, html) in enumerate(panels):
               <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
                  href="#sec{{ p }}" style="color: #00ABE4">
                 <span class="d-none d-sm-inline">{{ panel_title }}</span>
@@ -165,8 +164,7 @@
     <!--  Information Viewing Area  -->
     <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
-      % for p, super_panel in enumerate(panels):
-        % panel_title, info, html, sub_panels = super_panel.get_properties()
+      % for p, (panel_title, info, html) in enumerate(panels):
         % if p == 0:
           <!-- Logo (header) Area -->
           <section id="materialHeader" class="py-2 sticky-top">
