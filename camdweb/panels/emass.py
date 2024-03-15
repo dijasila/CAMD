@@ -122,11 +122,11 @@ def make_figure(data, folder: Path):
         cbar.set_label(r'$(E - E_0)$ / meV')
 
         # add circles to contour plot
-        ax.plot(line * max_emass_direction[0], line
-                * max_emass_direction[1], color='tab:green', ls='dashed',
+        ax.plot(line * max_emass_direction[0],
+                line * max_emass_direction[1], color='tab:green', ls='dashed',
                 label='Max eff. mass direction')
-        ax.plot(line * min_emass_direction[0], line
-                * min_emass_direction[1], color='tab:orange', ls='dashed',
+        ax.plot(line * min_emass_direction[0],
+                line * min_emass_direction[1], color='tab:orange', ls='dashed',
                 label='Min eff. mass direction')
 
         ax.set_xlim(X.min(), X.max())
