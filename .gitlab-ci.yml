@@ -15,8 +15,8 @@ tests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install git+https://gitlab.com/ase/ase
-    - pip install git+https://gitlab.com/asr-dev/asr
+    - pip install git+https://gitlab.com/ase/ase.git
+    - pip install git+https://gitlab.com/asr-dev/asr.git
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --skip-covered
@@ -41,8 +41,8 @@ oldtests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install git+https://gitlab.com/ase/ase
-    - pip install git+https://gitlab.com/asr-dev/asr
+    - pip install git+https://gitlab.com/ase/ase.git
+    - pip install git+https://gitlab.com/asr-dev/asr.git
     - pip install pytest boddle
     - pip install .
     - pytest -v --color=yes
