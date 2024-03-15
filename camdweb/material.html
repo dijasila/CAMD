@@ -7,7 +7,10 @@
     const accordionItems = document.querySelectorAll('.accordion-collapse');
     accordionItems.forEach(item => {
       item.classList.add('show');
-      });
+      const button = item.previousElementSibling.querySelector('.accordion-button');
+      button.setAttribute('aria-expanded', 'true');
+      button.classList.remove('collapsed');
+    });
   }
 
   // Function to collapse all accordion panels
@@ -15,9 +18,13 @@
     const accordionItems = document.querySelectorAll('.accordion-collapse');
     accordionItems.forEach(item => {
       item.classList.remove('show');
+      const button = item.previousElementSibling.querySelector('.accordion-button');
+      button.setAttribute('aria-expanded', 'false');
+      button.classList.add('collapsed');
     });
   }
 </script>
+
 <!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
 <script>
   function handleAnchorEvent(event, panelIndex) {
@@ -91,13 +98,13 @@
 </script>
 <!-- accordion color style.css override -->
 <style>
-.accordion-button.collapsed {
+.accordion-button:not(.collapsed) {
     color: #1B282D;
     background-color: #AAD5E3;
     border: 1px solid #212529;
 }
 
-.accordion-button:not(.collapsed)  {
+.accordion-button.collapsed {
     color: #1B282D;
     background-color: #FFFFFF;
     border: 1px solid #212529;
