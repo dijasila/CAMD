@@ -17,6 +17,8 @@ tests:
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase.git
     - pip install git+https://gitlab.com/asr-dev/asr.git
+    - python3 -c "import asr"
+    - python3 -c "from asr.effective_masses import map_to_IBZ"
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --skip-covered
