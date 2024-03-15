@@ -45,7 +45,6 @@ RESULT_FILES = [
     'deformationpotentials',
     'bandstructure',
     'pdos',
-    'effective_masses',
     'hse',
     'gw',
     'borncharges',
