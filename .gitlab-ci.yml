@@ -17,7 +17,7 @@ tests:
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase
     - git clone https://gitlab.com/asr-dev/asr.git
-    - (cd asr && git switch om_dmispiral && pip install . && cd .. && rm -rf asr)
+    - (cd asr && pip install . && cd .. && rm -rf asr)
     - python3 -c "import asr; print(asr)"
     - python3 -c "import asr.collect_spiral"
     - python3 -c "import importlib; importlib.import_module('asr.collect_spiral')"
