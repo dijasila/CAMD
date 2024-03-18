@@ -24,6 +24,7 @@ from camdweb.html import Range, RangeX, Select, table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
+from camdweb.panels.emass import EmassPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
@@ -127,7 +128,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         asr_panel('phonons'),
         asr_panel('deformationpotentials'),
         BSDOSBZPanel(),
-        asr_panel('effective_masses'),
+        EmassPanel(),
         asr_panel('hse'),
         asr_panel('gw'),
         asr_panel('borncharges'),

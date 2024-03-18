@@ -15,12 +15,10 @@ tests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install git+https://gitlab.com/ase/ase
-    - git clone https://gitlab.com/asr-dev/asr.git
-    - (cd asr && git switch om_dmispiral && pip install . && cd .. && rm -rf asr)
-    - python3 -c "import asr; print(asr)"
-    - python3 -c "import asr.collect_spiral"
-    - python3 -c "import importlib; importlib.import_module('asr.collect_spiral')"
+    - pip install git+https://gitlab.com/ase/ase.git
+    - pip install git+https://gitlab.com/asr-dev/asr.git
+    - python3 -c "import asr"
+    - python3 -c "from asr.effective_masses import map_to_IBZ"
     - pip install .[test]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --skip-covered
@@ -45,8 +43,8 @@ oldtests:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -U pip
-    - pip install git+https://gitlab.com/ase/ase
-    - pip install git+https://gitlab.com/asr-dev/asr.git@om_dmispiral
+    - pip install git+https://gitlab.com/ase/ase.git
+    - pip install git+https://gitlab.com/asr-dev/asr.git
     - pip install pytest boddle
     - pip install .
     - pytest -v --color=yes

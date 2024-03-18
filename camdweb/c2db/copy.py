@@ -30,6 +30,8 @@ import rich.progress as progress
 from ase import Atoms
 from ase.formula import Formula
 from ase.io import read
+from camdweb.c2db.emass import get_emass_data
+import numpy as np
 
 from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
@@ -43,7 +45,6 @@ RESULT_FILES = [
     'deformationpotentials',
     'bandstructure',
     'pdos',
-    'effective_masses',
     'hse',
     'gw',
     'borncharges',
@@ -73,6 +74,15 @@ PATTERNS = [
     'tree_intercalated/A*/*/*/',
     'push-manti-tree/A*/*/*/',
     'tree_Wang23/A*/*/*/']
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.int64):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def copy_materials(root: Path,
@@ -282,6 +292,15 @@ def copy_material(fro: Path,
     else:
         (to / 'bader.json').write_text(
             json.dumps({'charges': bc.tolist()}))
+
+    try:
+        emass_data = rrf('effective_masses')
+    except FileNotFoundError:
+        pass
+    else:
+        emass_webpanel_data = get_emass_data(emass_data, atoms)
+        with open(to / 'emass.json', 'w') as file:
+            json.dump(emass_webpanel_data, file, indent=4, cls=NumpyEncoder)
 
     # Copy result json-files:
     for name in RESULT_FILES:
