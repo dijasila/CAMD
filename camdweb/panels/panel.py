@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 import abc
-from typing import TYPE_CHECKING, Callable, Generator, Iterable
+from typing import TYPE_CHECKING, Callable, Generator, Iterable, Any
 
 from camdweb import ColVal
 
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from camdweb.material import Material
 
 class Panel(abc.ABC):
-    title: str
+    title: str = "Unnamed"
     info = ''
     datafiles: list[str] = []
     column_descriptions: dict[str, str] = {}
@@ -57,11 +57,11 @@ class Panel(abc.ABC):
         return rows
 
     def add_subpanels(self, material: Material):
-        return None
+        return
 
     def generate_webpanel(self, material: Material):
         self.add_subpanels(material)               
-        self.generator = self.get_html(material)
+        self.generator : Any = self.get_html(material)
 
         for subpanel in self.subpanels:
             subpanel.generate_webpanel(material = material)
@@ -75,10 +75,15 @@ class Panel(abc.ABC):
             self.generator = iter([html])
 
     def get_webpanel(self): # To be called after generation started.
-        assert self.generator is not None
-        
-        html = next(self.generator)
-        html, script = cut_out_script(html)
+        html = ''
+        script = ''
+        if self.generator is not None:
+            try:
+                html = next(self.generator)
+                html, script = cut_out_script(html)
+            except StopIteration:
+                self.generator = None
+
         subwebpanels = list()
         for subpanel in self.subpanels:
             wp, scr = subpanel.get_webpanel()

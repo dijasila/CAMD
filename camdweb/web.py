@@ -149,10 +149,7 @@ class CAMDApp:
                     for datafile in panel.datafiles):
                 continue
             
-            try:
-                webpanel, script = panel.get_webpanel()
-            except:
-                continue
+            webpanel, script = panel.get_webpanel()
             panels.append(webpanel)
             scripts.append(script)
 
