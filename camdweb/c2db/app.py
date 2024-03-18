@@ -43,7 +43,7 @@ class C2DBAtomsPanel(AtomsPanel):
         html1 = table(['Structure info', ''],
                       self.table_rows(material,
                                       ['layergroup', 'lgnum', 'lable',
-                                       'cod_id', 'icsd_id', 'doi', 'olduid']))
+                                       'cod_id', 'icsd_id', 'doi']))
         html2 = table(['Stability', ''],
                       self.table_rows(material,
                                       ['ehull', 'hform', 'dyn_stab']))
@@ -60,6 +60,25 @@ def olduid(uid, link=False):  # pragma: no cover
     return uid
 
 
+class C2DBApp(CAMDApp):
+    title = 'C2DB'
+
+    def __init__(self,
+                 materials: Materials,
+                 initial_columns: list[str],
+                 root: Path | None = None,
+                 olduid2uid: dict[str, str] | None = None):
+        super().__init__(materials, initial_columns, root)
+        self.olduid2uid = olduid2uid or {}
+
+    def route(self):
+        super().route()
+        self.app.route('/row/<olduid>')(self.material_page_old_uid)
+
+    def material_page_old_uid(self, olduid: str) -> str:
+        return self.material_page(self.olduid2uid[olduid])
+
+
 def main(argv: list[str] | None = None) -> CAMDApp:
     """Create C2DB app."""
     parser = argparse.ArgumentParser()
@@ -69,7 +88,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         '"AB2/1MoS2" (same as "AB2/1MoS2/*/") or "AB2/1MoS2/1".')
     args = parser.parse_args(argv)
 
-    mlist: list[Material] = []
     folders = []
     for path in args.path:
         p = Path(path)
@@ -80,6 +98,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         else:
             folders += list(p.glob('*/'))
 
+    olduid2uid = {}
+    mlist: list[Material] = []
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
@@ -88,6 +108,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             data = json.loads((f / 'data.json').read_text())
             material.columns.update(data)
             mlist.append(material)
+            if hasattr(material, 'olduid'):
+                olduid2uid[material.olduid] = uid
             pb.advance(pid)
 
     pool = None  # mp.Pool(maxtasksperchild=100)
@@ -154,7 +176,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                        'layergroup']
 
     root = folders[0].parent.parent.parent
-    app = CAMDApp(materials, initial_columns, root)
+    app = C2DBApp(materials, initial_columns, root, olduid2uid)
     app.form_parts += [
         Select('Dynamically stable', 'dyn_stab',
                ['', 'True', 'False'], ['-', 'Yes', 'No']),
@@ -162,7 +184,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         RangeX('Band gap range [eV]', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
-    app.title = 'C2DB'
     return app
 
 
