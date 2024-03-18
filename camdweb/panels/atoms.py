@@ -99,6 +99,7 @@ class AtomsPanel(Panel):
     title = 'Atoms'
 
     def __init__(self) -> None:
+        super().__init__()
         self.callbacks = {'atoms': self.plot}
 
     def get_html(self,

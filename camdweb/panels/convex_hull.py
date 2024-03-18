@@ -53,6 +53,7 @@ class ConvexHullPanel(Panel):
     title = 'Convex hull'
 
     def __init__(self, sources: dict[str, tuple[str, str]] | None = None):
+        super().__init__()
         self.sources = sources
 
     def get_html(self,

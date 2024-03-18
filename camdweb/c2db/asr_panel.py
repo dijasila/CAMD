@@ -95,6 +95,7 @@ class ASRPanel(Panel):
     def __init__(self,
                  name: str,
                  process_pool: Pool | None = None):
+        super().__init__()
         self.name = name
         self.process_pool = process_pool
         mod = importlib.import_module(f'asr.{name}')

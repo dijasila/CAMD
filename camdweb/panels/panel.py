@@ -17,7 +17,10 @@ class Panel(abc.ABC):
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-    subpanels = list()
+    
+    def __init__(self):
+        super().__init__()
+        self.subpanels = list()
 
     @abc.abstractmethod
     def get_html(self,
@@ -53,11 +56,15 @@ class Panel(abc.ABC):
                              formatter(value, link=True)])
         return rows
 
-    def generate_webpanel(self, material: Material):               
+    def add_subpanels(self, material: Material):
+        return None
+
+    def generate_webpanel(self, material: Material):
+        self.add_subpanels(material)               
         self.generator = self.get_html(material)
 
         for subpanel in self.subpanels:
-            subpanel.generate_panel(material = material)
+            subpanel.generate_webpanel(material = material)
 
         try:
             html = next(self.generator)
@@ -74,9 +81,9 @@ class Panel(abc.ABC):
         html, script = cut_out_script(html)
         subwebpanels = list()
         for subpanel in self.subpanels:
-            subwebpanels.append(subpanel.get_webpanel())
+            wp, scr = subpanel.get_webpanel()
+            subwebpanels.append(wp)
 
-        # Should i purge the generators here?
         self.generator = None
 
         return WebPanel(self.title, self.info, html, subwebpanels), script
@@ -110,7 +117,7 @@ def default_formatter(value: ColVal, link: bool = False) -> str:
 
 # Simple class for parsing panel and subpanel html info to the front end.
 class WebPanel:
-    def __init__(self, panel_title, info, html, subpanels = None):
+    def __init__(self, panel_title, info, html, subpanels = list()):
         self.panel_title = panel_title
         self.info = info
         self.html = html
@@ -119,5 +126,6 @@ class WebPanel:
     def get_properties(self):
         subpanel_properties = list()
         for subpanel in self.subpanels:
+            #breakpoint()
             subpanel_properties.append(subpanel.get_properties())
         return self.panel_title, self.info, self.html, subpanel_properties
