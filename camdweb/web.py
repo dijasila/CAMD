@@ -135,7 +135,7 @@ class CAMDApp:
         material = self.materials[uid]
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                        for datafile in panel.datafiles):
+                       for datafile in panel.datafiles):
                 continue
 
             panel.generate_webpanel(material=material)
@@ -144,7 +144,7 @@ class CAMDApp:
         scripts = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                        for datafile in panel.datafiles):
+                       for datafile in panel.datafiles):
                 continue
 
             webpanel, script = panel.get_webpanel()
