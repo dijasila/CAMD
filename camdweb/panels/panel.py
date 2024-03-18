@@ -10,6 +10,7 @@ from camdweb import ColVal
 if TYPE_CHECKING:
     from camdweb.material import Material
 
+
 class Panel(abc.ABC):
     title: str = "Unnamed"
     info = ''
@@ -17,7 +18,7 @@ class Panel(abc.ABC):
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-    
+
     def __init__(self):
         super().__init__()
         self.subpanels = list()
@@ -60,11 +61,11 @@ class Panel(abc.ABC):
         return
 
     def generate_webpanel(self, material: Material):
-        self.add_subpanels(material)               
-        self.generator : Any = self.get_html(material)
+        self.add_subpanels(material)
+        self.generator: Any = self.get_html(material)
 
         for subpanel in self.subpanels:
-            subpanel.generate_webpanel(material = material)
+            subpanel.generate_webpanel(material=material)
 
         try:
             html = next(self.generator)
@@ -74,7 +75,7 @@ class Panel(abc.ABC):
         if not html == '':  # result is ready
             self.generator = iter([html])
 
-    def get_webpanel(self): # To be called after generation started.
+    def get_webpanel(self):  # To be called after generation started.
         html = ''
         script = ''
         if self.generator is not None:
@@ -108,7 +109,8 @@ def cut_out_script(html: str) -> tuple[str, str]:
     if m:
         i, j = m.span()
         return html[:i] + html[j:], html[i:j]
-    return html, ''            
+    return html, ''
+
 
 def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, str):
@@ -122,7 +124,7 @@ def default_formatter(value: ColVal, link: bool = False) -> str:
 
 # Simple class for parsing panel and subpanel html info to the front end.
 class WebPanel:
-    def __init__(self, panel_title, info, html, subpanels = list()):
+    def __init__(self, panel_title, info, html, subpanels=list()):
         self.panel_title = panel_title
         self.info = info
         self.html = html
@@ -131,6 +133,5 @@ class WebPanel:
     def get_properties(self):
         subpanel_properties = list()
         for subpanel in self.subpanels:
-            #breakpoint()
             subpanel_properties.append(subpanel.get_properties())
         return self.panel_title, self.info, self.html, subpanel_properties

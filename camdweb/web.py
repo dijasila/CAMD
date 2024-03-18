@@ -1,11 +1,9 @@
 """Base web-app class."""
 from __future__ import annotations
 
-import re
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Iterator
 
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
@@ -137,7 +135,7 @@ class CAMDApp:
         material = self.materials[uid]
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                    for datafile in panel.datafiles):
+                        for datafile in panel.datafiles):
                 continue
 
             panel.generate_webpanel(material=material)
@@ -146,9 +144,9 @@ class CAMDApp:
         scripts = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                    for datafile in panel.datafiles):
+                        for datafile in panel.datafiles):
                 continue
-            
+
             webpanel, script = panel.get_webpanel()
             panels.append(webpanel)
             scripts.append(script)
