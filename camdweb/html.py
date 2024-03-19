@@ -78,10 +78,11 @@ class FormPart(abc.ABC):
 
 
 class Select(FormPart):
-    def __init__(self, text, name, options, names=None):
+    def __init__(self, text, name, options, names=None, default=None):
         super().__init__(text, name)
         self.options = options
         self.names = names
+        self.default = default or options[0]
 
     def render(self) -> str:
         """Render select block.
@@ -99,10 +100,9 @@ class Select(FormPart):
             '<div class="col">',
             f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
-        selected = ' selected'
         for val, txt in zip(self.options, names):
+            selected = ' selected' if val == self.default else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-            selected = ''
         parts.append('</select></div></div>')
         return '\n'.join(parts)
 
@@ -161,9 +161,14 @@ class StoichiometryInput(Input):
 
 
 class Range(FormPart):
-    def __init__(self, text: str, name: str, nonnegative=False):
+    def __init__(self,
+                 text: str,
+                 name: str,
+                 nonnegative: bool = False,
+                 default: tuple[str, str] = ('', '')):
         super().__init__(text, name)
         self.nonnegative = nonnegative
+        self.default = default
 
     def render(self) -> str:
         """Render range block.
@@ -171,6 +176,7 @@ class Range(FormPart):
         >>> s = Range('Band gap', 'gap')
         >>> html = s.render()
         """
+        v1, v2 = self.default
         parts = [
             '<div class="row">',
             '<div class="col-4">',
@@ -180,13 +186,13 @@ class Range(FormPart):
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
-            '  value="" />',
+            f'  value="{v1}" />',
             '</div>-<div class="col">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
-            '  value="" /></div></div>']
+            f'  value="{v2}" /></div></div>']
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:

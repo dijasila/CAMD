@@ -180,11 +180,12 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     root = folders[0].parent.parent.parent
     app = C2DBApp(materials, initial_columns, root, olduid2uid)
     app.form_parts += [
-        Select('Dynamically stable', 'dyn_stab',
-               ['', 'True', 'False'], ['-', 'Yes', 'No']),
-        Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
-        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
-        RangeX('Band gap range [eV]', 'bg',
+        Select('Magnetic:', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
+        Select('Dynamically stable:', 'dyn_stab',
+               ['', 'True', 'False'], ['-', 'Yes', 'No'], default='True'),
+        Range('Energy above convex hull [eV/atom]:', 'ehull',
+              nonnegative=True, default=('0.0', '0.2')),
+        RangeX('Band gap range [eV]:', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
     return app
 

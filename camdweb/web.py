@@ -44,13 +44,13 @@ class CAMDApp:
             self.form_parts.append(StoichiometryInput())
         else:
             self.form_parts.append(
-                Select('Stoichiometry', 'stoichiometry',
+                Select('Stoichiometry:', 'stoichiometry',
                        [''] + stoichiometries))
 
         # For nspecies selection:
         maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
-            Select('Number of chemical species', 'nspecies',
+            Select('Number of chemical species:', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies + 1)]))
 
     def route(self):
