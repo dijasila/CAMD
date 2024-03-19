@@ -247,7 +247,9 @@ def plot_atoms(atoms: Atoms,
 
     fig.update_xaxes(showgrid=False)
     fig.update_scenes(aspectmode='data',
-                      camera=dict(projection=dict(type='orthographic')))
+                      camera=dict(projection=dict(type='orthographic'),
+                                  up=dict(x=0, y=1, z=0),
+                                  eye=dict(x=0, y=0, z=10)))
     return fig
 
 
