@@ -324,7 +324,8 @@ def copy_material(fro: Path,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('root', help='Root of ASR-tree to copy from.')
+    parser.add_argument('root', help='Root of ASR-tree to copy from. '
+                        'Example: "~cmr/C2DB-ASR/".')
     patterns = ', '.join(f'"{p}"' for p in PATTERNS)
     parser.add_argument(
         'pattern', nargs='+',
