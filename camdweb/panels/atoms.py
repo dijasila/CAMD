@@ -235,7 +235,7 @@ def plot_atoms(atoms: Atoms,
                              hovertemplate='',
                              hoverinfo='skip',
                              name='',
-                             line=dict(color='#fa9fb5', width=10),
+                             line=dict(color='red', width=3),
                              showlegend=False))
 
     fig = go.Figure(data=data)
