@@ -138,11 +138,13 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         cod_id='COD id of parent bulk structure',
         iscd_id='ICSD id of parent bulk structure',
         doi='Reported DOI',
+        layergroup='Layer group',
         lgnum='Layer group number',
         label='Structure origin',
         gap='Band gap [eV]',
         gap_hse='Band gap (HSE06) [eV]',
-        gap_gw='Band gap (G₀W₀) [eV]')
+        gap_gw='Band gap (G₀W₀) [eV]',
+        folder='Original file-system folder')
 
     materials.html_formatters.update(
         cod_id=cod,
