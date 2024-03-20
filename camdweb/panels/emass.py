@@ -33,7 +33,7 @@ class EmassPanel(Panel):
 
         def emass2html(emass):
             if emass == np.inf:
-                emass_str = '&infin'
+                emass_str = '∞'
             else:
                 emass_str =  '%.2f m<sub>0</sub>' % emass
             return emass_str
