@@ -35,7 +35,7 @@ class EmassPanel(Panel):
             if emass == np.inf:
                 emass_str = '∞'
             else:
-                emass_str =  '%.2f m<sub>0</sub>' % emass
+                emass_str = '%.2f m<sub>0</sub>' % emass
             return emass_str
 
         tables = []
@@ -60,7 +60,8 @@ class EmassPanel(Panel):
                 dist_to_barrier = ('Distance to barrier',
                                    '> %.3g Å<sup>-1</sup>' %
                                    data['dist_to_barrier'])
-            new_table = table(['Property (' + band_name.upper() + ')', 'Value'],
+            new_table = table(['Property (' + band_name.upper() + ')',
+                               'Value'],
                               [min_emass,
                                max_emass,
                                dos_emass,
