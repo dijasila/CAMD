@@ -12,7 +12,7 @@ class Pages:
     def summary(self, total_rows: int) -> str:
         s = '' if self.rows_found == 1 else 's'
         return (
-            f'Found {self.rows_found} row{s} out of {total_rows},'
+            f'Found {self.rows_found} row{s} out of {total_rows}, '
             f'showing rows {self.row_start}-{self.row_end}')
 
 
