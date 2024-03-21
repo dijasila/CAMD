@@ -11,7 +11,6 @@ TODO:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Generator
 import matplotlib.pyplot as plt
 from ase.db import connect
 
