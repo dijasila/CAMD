@@ -35,7 +35,7 @@ class EmassPanel(Panel):
             if emass == np.inf:
                 emass_str = '∞'
             else:
-                emass_str = '%.2f m<sub>0</sub>' % emass
+                emass_str = f'{emass:.2f} m<sub>0</sub>'
             return emass_str
 
         tables = []
