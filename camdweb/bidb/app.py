@@ -110,7 +110,7 @@ def main(root: Path) -> CAMDApp:
 
     initial_columns = ['uid', 'area', 'formula']
 
-    return CAMDApp(materials, initial_columns, root)
+    return CAMDApp(materials, initial_columns, root=root)
 
 
 if __name__ == '__main__':
