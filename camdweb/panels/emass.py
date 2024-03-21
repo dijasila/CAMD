@@ -1,7 +1,6 @@
 import json
-from typing import Generator
 from pathlib import Path
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 from camdweb.material import Material
 from camdweb.html import table
 from camdweb.html import image
@@ -22,11 +21,10 @@ HTML = """
 
 
 class EmassPanel(Panel):
-    title = 'Effective masses (PBE)'
     datafiles = ['emass.json']
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         path = material.folder / self.datafiles[0]
         with open(path, 'r') as file:
             band_data = json.load(file)
@@ -76,8 +74,8 @@ class EmassPanel(Panel):
         html = HTML.format(vbmfig=image(vbmfig, 'VBM'),
                            vbmtable=vbmtable,
                            cbmfig=image(cbmfig, 'CBM'),
-                           cbmtable=cbmtable,)
-        yield html
+                           cbmtable=cbmtable)
+        return PanelData(html, title='Effective masses (PBE)')
 
 
 def make_figure(data, folder: Path):

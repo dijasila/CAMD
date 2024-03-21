@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
-from typing import Generator, Iterable
+from typing import Iterable
 
 import plotly
 import plotly.graph_objs as go
@@ -27,7 +27,7 @@ from ase.phasediagram import PhaseDiagram
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 
 HTML = """
 <div class="row">
@@ -54,13 +54,12 @@ colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
 
 
 class ConvexHullPanel(Panel):
-    title = 'Convex hull'
-
     def __init__(self, sources: dict[str, tuple[str, str]] | None = None):
+        super().__init__()
         self.sources = sources
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         tbl = table(
             None,
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
@@ -75,9 +74,12 @@ class ConvexHullPanel(Panel):
                                                verbose=False)
         html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
-            yield html + SCRIPT.format(chull_json=chull, id='chull')
+            script = SCRIPT.format(chull_json=chull, id='chull')
         else:
-            yield html  # pragma: no cover
+            script = ''
+        return PanelData(html,
+                         title='Convex hull',
+                         script=script)
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],

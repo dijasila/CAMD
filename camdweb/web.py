@@ -1,11 +1,9 @@
 """Base web-app class."""
 from __future__ import annotations
 
-import re
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Iterator
 
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
@@ -13,6 +11,7 @@ from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 from camdweb.html import FormPart, Select, StoichiometryInput
 from camdweb.materials import Materials
 from camdweb.session import Sessions
+from camdweb.panels.panel import SkipPanel
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -140,37 +139,20 @@ class CAMDApp:
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
         material = self.materials[uid]
-        titles = []
-        info_strings = []
-        generators: list[Iterator[str]] = []
+        webpanels = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
                        for datafile in panel.datafiles):
                 continue
-            generator = panel.get_html(material)
             try:
-                html = next(generator)
-            except StopIteration:
+                data = panel.get_data(material)
+            except SkipPanel:
                 continue
-            if html == '':  # result will come next time
-                generators.append(generator)
-            else:
-                generators.append(iter([html]))
-            titles.append(panel.title)
-            info_strings.append(panel.info)
-
-        panels = []
-        scripts = []
-        for gen, title, info in zip(generators, titles, info_strings):
-            html = next(gen)
-            html, script = cut_out_script(html)
-            panels.append((title, info, html))
-            scripts.append(script)
+            webpanels.append(data)
 
         return template('material.html',
                         title=uid,
-                        panels=panels,
-                        footer='\n'.join(scripts))
+                        panels=webpanels)
 
     def callback(self) -> str:
         """Send new json data.
@@ -190,20 +172,3 @@ class CAMDApp:
     def favicon(self) -> bytes:
         path = self.root / 'favicon.ico'
         return static_file(path.name, path.parent)
-
-
-def cut_out_script(html: str) -> tuple[str, str]:
-    r"""We need to put the script tags in the footer.
-
-    >>> cut_out_script('''Hello
-    ... <script>
-    ...   ...
-    ... </script>
-    ... CAMd''')
-    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
-    """
-    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
-    if m:
-        i, j = m.span()
-        return html[:i] + html[j:], html[i:j]
-    return html, ''

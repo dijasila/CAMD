@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-# import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
@@ -36,8 +35,6 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
 class C2DBAtomsPanel(AtomsPanel):
-    title = 'Summary'
-
     def create_column_one(self,
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
@@ -117,11 +114,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                 olduid2uid[material.olduid] = uid
             pb.advance(pid)
 
-    pool = None  # mp.Pool(maxtasksperchild=100)
-
-    def asr_panel(name):
-        return ASRPanel(name, pool)
-
     panels: list[Panel] = [
         C2DBAtomsPanel(),
         ConvexHullPanel(
@@ -129,25 +121,25 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
                      'C2DB': ('Monolayers from C2DB',
                               '<a href={uid}>{formula:html}</a>')}),
-        asr_panel('stiffness'),
-        asr_panel('phonons'),
-        asr_panel('deformationpotentials'),
+        ASRPanel('stiffness'),
+        ASRPanel('phonons'),
+        ASRPanel('deformationpotentials'),
         BSDOSBZPanel(),
         EmassPanel(),
-        asr_panel('hse'),
-        asr_panel('gw'),
-        asr_panel('borncharges'),
-        asr_panel('shg'),
-        asr_panel('polarizability'),
-        asr_panel('infraredpolarizability'),
-        asr_panel('raman'),
-        asr_panel('bse'),
+        ASRPanel('hse'),
+        ASRPanel('gw'),
+        ASRPanel('borncharges'),
+        ASRPanel('shg'),
+        ASRPanel('polarizability'),
+        ASRPanel('infraredpolarizability'),
+        ASRPanel('raman'),
+        ASRPanel('bse'),
         BaderPanel(),
-        asr_panel('piezoelectrictensor'),
+        ASRPanel('piezoelectrictensor'),
         ShiftCurrentPanel(),
-        asr_panel('collect_spiral'),
-        asr_panel('dmi'),
-        asr_panel('spinorbit')]
+        ASRPanel('collect_spiral'),
+        ASRPanel('dmi'),
+        ASRPanel('spinorbit')]
 
     materials = Materials(mlist, panels)
 
