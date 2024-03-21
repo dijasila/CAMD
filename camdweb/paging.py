@@ -23,7 +23,7 @@ def get_pages_object(page: int,
         get_pages(page, nrows, limit),
         page,
         page * limit + 1,
-        min((page + 1) * limit + 1, nrows),
+        min((page + 1) * limit, nrows),
         nrows)
 
 
