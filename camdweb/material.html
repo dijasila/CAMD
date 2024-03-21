@@ -282,4 +282,8 @@
 </div>
 
 </body>
-{{ !'\n'.join(panel.script for script in panels) }}
+% for panel in panels:
+%     if panel.script:
+          {{ !panel.script }}
+%     end
+% end
