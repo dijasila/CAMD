@@ -42,7 +42,7 @@ class C2DBAtomsPanel(AtomsPanel):
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
                       self.table_rows(material,
-                                      ['layergroup', 'lgnum', 'lable',
+                                      ['layergroup', 'lgnum', 'label',
                                        'cod_id', 'icsd_id', 'doi']))
         html2 = table(['Stability', ''],
                       self.table_rows(material,
@@ -61,6 +61,8 @@ def olduid(uid, link=False):  # pragma: no cover
 
 
 class C2DBApp(CAMDApp):
+    """C2DB app with /row/<olduid> endpoint."""
+
     title = 'C2DB'
 
     def __init__(self,
@@ -68,7 +70,10 @@ class C2DBApp(CAMDApp):
                  initial_columns: list[str],
                  root: Path | None = None,
                  olduid2uid: dict[str, str] | None = None):
-        super().__init__(materials, initial_columns, root)
+        super().__init__(materials,
+                         initial_columns=initial_columns,
+                         initial_filter_string='dyn_stab=True, ehull<0.2',
+                         root=root)
         self.olduid2uid = olduid2uid or {}
 
     def route(self):
@@ -158,13 +163,15 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         efermi='Fermi level [eV]',
         dyn_stab='Dynamically stable',
         cod_id='COD id of parent bulk structure',
-        iscd_id='ICSD id of parent bulk structure',
-        doi='Reported DOI',
+        icsd_id='ICSD id of parent bulk structure',
+        doi='Mono/few-later report',
+        layergroup='Layer group',
         lgnum='Layer group number',
         label='Structure origin',
         gap='Band gap [eV]',
         gap_hse='Band gap (HSE06) [eV]',
-        gap_gw='Band gap (G₀W₀) [eV]')
+        gap_gw='Band gap (G₀W₀) [eV]',
+        folder='Original file-system folder')
 
     materials.html_formatters.update(
         cod_id=cod,
@@ -176,13 +183,17 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                        'layergroup']
 
     root = folders[0].parent.parent.parent
-    app = C2DBApp(materials, initial_columns, root, olduid2uid)
+    app = C2DBApp(materials,
+                  initial_columns,
+                  root,
+                  olduid2uid)
     app.form_parts += [
-        Select('Dynamically stable', 'dyn_stab',
-               ['', 'True', 'False'], ['-', 'Yes', 'No']),
-        Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
-        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
-        RangeX('Band gap range [eV]', 'bg',
+        Select('Magnetic:', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
+        Select('Dynamically stable:', 'dyn_stab',
+               ['', 'True', 'False'], ['-', 'Yes', 'No'], default='True'),
+        Range('Energy above convex hull [eV/atom]:', 'ehull',
+              nonnegative=True, default=('0.0', '0.2')),
+        RangeX('Band gap range [eV]:', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
     return app
 

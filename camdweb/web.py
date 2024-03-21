@@ -23,6 +23,8 @@ class CAMDApp:
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
+                 *,
+                 initial_filter_string: str = '',
                  root: Path | None = None):
         self.materials = materials
         self.root = root or Path()
@@ -33,7 +35,8 @@ class CAMDApp:
         self.callbacks = self.materials.get_callbacks()
 
         # User sessions (selected columns, sorting, filter string, ...)
-        self.sessions = Sessions(initial_columns)
+        self.sessions = Sessions(initial_columns,
+                                 filter_string=initial_filter_string)
 
         self.form_parts: list[FormPart] = []
 
@@ -44,13 +47,13 @@ class CAMDApp:
             self.form_parts.append(StoichiometryInput())
         else:
             self.form_parts.append(
-                Select('Stoichiometry', 'stoichiometry',
+                Select('Stoichiometry:', 'stoichiometry',
                        [''] + stoichiometries))
 
         # For nspecies selection:
         maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
-            Select('Number of chemical species', 'nspecies',
+            Select('Number of chemical species:', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies + 1)]))
 
     def route(self):
@@ -105,10 +108,12 @@ class CAMDApp:
                 session.update(query=query)
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
+        summary_string = pages.summary(len(self.materials))
         return template('table.html',
                         session=session,
                         pages=pages,
                         rows=rows,
+                        summary_string=summary_string,
                         header=header,
                         new_columns=new_columns,
                         error=error)
