@@ -42,7 +42,7 @@ class C2DBAtomsPanel(AtomsPanel):
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
                       self.table_rows(material,
-                                      ['layergroup', 'lgnum', 'lable',
+                                      ['layergroup', 'lgnum', 'label',
                                        'cod_id', 'icsd_id', 'doi']))
         html2 = table(['Stability', ''],
                       self.table_rows(material,
