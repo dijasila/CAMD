@@ -7,6 +7,7 @@ from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.session import Session
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
+from camdweb.paging import Pages
 
 
 @pytest.fixture(scope='module')
@@ -25,7 +26,8 @@ def test_materials(material):
     assert (rows, header, pages, new_columns, error) == (
         [('x', ['x'])],
         [('uid', 'Unique ID')],
-        [(0, '«'), (0, '<'), (0, '1-1'), (0, '>'), (0, '»')],
+        Pages(buttons=[(0, '«'), (0, '<'), (0, '1-1'), (0, '>'), (0, '»')],
+              page=0, row_start=1, row_end=1, rows_found=1),
         [('formula', 'Formula'),
          ('reduced', 'Reduced formula'),
          ('stoichiometry', 'Stoichiometry'),

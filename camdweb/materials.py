@@ -5,7 +5,7 @@ from typing import Callable, Generator, Sequence
 
 from camdweb.filter import Index
 from camdweb.material import Material
-from camdweb.paging import get_pages
+from camdweb.paging import get_pages_object
 from camdweb.panels.panel import Panel, default_formatter
 from camdweb.parse import parse
 from camdweb.session import Session
@@ -135,7 +135,7 @@ class Materials:
 
         page = session.page
         n = session.rows_per_page
-        pages = get_pages(page, len(rows), n)
+        pages = get_pages_object(page, len(rows), n)
         rows = rows[n * page:n * (page + 1)]
 
         formatters = [self.html_formatters.get(name, default_formatter)

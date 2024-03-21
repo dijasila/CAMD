@@ -27,7 +27,7 @@ def c2db(tmp_path_factory):
         Materials([Material.from_file(path / 'structure.xyz', 'h2')],
                   [AtomsPanel(), DOSPanel(), BaderPanel()]),
         {'uid', 'volume', 'formula'},
-        tmp_path)
+        root=tmp_path)
     return c2db
 
 

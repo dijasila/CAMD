@@ -61,6 +61,8 @@ def olduid(uid, link=False):  # pragma: no cover
 
 
 class C2DBApp(CAMDApp):
+    """C2DB app with /row/<olduid> endpoint."""
+
     title = 'C2DB'
 
     def __init__(self,
@@ -68,7 +70,10 @@ class C2DBApp(CAMDApp):
                  initial_columns: list[str],
                  root: Path | None = None,
                  olduid2uid: dict[str, str] | None = None):
-        super().__init__(materials, initial_columns, root)
+        super().__init__(materials,
+                         initial_columns=initial_columns,
+                         initial_filter_string='dyn_stab=True, ehull<0.2',
+                         root=root)
         self.olduid2uid = olduid2uid or {}
 
     def route(self):
@@ -178,7 +183,10 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                        'layergroup']
 
     root = folders[0].parent.parent.parent
-    app = C2DBApp(materials, initial_columns, root, olduid2uid)
+    app = C2DBApp(materials,
+                  initial_columns,
+                  root,
+                  olduid2uid)
     app.form_parts += [
         Select('Magnetic:', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         Select('Dynamically stable:', 'dyn_stab',

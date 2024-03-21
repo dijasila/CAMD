@@ -23,6 +23,8 @@ class CAMDApp:
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
+                 *,
+                 initial_filter_string: str = '',
                  root: Path | None = None):
         self.materials = materials
         self.root = root or Path()
@@ -33,7 +35,8 @@ class CAMDApp:
         self.callbacks = self.materials.get_callbacks()
 
         # User sessions (selected columns, sorting, filter string, ...)
-        self.sessions = Sessions(initial_columns)
+        self.sessions = Sessions(initial_columns,
+                                 filter_string=initial_filter_string)
 
         self.form_parts: list[FormPart] = []
 
@@ -105,10 +108,12 @@ class CAMDApp:
                 session.update(query=query)
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
+        summary_string = pages.summary(len(self.materials))
         return template('table.html',
                         session=session,
                         pages=pages,
                         rows=rows,
+                        summary_string=summary_string,
                         header=header,
                         new_columns=new_columns,
                         error=error)
