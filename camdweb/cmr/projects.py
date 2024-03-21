@@ -12,14 +12,13 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Generator
-
 import matplotlib.pyplot as plt
 from ase.db import connect
 
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
 from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.utils import cod, icsd
 
 # Mapping from project name to ProjectDescription class:
@@ -146,10 +145,8 @@ class ABSe3ProjectDescription(ProjectDescription):
 
 
 class ABS3BandStructurePanel(Panel):
-    title = 'Electronic band-structure'
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         uid = material.uid
         path = material.folder / f'abs3/bs-{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -158,8 +155,10 @@ class ABS3BandStructurePanel(Panel):
             dct = connect(dbpath).get(id=uid).data
             ok = abs3_bs(dct, path)
             if not ok:
-                return
-        yield f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />'
+                raise SkipPanel
+        return PanelData(
+            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />',
+            title='Electronic band-structure')
 
 
 def abs3_bs(d: dict, path: Path) -> bool:

@@ -7,6 +7,7 @@ from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.session import Session
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
+from camdweb.panels.panel import SkipPanel
 
 
 @pytest.fixture(scope='module')
@@ -66,8 +67,8 @@ def test_row(material):
 
 
 def test_no_bs(material):
-    with pytest.raises(StopIteration):
-        next(BSDOSBZPanel().get_html(material))
+    with pytest.raises(SkipPanel):
+        BSDOSBZPanel().get_data(material)
 
 
 def test_repr(material):

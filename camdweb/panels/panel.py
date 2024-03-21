@@ -1,14 +1,26 @@
 """Panel base class."""
 from __future__ import annotations
 
-import re
 import abc
-from typing import TYPE_CHECKING, Callable, Generator, Iterable, Any
-
+from typing import TYPE_CHECKING, Callable, Iterable
+from dataclasses import dataclass
 from camdweb import ColVal
 
 if TYPE_CHECKING:
     from camdweb.material import Material
+
+
+class SkipPanel(Exception):
+    """Don't show this panel."""
+
+
+@dataclass
+class PanelData:
+    html: str
+    title: str
+    info: str = ''
+    script: str = ''
+    subpanels: list[PanelData] | None = None
 
 
 class Panel(abc.ABC):
@@ -21,11 +33,10 @@ class Panel(abc.ABC):
 
     def __init__(self):
         super().__init__()
-        self.subpanels = list()
 
     @abc.abstractmethod
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         raise NotImplementedError
 
     def update_material(self, material: Material) -> None:
@@ -57,6 +68,8 @@ class Panel(abc.ABC):
                              formatter(value, link=True)])
         return rows
 
+
+"""
     def add_subpanels(self, material: Material):
         return
 
@@ -93,23 +106,7 @@ class Panel(abc.ABC):
         self.generator = None
 
         return WebPanel(self.title, self.info, html, subwebpanels), script
-
-
-def cut_out_script(html: str) -> tuple[str, str]:
-    r"""We need to put the script tags in the footer.
-
-    >>> cut_out_script('''Hello
-    ... <script>
-    ...   ...
-    ... </script>
-    ... CAMd''')
-    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
-    """
-    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
-    if m:
-        i, j = m.span()
-        return html[:i] + html[j:], html[i:j]
-    return html, ''
+"""
 
 
 def default_formatter(value: ColVal, link: bool = False) -> str:
@@ -120,18 +117,3 @@ def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, bool):
         return 'Yes' if value else 'No'
     return str(value)
-
-
-# Simple class for parsing panel and subpanel html info to the front end.
-class WebPanel:
-    def __init__(self, panel_title, info, html, subpanels=list()):
-        self.panel_title = panel_title
-        self.info = info
-        self.html = html
-        self.subpanels = subpanels
-
-    def get_properties(self):
-        subpanel_properties = list()
-        for subpanel in self.subpanels:
-            subpanel_properties.append(subpanel.get_properties())
-        return self.panel_title, self.info, self.html, subpanel_properties

@@ -11,6 +11,7 @@ from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 from camdweb.html import FormPart, Select, StoichiometryInput
 from camdweb.materials import Materials
 from camdweb.session import Sessions
+from camdweb.panels.panel import SkipPanel
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
@@ -133,28 +134,20 @@ class CAMDApp:
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
         material = self.materials[uid]
+        webpanels = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
                        for datafile in panel.datafiles):
                 continue
-
-            panel.generate_webpanel(material=material)
-
-        panels = []
-        scripts = []
-        for panel in self.materials.panels:
-            if not all((material.folder / datafile).is_file()
-                       for datafile in panel.datafiles):
+            try:
+                data = panel.get_data(material)
+            except SkipPanel:
                 continue
-
-            webpanel, script = panel.get_webpanel()
-            panels.append(webpanel)
-            scripts.append(script)
+            webpanels.append(data)
 
         return template('material.html',
                         title=uid,
-                        panels=panels,
-                        footer='\n'.join(scripts))
+                        panels=webpanels)
 
     def callback(self) -> str:
         """Send new json data.

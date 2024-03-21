@@ -3,19 +3,16 @@ from __future__ import annotations
 
 import gzip
 import importlib
-from multiprocessing.pool import Pool
 from pathlib import Path
-from typing import Generator
 
 import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
 from camdweb.html import table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 
 HTML = """
-<h4>{title}</h4>
 <div class="row">
   <div class="col-6">
    {col1}
@@ -93,11 +90,9 @@ class Data:
 class ASRPanel(Panel):
     """Generic ASR-panel."""
     def __init__(self,
-                 name: str,
-                 process_pool: Pool | None = None):
+                 name: str):
         super().__init__()
         self.name = name
-        self.process_pool = process_pool
         mod = importlib.import_module(f'asr.{name}')
         self.webpanel = mod.webpanel
         self.result_class = mod.Result
@@ -106,19 +101,17 @@ class ASRPanel(Panel):
                                  'key_descriptions', {}).items():
             self.key_descriptions[key] = KeyDescription(key, desc)
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         """Create row and result objects and call webpanel() function."""
         row = Row(material)
         dct = row.data.get(f'results-asr.{self.name}.json')
         if dct is None:
-            return
+            raise SkipPanel
         if self.name == 'deformationpotentials' and 'defpots_soc' not in dct:
-            return  # pragma: no cover
+            raise SkipPanel  # pragma: no cover
         result = self.result_class(dct)
-        print(self.name)
         (p, *_) = self.webpanel(result, row, self.key_descriptions)
-        self.title = p['title']
 
         columns: list[list[str]] = [[], []]
         for i, column in enumerate(p['columns']):
@@ -128,7 +121,6 @@ class ASRPanel(Panel):
                     columns[i].append(html)
 
         all_paths = []  # files to be created
-        async_results = []
         for desc in p.get('plot_descriptions', []):
             paths = [material.folder / filename
                      for filename in desc['filenames']]
@@ -136,32 +128,16 @@ class ASRPanel(Panel):
             for f in paths:
                 if not f.is_file():
                     # Call plot-function:
-                    if self.process_pool:  # pragma: no cover
-                        result = self.process_pool.apply_async(
-                            worker, (desc['function'], row, *paths))
-                        async_results.append(result)
-                    else:  # pragma: no cover
-                        desc['function'](row, *paths)
-                        plt.close()
+                    desc['function'](row, *paths)
+                    plt.close()
                     break
-
-        yield ''
-
-        for result in async_results:  # pragma: no cover
-            result.get()
 
         assert all(path.is_file() for path in all_paths), all_paths
 
-        html = HTML.format(title=p['title'],
-                           col1='\n'.join(columns[0]),
-                           col2='\n'.join(columns[1]))
-
-        yield html
-
-
-def worker(webpanel, *args):  # pragma: no cover
-    webpanel(*args)
-    plt.close()
+        return PanelData(
+            HTML.format(col1='\n'.join(columns[0]),
+                        col2='\n'.join(columns[1])),
+            p['title'])
 
 
 def thing2html(thing: dict, path: Path) -> str:

@@ -149,27 +149,27 @@
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
              % i = 0
-             % for super_panel in panels:
+             % for panel in panels:
               % p = i
               % i += 1
-              % panel_title, info, html, sub_panels = super_panel.get_properties()
-              % if len(sub_panels) == 0:
+              % # panel_title, info, html, sub_panels = super_panel.get_properties()
+              % if len(panel.subpanels or []) == 0:
                 <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
                   href="#sec{{ p }}" style="color: #00ABE4">
-                  <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
                 </a>
               % else:
                 <li>
                 %#<!--  Subpanel Sidebar Dropdown Name  -->
                 <a href="#submenu{{ p }}" data-bs-toggle="collapse"
                   class="nav-link px-0 align-middle">
-                    <span class="d-none d-sm-inline dropdown-toggle">{{ panel_title }}</span>
+                    <span class="d-none d-sm-inline dropdown-toggle">{{ !panel.title }}</span>
                 </a>
-                % for sub_panel in sub_panels:
+                % for subpanel in panel.subpanels or []:
                   % p2 = i
                   % i += 1
-                  % subpanel_title, info, html, sub_panels = sub_panel
-                  %#<!--  Subpanel Dropdown Content  -->
+                  % # subpanel_title, info, html, sub_panels = sub_panel
+                  % #<!--  Subpanel Dropdown Content  -->
                   <ul class="collapse nav flex-column flex-nowrap text-center ms-1 align-items-center"
                       id="submenu{{ p }}" data-bs-parent="#menu">
                       <li class="w-100">
@@ -179,7 +179,7 @@
                               data-bs-target="#sec{{ p2 }}"
                               aria-expanded="false"
                               aria-controls="collapseExample">
-                            <span class="d-none d-sm-inline">{{ subpanel_title }}</span>
+                            <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
                           </button>
                       </li>
                   </ul>
@@ -197,10 +197,10 @@
     <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
       % i = 0
-      % for super_panel in panels:
+      % for panel in panels:
         % p = i
         % i += 1
-        % panel_title, info, html, sub_panels = super_panel.get_properties()
+        % # panel_title, info, html, sub_panels = super_panel.get_properties()
         % if p == 0:
           <!-- Logo (header) Area -->
           <section id="materialHeader" class="py-2 sticky-top">
@@ -222,26 +222,26 @@
                 <button class="accordion-button collapsed"
                    type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
                    aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                  <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
                 </button>
             </h2>
 
             <!--  Accordion Content (Panel info)  -->
             <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
                  id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
-                 aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
+                 aria-labelledby="flush-heading{{ p }}" title="{{ !panel.title }}">
               <div class="panel accordion-body">
-                {{ !html }}
-                {{ !info }}
+                {{ !panel.html }}
+                {{ !panel.info }}
               </div>
             </div>
           </div>
         </div>
         </section>
-        % for sub_panel in sub_panels:
+        % for subpanel in panel.subpanels or []:
           % p = i
           % i += 1
-          % panel_title, info, html, sub_panels = sub_panel
+          % # panel_title, info, html, sub_panels = sub_panel
           <section id="sec{{ p }}">
           <div class="accordion accordion-flush" id="accordionFlush">
             <!--  Create each Accordion Body  -->
@@ -251,17 +251,17 @@
                   <button class="accordion-button collapsed"
                       type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
                       aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                    <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                    <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
                   </button>
               </h2>
 
               <!--  Accordion Content (Panel info)  -->
               <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
                     id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
-                    aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
+                    aria-labelledby="flush-heading{{ p }}" title="{{ !subpanel.title }}">
                 <div class="panel accordion-body">
-                  {{ !html }}
-                  {{ !info }}
+                  {{ !subpanel.html }}
+                  {{ !subpanel.info }}
                 </div>
               </div>
             </div>
@@ -275,4 +275,4 @@
 </div>
 
 </body>
-{{ !footer }}
+{{ !'\n'.join(panel.script for script in panels) }}
