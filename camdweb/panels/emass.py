@@ -144,6 +144,7 @@ def make_figure(data, folder: Path):
         plt.tight_layout()
 
         if len(ax.get_xticks()) >= 7:
+            ax.set_xticks(ax.get_xticks())  # hack to avoid matplotlib warning
             ax.set_xticklabels(np.round(ax.get_xticks(), 4), rotation=15)
         ax.legend()
         filename = 'emass_' + band_name + '.png'
