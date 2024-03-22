@@ -17,7 +17,7 @@ tests:
     - pip install -U pip
     - pip install git+https://gitlab.com/ase/ase.git
     - pip install git+https://gitlab.com/asr-dev/asr.git
-    - pip install .[test]
+    - pip install .[test,optimade]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
     - coverage report -i --precision=2 --skip-covered
     - coverage html --skip-covered

@@ -9,6 +9,7 @@ from camdweb.panels.dos import DOSPanel
 from camdweb.materials import Material, Materials
 from camdweb.web import CAMDApp
 from boddle import boddle
+from camdweb.optimade.app import add_optimade
 
 
 @pytest.fixture(scope='module')
@@ -85,3 +86,13 @@ def test_download(c2db, fmt, ref_substring):
     # atoms object as the one we downloaded.
     data = c2db.download('h2', fmt)
     assert ref_substring in data
+
+
+def test_optimade(c2db):
+    add_optimade(c2db)
+    c2db.optimade.info_structures()
+    with boddle(query={'filter': 'elements HAS "H"',
+                       'response_fields': 'cartesian_site_positions'}):
+        dct = c2db.optimade.structures()
+    pos_av = dct['data'][0]['attributes']['cartesian_site_positions']
+    assert pos_av[1][0] == 2.7

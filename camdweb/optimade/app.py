@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import importlib
 from datetime import datetime
 from typing import Any, Callable, Iterable
-import importlib
 
+import numpy as np
+from ase.formula import Formula
 from bottle import request, response
 
 from camdweb.optimade.filter import create_parse_function, select
 
-
-cfg = {'url': 'http://localhost:8080/v1',
+CFG = {'url': 'http://localhost:8080/v1',
        'provider': {
            'name': 'CAMD',
            'description': 'OPTIMADE for CAMD',
@@ -75,7 +76,7 @@ def add_meta(method: Callable) -> Callable:
 
         dct['meta'] = META | {
             'time_stamp': f'{datetime.now().isoformat()}',
-            'provider': self.cfg['provider'],
+            'provider': CFG['provider'],
             'query': {
                 'representation': "?".join((request.urlparts.path,
                                             request.urlparts.query or ""))},
@@ -106,10 +107,14 @@ def add_error_handling(method: Callable) -> Callable:
 
 
 class Optimade:
-    def __init__(self,
-                 index,):
-        self.index = index
+    def __init__(self, materials):
+        self.materials = materials
         self.parse = create_parse_function()
+        self.meta = {
+            "entries_available": {
+                "structures": len(materials),
+                "references": 0,
+                "links": 0}}
 
     def versions(self):
         response.content_type = (
@@ -120,7 +125,7 @@ class Optimade:
     def info(self) -> dict:
         dct = INFO.copy()
         aav = dct['attributes']['available_api_versions']  # type: ignore
-        aav[0]['url'] = cfg['url']
+        aav[0]['url'] = CFG['url']
         return {'data': dct}
 
     @add_meta
@@ -146,23 +151,14 @@ class Optimade:
                 'output_fields_by_format': {
                     'json': list(properties)}}}
 
-    def _get_row_ids(self, query: str) -> list[int]:
-        if query:
-            tree = self.parse(query)
-            selection = self.indexdb.select(tree)
-            rowids = self.indexdb.execute(selection)
-        else:
-            rowids = list(range(1, self.indexdb.nstructures + 1))
-        return rowids
-
     @add_meta
     @add_error_handling
     def structures(self) -> dict:
         rowids = select(self.parse(request.query.get('filter', '')),
-                        self.index)
+                        self.materials.index)
         offset = int(request.query.get('page_offset', '0'))
         limit = min(int(request.query.get('page_limit', '20')), 100)
-        limited_rowids = rowids[offset:offset + limit]
+        limited_rowids = sorted(rowids)[offset:offset + limit]
 
         response = self.response(limited_rowids)
         response["meta"]["data_returned"] = len(limited_rowids)
@@ -176,7 +172,7 @@ class Optimade:
     @add_meta
     def response(self,
                  rowids: Iterable[int]) -> dict:
-        response_fields = self.query.get('response_fields')
+        response_fields = request.query.get('response_fields')
         if response_fields:
             fields = set(response_fields.split(','))
         else:
@@ -184,29 +180,26 @@ class Optimade:
 
         data = []
         for id in rowids:
-            row = self.get_row(id)
-            dct = row2dict(row)
-            optimade_id = str(dct.pop("id"))
+            uid = self.materials.i2uid[id]
+            material = self.materials[uid]
+            dct = material2dict(material)
+            print(dct, fields)
             if fields:
                 dct = {key: value
                        for key, value in dct.items()
                        if key in fields}
-            data.append({'id': optimade_id,
+            data.append({'id': id,
                          'attributes': dct,
                          'type': 'structures'})
 
         return {'data': data}
 
 
-def add_optimade(app) -> None:
-    om = Optimade(app.index)
+def add_optimade(webapp) -> None:
+    om = Optimade(webapp.materials)
+    webapp.optimade = om
+    app = webapp.app
     app.route('/optimade/versions')(om.versions)
-
-    om.meta = {}
-    om.meta["entries_available"] = {
-        "structures": len(app.materials),
-        "references": 0,
-        "links": 0}
 
     for prefix in ["",
                    f"/v{API_VERSION[0]}",
@@ -220,3 +213,54 @@ def add_optimade(app) -> None:
         app.route(f'{prefix}/structures/<id>')(om.structures_id)
 
     return app
+
+
+def get_optimade_things(formula: Formula, pbc: np.ndarray) -> dict:
+    """Collect some OPTIMADE stuff."""
+    _, reduced, num = formula.stoichiometry()
+    count = reduced.count()
+
+    # Alphapetically sorted:
+    reduced = Formula.from_dict({symbol: count[symbol]
+                                 for symbol in sorted(count)})
+
+    # Elements with highest proportion should appear first:
+    c = ord('A')
+    dct = {}
+    for n in sorted(count.values(), reverse=True):
+        dct[chr(c)] = n
+        c += 1
+    anonymous = Formula.from_dict(dct)
+
+    return {
+        'chemical_formula_descriptive': None,
+        'chemical_formula_reduced': f'{reduced}',
+        'chemical_formula_anonymous': f'{anonymous}',
+        'chemical_formula_hill': f'{formula:hill}',
+        'nsites': num * sum(count.values()),
+        'nelements': len(count),
+        'nperiodic_dimensions': int(sum(pbc))}
+
+
+def material2dict(material) -> dict[str, Any]:
+    """Create OPTIMADE dictionary."""
+    count = material.count
+    formula = Formula.from_dict(count)
+    last_modified = '%Y-%m-%dT%H:%M:%SZ'  # ???
+    atoms = material.atoms
+    dct = {
+        'cartesian_site_positions': atoms.positions.tolist(),
+        'species_at_sites': atoms.get_chemical_symbols(),
+        'species': [{'name': symbol,
+                     'chemical_symbols': [symbol],
+                     'concentration': [1.0]}
+                    for symbol in count],
+        'lattice_vectors': atoms.cell.tolist(),
+        'dimension_types': atoms.pbc.astype(int).tolist(),
+        'last_modified': last_modified,
+        'elements': list(count),
+        'elements_ratios': [n / len(atoms) for n in count.values()],
+        'structure_features': []}
+    dct |= get_optimade_things(formula, atoms.pbc)
+
+    return dct
