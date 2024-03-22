@@ -5,9 +5,11 @@ import json
 from ase.build import bulk
 from ase import Atoms
 import numpy as np
+from pathlib import Path
 
 
-def test_emass_data(tmp_path):
+def test_emass_data(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(Path(__file__).parent.resolve())
     atoms = bulk('Si')
 
     band_data = {}
