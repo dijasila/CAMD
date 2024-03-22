@@ -124,6 +124,7 @@ def parse_lark_tree(node: Tree | Token) -> Any:
 
     See examples in ``parser_test.py``.
     """
+    from lark.lexer import Token
     if isinstance(node, Token):
         if node.type == 'SIGNED_INT':
             return int(node.value)
