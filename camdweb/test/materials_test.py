@@ -6,7 +6,9 @@ from camdweb.materials import Material, Materials
 from camdweb.c2db.asr_panel import Row
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.session import Session
-from camdweb.panels.bandstructure import BandStructurePanel
+from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
+from camdweb.panels.panel import SkipPanel
+from camdweb.paging import Pages
 
 
 @pytest.fixture(scope='module')
@@ -25,7 +27,8 @@ def test_materials(material):
     assert (rows, header, pages, new_columns, error) == (
         [('x', ['x'])],
         [('uid', 'Unique ID')],
-        [(0, '«'), (0, '<'), (0, '1-1'), (0, '>'), (0, '»')],
+        Pages(buttons=[(0, '«'), (0, '<'), (0, '1-1'), (0, '>'), (0, '»')],
+              page=0, row_start=1, row_end=1, rows_found=1),
         [('formula', 'Formula'),
          ('reduced', 'Reduced formula'),
          ('stoichiometry', 'Stoichiometry'),
@@ -33,16 +36,16 @@ def test_materials(material):
          ('natoms', 'Number of atoms'),
          ('volume', 'Unit cell volume [Å<sup>3</sup>]')],
         '')
-    s.update('volume>1,stoichiometry=A', {})
+    s.update(filter='volume>1,stoichiometry=A')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
-    s.update('stoichiometry=A', {})
+    s.update(filter='stoichiometry=A')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 1
-    s.update('stoichiometry=AB', {})
+    s.update(filter='stoichiometry=AB')
     rows, _, _, _, _ = materials.get_rows(s)
     assert len(rows) == 0
-    s.update('Ha>100', {})
+    s.update(filter='Ha>100')
     rows, _, _, _, error = materials.get_rows(s)
     assert len(rows) == 0
     assert error == 'Unknown chemical symbol "Ha"'
@@ -66,8 +69,8 @@ def test_row(material):
 
 
 def test_no_bs(material):
-    with pytest.raises(StopIteration):
-        next(BandStructurePanel().get_html(material))
+    with pytest.raises(SkipPanel):
+        BSDOSBZPanel().get_data(material)
 
 
 def test_repr(material):

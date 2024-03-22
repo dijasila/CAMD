@@ -16,6 +16,8 @@ from __future__ import annotations
 class Sessions:
     def __init__(self,
                  columns: list[str],
+                 *,
+                 filter_string: str = '',
                  max_sessions: int = 200):
         """Session factory.
 
@@ -27,6 +29,7 @@ class Sessions:
             Maximum number of session to keep in memory.
         """
         self.columns = columns
+        self.initial_filter_string = filter_string
         self.max_sessions = max_sessions
         self.sid = 0
         self.sessions: dict[int, Session] = {}
@@ -36,7 +39,8 @@ class Sessions:
         if sid not in self.sessions:
             sid = self.sid
             self.sid += 1
-            self.sessions[sid] = Session(sid, self.columns)
+            self.sessions[sid] = Session(
+                sid, self.columns, self.initial_filter_string)
             # Remove old session objects:
             if len(self.sessions) > self.max_sessions:
                 self.sessions = {
@@ -49,18 +53,24 @@ class Sessions:
 class Session:
     def __init__(self,
                  sid: int,
-                 columns: list[str]):
+                 columns: list[str],
+                 filter: str = ''):
         self.sid = sid
         self.columns = list(columns)
-        self.filter = ''
+        self.filter = filter
         self.page = 0
         self.sort = ''
         self.direction = 1
         self.rows_per_page = 25
 
+    def __repr__(self):
+        return (
+            f'Session({self.sid}, {self.columns}, {self.filter!r}, '
+            f'{self.page}, {self.sort!r}, {self.direction})')
+
     def update(self,
-               filter: str,
-               query: dict) -> None:
+               query: dict | None = None,
+               filter: str | None = None) -> None:
         """Update session object.
 
         toggle:
@@ -72,11 +82,12 @@ class Session:
         page:
             go to another page
         """
-        if filter != self.filter:
+        if filter is not None:
             self.filter = filter
             self.page = 0
             return
 
+        assert query is not None
         column = query.get('toggle')
         if column:
             if column in self.columns:

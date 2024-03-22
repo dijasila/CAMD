@@ -30,6 +30,8 @@ import rich.progress as progress
 from ase import Atoms
 from ase.formula import Formula
 from ase.io import read
+from camdweb.c2db.emass import get_emass_data
+import numpy as np
 
 from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
@@ -43,7 +45,6 @@ RESULT_FILES = [
     'deformationpotentials',
     'bandstructure',
     'pdos',
-    'effective_masses',
     'hse',
     'gw',
     'borncharges',
@@ -55,7 +56,12 @@ RESULT_FILES = [
     'piezoelectrictensor',
     'gs',
     'gs@calculate',
-    'shift']
+    'shift',
+    'structureinfo',
+    'collect_spiral',
+    'dmi',
+    'spinorbit',
+    'spinorbit@calculate']
 
 ROOT = Path('/home/niflheim2/cmr/C2DB-ASR')
 
@@ -66,8 +72,17 @@ PATTERNS = [
     'tree_LDP/A*/*/*/',
     'tree_CDVAE/A*/*/*/',
     'tree_intercalated/A*/*/*/',
-    'push-manti-tree/A*/*/*/']
-# '/home/niflheim2/pmely/trees_to_collect/tree_Wang23/A*/*/*/'
+    'push-manti-tree/A*/*/*/',
+    'tree_Wang23/A*/*/*/']
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.int64):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
 
 
 def copy_materials(root: Path,
@@ -100,7 +115,7 @@ def copy_materials(root: Path,
             try:
                 olduid = read_result_file(fp)['uid']
             except FileNotFoundError:  # pragma: no cover
-                print(fp)
+                print('No fingerprint:', fp)
                 continue
             f = Formula(olduid.split('-')[0])
             stoi, reduced, nunits = f.stoichiometry()
@@ -155,11 +170,10 @@ def copy_material(fro: Path,
                   to: Path,
                   olduid: str,
                   uid: str) -> None:  # pragma: no cover
-    gpw = fro / 'gs.gpw'
-    if gpw.is_file():
-        atoms = read(gpw)
-    else:
-        atoms = read(fro / 'structure.json')
+    structure_file = fro / 'structure.json'
+    if not structure_file.is_file():
+        return
+    atoms = read(structure_file)
     assert isinstance(atoms, Atoms)
 
     def rrf(name: str) -> dict:
@@ -180,11 +194,9 @@ def copy_material(fro: Path,
         pass
 
     structure = rrf('structureinfo')
-    for key in ['has_inversion_symmetry', 'layergroup', 'lgnum']:
-        if key not in structure:
-            print(fro)
-            return
-        data[key] = structure[key]
+    data['has_inversion_symmetry'] = structure['has_inversion_symmetry']
+    data['layergroup'] = structure.get('layergroup', '?')
+    data['lgnum'] = structure.get('lgnum', -1)
 
     try:
         data['label'] = rrf('c2db.labels')['label']
@@ -236,7 +248,7 @@ def copy_material(fro: Path,
     except FileNotFoundError:
         pass
     else:  # pragma: no cover
-        data['E_B'] = bse['E_B']
+        data['E_B'] = bse.get('E_B')
 
     try:
         pol = rrf('polarizability')
@@ -281,6 +293,15 @@ def copy_material(fro: Path,
         (to / 'bader.json').write_text(
             json.dumps({'charges': bc.tolist()}))
 
+    try:
+        emass_data = rrf('effective_masses')
+    except FileNotFoundError:
+        pass
+    else:
+        emass_webpanel_data = get_emass_data(emass_data, atoms)
+        with open(to / 'emass.json', 'w') as file:
+            json.dump(emass_webpanel_data, file, indent=4, cls=NumpyEncoder)
+
     # Copy result json-files:
     for name in RESULT_FILES:
         result = fro / f'results-asr.{name}.json'
@@ -303,14 +324,15 @@ def copy_material(fro: Path,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('root', help='Root of ASR-tree to copy from.')
+    parser.add_argument('root', help='Root of ASR-tree to copy from. '
+                        'Example: "~cmr/C2DB-ASR/".')
     patterns = ', '.join(f'"{p}"' for p in PATTERNS)
     parser.add_argument(
         'pattern', nargs='+',
         help='Glob pattern like "tree/A*/*/*/". '
         f'Use "ALL" to get all the standard patterns: {patterns}.')
     parser.add_argument('-s', '--skip-convex-hulls', action='store_true')
-    parser.add_argument('-p', '--processes', default=1)
+    parser.add_argument('-p', '--processes', type=int, default=1)
     args = parser.parse_args(argv)
     if args.pattern == ['ALL']:  # pragma: no cover
         args.pattern = PATTERNS

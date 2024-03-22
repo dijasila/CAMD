@@ -69,6 +69,11 @@ class CMRProjectApp(CAMDApp):
         self.title = title
         self.form_parts += form_parts
 
+    def index_page(self) -> str:
+        html = super().index_page()
+        html = html.replace('/table?', f'/{self.name}/table?')
+        return html
+
     def table_html(self, session=None) -> str:
         html = super().table_html(session)
         html = html.replace('/material/', f'/{self.name}/material/')
@@ -102,7 +107,7 @@ class CMRAtomsPanel(AtomsPanel):
         col2 = self._create_column_two(self, material)
         if not col2:
             return super().create_column_two(material)
-        return col2
+        return col2, ''
 
 
 def app_from_db(dbpath: Path,

@@ -9,15 +9,28 @@
         </div>
       </div>
 
+<div id="table-div">
+      <!--  show the error message  -->
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-1"></div>
+          <div class="col">
+            <p style="color: green;">{{ summary_string }}</p>
+          </div>
+        </div>
+      </div>
+
+
 <!--  Add Column to Search Table Results  -->
 <div class="container-fluid col-md-10">
   <div class="row">
-    <div class="col-5 mb-3 pt-1">
+    <div class="col-8 mb-3 pt-1">
       <div class="pt-2 pb-2">
         <form>
           <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
 
           <div class="input-group">
+          <label class="form-label">Add column: </label>
             <select
               hx-get="/table?sid={{ session.sid }}"
               hx-trigger="change"
@@ -27,9 +40,6 @@
                 <option value="{{ name }}">{{ !value }}</option>
               % end
             </select>
-            <button class="btn btn-sm btn-outline-secondary save-scroll"
-                    type="submit" onclick="storeScrollPosition(event)">Add column
-            </button>
           </div>
         </form>
       </div>
@@ -104,7 +114,7 @@
         <ul class="pagination mb-1 mt-1">
           <!-- first and previous page buttons -->
           <div class="d-flex justify-content-start col-1.5">
-            % for page, text in pages[0:2]:
+            % for page, text in pages.buttons[0:2]:
               <li class="page-item {{! 'disabled' if (page == session.page) else '' }}">
                 <a class="page-link"
                    hx-get="/table?sid={{ session.sid }}&page={{ page }}"
@@ -118,7 +128,7 @@
 
           <!-- active page buttons -->
           <div class="d-flex justify-content-evenly col-8">
-          % for page, text in pages[2:-2]:
+          % for page, text in pages.buttons[2:-2]:
             % active = 'active' if page == session.page else ''
             <li class="page-item  {{! active }} col-1.5">
               <a class="page-link"
@@ -134,7 +144,7 @@
 
           <!-- next and last page buttons -->
           <div class="d-flex justify-content-end col-1.5">
-          % for page, text in pages[-2:]:
+          % for page, text in pages.buttons[-2:]:
             <li class="page-item {{! 'disabled' if page == session.page else '' }}">
               <a class="page-link"
                  hx-get="/table?sid={{ session.sid }}&page={{ page }}"

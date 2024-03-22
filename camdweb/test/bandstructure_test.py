@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from ase.lattice import BCT
 
-from camdweb.panels.bandstructure import PlotUtil, prettify_labels
+from camdweb.bandstructure import PlotUtil, prettify_labels
 
 
 def test_plotutil():
@@ -42,5 +42,4 @@ def test_kpoint_labels():
     coords = [1.0, 2.0, 3.0, 3.0, 4.0]  # discontinuous bandpath ABC|DE
     newlabels, newcoords = prettify_labels(labels, coords)
     assert newcoords == pytest.approx([1.0, 2.0, 3.0, 4.0])
-    assert newlabels == [rf'$\mathrm{{{sym}}}$'
-                         for sym in ['Γ', 'B', 'C,D', 'EFG_{123}']]
+    assert newlabels == ['Γ', 'B', 'C,D', 'EFG<sub>123</sub>']

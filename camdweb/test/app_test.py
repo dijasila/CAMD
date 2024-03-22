@@ -27,20 +27,18 @@ def c2db(tmp_path_factory):
         Materials([Material.from_file(path / 'structure.xyz', 'h2')],
                   [AtomsPanel(), DOSPanel(), BaderPanel()]),
         {'uid', 'volume', 'formula'},
-        tmp_path)
+        root=tmp_path)
     return c2db
 
 
 def test_query_h2(c2db):
-    with boddle(query={'filter': 'H=2'}):
-        out = c2db.index_page()
-        c2db.table_html()
+    out = c2db.index_page()
     assert 'H<sub>2' in out
 
 
 def test_query_sid_h2(c2db):
     with boddle(query={'sid': '0', 'filter': 'H=3,energy=42.0'}):
-        out = c2db.index_page()
+        out = c2db.table_html()
     assert 'H<sub>2' not in out
 
 
@@ -50,14 +48,14 @@ def test_query_stoichiometry_h2(c2db):
     assert 'H<sub>2' in out
 
 
-def test_various_queries(c2db):
-    for query in [{'toggle': 'volume'},
-                  {'toggle': 'volume'},
-                  {'sort': 'volume'},
-                  {'sort': 'volume'},
-                  {'page': '0'}]:
-        with boddle(query=query):
-            c2db.index_page()
+@pytest.mark.parametrize(
+    'query',
+    [{'toggle': 'volume'},
+     {'sort': 'volume'},
+     {'page': '0'}])
+def test_various_queries(c2db, query):
+    with boddle(query=query | {'sid': '-1'}):
+        c2db.table_html()
 
 
 def test_material(c2db):
