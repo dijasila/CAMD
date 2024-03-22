@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import functools
 import operator
+from pathlib import Path
 from typing import Any, Callable
 
-import numpy as np
-from ase.data import atomic_numbers
 from ase.formula import Formula
-from camdweb.filter import Index
 from lark import Lark
 from lark.lexer import Token
 from lark.tree import Tree
+
+from camdweb.filter import Index
 
 OPS = {
     '=': operator.eq,
@@ -53,7 +53,7 @@ def select(node: Any,
             op = n2[1]
             value = n1
             op = REVERSE_OPS.get(op, op)
-            return index.key(key, op, value)
+            return select([n3, [('OPERATOR', op), value]], index)
         raise ValueError
 
     n1, n2 = node
@@ -78,26 +78,42 @@ def select(node: Any,
             if name == 'HAS ALL':
                 values = n4 if isinstance(n4, list) else [n4]
                 return functools.reduce(
-                    (operator.and_,
-                     index.key(value, '>', 0) for value in values))
+                    operator.and_,
+                    (index.key(value, '>', 0) for value in values))
             assert name == 'HAS ANY', name
             values = n4 if isinstance(n4, list) else [n4]
             return functools.reduce(
-                (operator.or_,
-                 index.key(value, '>', 0) for value in values))
+                operator.or_,
+                (index.key(value, '>', 0) for value in values))
         if name.startswith('LENGTH'):
             value = n4
             op = "="
             if name.endswith('OPERATOR'):
                 op = n3[1][1]
             if key in LENGTH_ALIASES:
-                return self.key(LENGTH_ALIASES[key], op, value)
+                return index.key(LENGTH_ALIASES[key], op, value)
             raise NotImplementedError(
-            f'Length filter not supported on field {key!r}')
+                f'Length filter not supported on field {key!r}')
         if n3[0][0] == 'OPERATOR':
             op = n3[0][1]
             value = n4
-            return self.compare(key, op, value)
+            if key == 'nelements':
+                key = 'nspecies'
+            elif key == 'chemical_formula_anonymous':
+                key = 'stoichiometry'
+                value = f'{Formula(value):ab2}'
+            elif key == 'chemical_formula_hill':
+                key = 'formula'
+                value = f'{Formula(value):ab2}'
+            elif key == 'chemical_formula_reduced':
+                value = f'{Formula(value):ab2}'
+                print(value)
+                if op == '=':
+                    return index.reduced[value]
+                if op == '!=':
+                    return index.ids - index.reduced[value]
+                1 / 0
+            return index.key(key, op, value)
 
 
 def parse_lark_tree(node: Tree | Token) -> Any:
@@ -113,8 +129,8 @@ def parse_lark_tree(node: Tree | Token) -> Any:
         if node.type == 'ESCAPED_STRING':
             return node.value[1:-1]
         return (node.type, node.value)
-    children = [parse_lark_tree(child)  # type: ignore
-                for child in node.children]
+    children = [parse_lark_tree(child)
+                for child in node.children if child is not None]
     if len(children) == 1:
         return children[0]
     if node.data == 'expression':

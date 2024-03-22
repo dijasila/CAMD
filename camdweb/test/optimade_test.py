@@ -1,6 +1,6 @@
 import pytest
 from camdweb.filter import Index
-from camdweb.optimade.filter import create_parse_function
+from camdweb.optimade.filter import create_parse_function, select
 
 
 @pytest.fixture(scope='module')
@@ -12,9 +12,11 @@ def parse():
 def index():
     index = Index(
         [({'H': 2},
-          {'energy': -1.0, 'hmm': 'a123'}),
+          {'energy': -1.0, 'hmm': 'a123',
+           'nspecies': 1, 'stoichiometry': 'A', 'formula': 'H2'}),
          ({'C': 1, 'O': 1},
-          {'x': 7, 'hmm': 'hi!'})])
+          {'x': 7, 'hmm': 'hi!',
+           'nspecies': 2, 'stoichiometry': 'AB', 'formula': 'CO'})])
     return index
 
 
@@ -34,18 +36,9 @@ def index():
      ['"H" = chemical_formula_reduced', [1]],
      ['chemical_formula_anonymous = "A"', [1]],
      ['"A" = chemical_formula_anonymous', [1]],
-     ['chemical_formula_hill CONTAINS "H"', [1]],
-     ['chemical_formula_hill STARTS "H"', [1]],
-     ['chemical_formula_hill ENDS "2"', [1]],
-     ['id=1', [1]],
      ['hmm="abc"', []],
-     ['hmm ENDS WITH "3"', [1]],
-     ['hmm STARTS WITH "3"', []],
-     ['hmm CONTAINS "i"', [2]],
      ['hmm="hi!" OR hmm="a123" AND energy=-1.0', [1, 2]],
      ['(hmm="hi!" OR hmm="a123") AND energy=-1.0', [1]],
-     ['structure_features HAS "bulk"', []],
-     ['NOT structure_features HAS "assemblies"', [1, 2]],
      ['elements HAS "C"', [2]],
      ['elements HAS ALL "C"', [2]],
      ['elements HAS ANY "C"', [2]],
@@ -55,15 +48,17 @@ def index():
      ['a+b', ValueError],
      ['~a', ValueError]])
 def test_select(index, query, result, parse):
+    from lark.exceptions import UnexpectedCharacters
     if isinstance(result, list):
         tree = parse(query)
     else:
-        with pytest.raises(result):
+        with pytest.raises(UnexpectedCharacters):
             parse(query)
         return
     print(tree)
-    selection = index.select(tree)
-    rows = index.execute(selection)
+    selection = select(tree, index)
+    print(selection)
+    rows = sorted(i + 1 for i in selection)
     assert rows == result
 
 

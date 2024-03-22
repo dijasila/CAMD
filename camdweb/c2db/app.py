@@ -17,14 +17,16 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
+
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
 from camdweb.html import Range, RangeX, Select, table
 from camdweb.materials import Material, Materials
+from camdweb.optimade.app import add_optimade
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
-from camdweb.panels.emass import EmassPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.emass import EmassPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
@@ -187,6 +189,9 @@ def main(argv: list[str] | None = None) -> CAMDApp:
               nonnegative=True, default=('0.0', '0.2')),
         RangeX('Band gap range [eV]:', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
+
+    add_optimade(app)
+
     return app
 
 
