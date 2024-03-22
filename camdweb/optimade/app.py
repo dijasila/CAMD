@@ -124,7 +124,7 @@ class Optimade:
     @add_meta
     def info(self) -> dict:
         dct = INFO.copy()
-        aav = dct['attributes']['available_api_versions']  # type: ignore
+        aav = dct['attributes']['available_api_versions']
         aav[0]['url'] = CFG['url']
         return {'data': dct}
 
@@ -183,12 +183,11 @@ class Optimade:
             uid = self.materials.i2uid[id]
             material = self.materials[uid]
             dct = material2dict(material)
-            print(dct, fields)
             if fields:
                 dct = {key: value
                        for key, value in dct.items()
                        if key in fields}
-            data.append({'id': id,
+            data.append({'id': int(id),
                          'attributes': dct,
                          'type': 'structures'})
 
@@ -262,5 +261,4 @@ def material2dict(material) -> dict[str, Any]:
         'elements_ratios': [n / len(atoms) for n in count.values()],
         'structure_features': []}
     dct |= get_optimade_things(formula, atoms.pbc)
-
     return dct
