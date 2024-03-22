@@ -3,14 +3,17 @@ from __future__ import annotations
 import functools
 import operator
 from pathlib import Path
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any, Callable
 
 from ase.formula import Formula
-from lark import Lark
-from lark.lexer import Token
-from lark.tree import Tree
 
 from camdweb.filter import Index
+
+if TYPE_CHECKING:
+    from lark import Lark
+    from lark.lexer import Token
+    from lark.tree import Tree
+
 
 OPS = {
     '=': operator.eq,
@@ -147,6 +150,7 @@ def parse(filter: str, parser: Lark) -> Any:
 
 def create_parse_function() -> Callable[[str], Any]:
     """Create a parser function."""
+    from lark import Lark
     with open(Path(__file__).with_name('v1.0.0.lark'), 'r') as fd:
         lark = Lark(fd)
     return functools.partial(parse, parser=lark)

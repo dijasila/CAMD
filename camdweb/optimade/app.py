@@ -27,8 +27,8 @@ INFO = {
     'attributes': {
         'api_version': API_VERSION_STR,
         'available_api_versions': [
-            {'version': API_VERSION_STR},
-        ],
+            {'version': API_VERSION_STR,
+             'url': 'http://localhost:8080/v1'}],
         'formats': ['json'],
         'available_endpoints': ['info',
                                 'links',
@@ -124,8 +124,6 @@ class Optimade:
     @add_meta
     def info(self) -> dict:
         dct = INFO.copy()
-        aav = dct['attributes']['available_api_versions']
-        aav[0]['url'] = CFG['url']
         return {'data': dct}
 
     @add_meta
