@@ -7,11 +7,10 @@ from typing import Any, Callable
 import numpy as np
 from ase.data import atomic_numbers
 from ase.formula import Formula
-from lark.lexer import Token  # type: ignore
-from lark.tree import Tree  # type: ignore
-
-from optimade.filterparser import LarkParser  # type: ignore
 from camdweb.filter import Index
+from lark import Lark
+from lark.lexer import Token
+from lark.tree import Tree
 
 OPS = {
     '=': operator.eq,
@@ -125,12 +124,13 @@ def parse_lark_tree(node: Tree | Token) -> Any:
     return children
 
 
-def parse(filter: str, parser: LarkParser) -> Any:
+def parse(filter: str, parser: Lark) -> Any:
     """Parse OPTIMADE filter string to simple data structure"""
     return parse_lark_tree(parser.parse(filter))
 
 
 def create_parse_function() -> Callable[[str], Any]:
     """Create a parser function."""
-    parser = LarkParser(version=(1, 0, 0))
-    return functools.partial(parse, parser=parser)
+    with open(Path(__file__).with_name('v1.0.0.lark'), 'r') as fd:
+        lark = Lark(fd)
+    return functools.partial(parse, parser=lark)

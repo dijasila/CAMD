@@ -33,7 +33,7 @@ test = [
     "pytest",
     "boddle"]
 optimade = [
-    "optimade>=0.22.2"]
+    "lark"]
 
 [tool.mypy]
 packages = "camdweb"
