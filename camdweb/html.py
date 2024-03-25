@@ -6,7 +6,8 @@ from typing import Iterable, Sequence
 from ase.formula import Formula
 
 
-def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
+def table(header: list[str] | None, rows: Sequence[Iterable],
+          responsive: bool = True) -> str:
     """Create HTML table.
 
     Example:
@@ -44,12 +45,16 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
         head = (' <thead>\n  <tr>\n   <th>' +
                 '</th>\n   <th>'.join(header) +
                 '</th>\n  </tr>\n </thead>\n')
-    return (
+
+    html_table = (
         f'<table class="table table-striped">\n{head} <tbody>\n  <tr>\n   ' +
         '\n  </tr>\n  <tr>\n   '.join(
             '\n   '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
         '\n  </tr>\n </tbody>\n</table>')
+
+    return f'<div class="table-responsive">{html_table}</div>' if responsive \
+        else html_table
 
 
 def image(path: Path | str, alt=None) -> str:
@@ -58,7 +63,7 @@ def image(path: Path | str, alt=None) -> str:
     >>> image('abc/def.png', alt='Short description')
     '<img alt="Short description" src="/png/abc/def.png" />'
     """
-    return f'<img alt="{alt or path}" src="/png/{path}" />'
+    return f'<img alt="{alt or path}" src="/png/{path}" class="img-fluid"/>'
 
 
 class FormPart(abc.ABC):
