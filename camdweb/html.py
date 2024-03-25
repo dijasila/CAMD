@@ -6,7 +6,8 @@ from typing import Iterable, Sequence
 from ase.formula import Formula
 
 
-def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
+def table(header: list[str] | None, rows: Sequence[Iterable],
+          responsive: bool = True) -> str:
     """Create HTML table.
 
     Example:
@@ -19,46 +20,53 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
     === =====
 
     >>> print(table(['A', 'B'], [[1.2, 'hello'], [2.0, 'hi!']]))
-    <table class="table table-striped">
-     <thead>
-      <tr>
-       <th>A</th>
-       <th>B</th>
-      </tr>
-     </thead>
-     <tbody>
-      <tr>
-       <td>1.2</td>
-       <td>hello</td>
-      </tr>
-      <tr>
-       <td>2.0</td>
-       <td>hi!</td>
-      </tr>
-     </tbody>
-    </table>
+    <div class="table-responsive">
+     <table class="table table-striped">
+      <thead>
+       <tr>
+        <th>A</th>
+        <th>B</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr>
+        <td>1.2</td>
+        <td>hello</td>
+       </tr>
+       <tr>
+        <td>2.0</td>
+        <td>hi!</td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
     """
     if header is None:
         head = ''
     else:
-        head = (' <thead>\n  <tr>\n   <th>' +
-                '</th>\n   <th>'.join(header) +
-                '</th>\n  </tr>\n </thead>\n')
-    return (
-        f'<table class="table table-striped">\n{head} <tbody>\n  <tr>\n   ' +
-        '\n  </tr>\n  <tr>\n   '.join(
-            '\n   '.join(f'<td>{x}</td>' for x in row)
+        head = ('  <thead>\n   <tr>\n    <th>' +
+                '</th>\n    <th>'.join(header) +
+                '</th>\n   </tr>\n  </thead>\n')
+
+    html_table = (
+        f' <table class="table table-striped">\n{head}' +
+        '  <tbody>\n   <tr>\n    ' +
+        '\n   </tr>\n   <tr>\n    '.join(
+            '\n    '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
-        '\n  </tr>\n </tbody>\n</table>')
+        '\n   </tr>\n  </tbody>\n </table>')
+
+    return f'<div class="table-responsive">\n{html_table}\n</div>' \
+        if responsive else html_table
 
 
 def image(path: Path | str, alt=None) -> str:
     """Create <img> tag.
 
     >>> image('abc/def.png', alt='Short description')
-    '<img alt="Short description" src="/png/abc/def.png" />'
+    '<img alt="Short description" src="/png/abc/def.png" class="img-fluid">'
     """
-    return f'<img alt="{alt or path}" src="/png/{path}" />'
+    return f'<img alt="{alt or path}" src="/png/{path}" class="img-fluid">'
 
 
 class FormPart(abc.ABC):

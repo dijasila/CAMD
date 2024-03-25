@@ -190,8 +190,6 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         RangeX('Band gap range [eV]:', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
 
-    add_optimade(app)
-
     return app
 
 
@@ -202,7 +200,9 @@ def test():  # pragma: no cover
 
 def create_app():  # pragma: no cover
     """Create the WSGI app."""
-    return main([str(path) for path in Path().glob('A*/')]).app
+    app = main([str(path) for path in Path().glob('A*/')])
+    add_optimade(app)
+    return app.app
 
 
 def check_all(pattern: str):  # pragma: no cover

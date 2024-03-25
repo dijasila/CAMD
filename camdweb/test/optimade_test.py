@@ -2,6 +2,8 @@ import pytest
 from camdweb.filter import Index
 from camdweb.optimade.filter import create_parse_function, select
 
+pytest.importorskip('lark')
+
 
 @pytest.fixture(scope='module')
 def parse():

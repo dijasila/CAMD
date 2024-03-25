@@ -89,6 +89,7 @@ def test_download(c2db, fmt, ref_substring):
 
 
 def test_optimade(c2db):
+    pytest.importorskip('lark')
     add_optimade(c2db)
     c2db.optimade.info_structures()
     with boddle(query={'filter': 'elements HAS "H"',

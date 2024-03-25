@@ -11,11 +11,13 @@ TODO:
 from __future__ import annotations
 
 from pathlib import Path
+
 import matplotlib.pyplot as plt
 from ase.db import connect
 
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
-from camdweb.html import FormPart, Input, Range, RangeS, RangeX, Select, table
+from camdweb.html import (FormPart, Input, Range, RangeS, RangeX, Select,
+                          image, table)
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.utils import cod, icsd
@@ -156,7 +158,7 @@ class ABS3BandStructurePanel(Panel):
             if not ok:
                 raise SkipPanel
         return PanelData(
-            f'<img alt="BS for {uid}" src="/png/abs3/bs-{uid}.png" />',
+            image(f'abs3/bs-{uid}.png', alt=f'BS for {uid}'),
             title='Electronic band-structure')
 
 

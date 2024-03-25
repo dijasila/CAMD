@@ -6,7 +6,7 @@ from typing import Iterable
 import matplotlib.pyplot as plt
 import numpy as np
 
-from camdweb.html import table
+from camdweb.html import table, image
 from camdweb.panels.panel import Panel, PanelData
 from camdweb.material import Material
 
@@ -117,7 +117,6 @@ class LowDimPanel(Panel):
 
         descriptions = {key: all_keydescs[key].long for key in keysfortable2}
         col1 = table(['Item', ''], self.table_rows(material, descriptions))
-        col2 = (f'<img alt="Dim. analysis for {uid}" '
-                f'src="/png/lowdim/{uid}.png" />')
+        col2 = image(f'lowdim/{uid}.png', alt=f'Dim. analysis for {uid}')
         return PanelData(HTML.format(col1, col2),
                          title='Dimensionality analysis')
