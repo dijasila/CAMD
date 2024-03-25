@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from ase.db.core import KeyDescription
 from ase.io.jsonio import decode
-from camdweb.html import table
+from camdweb.html import table, image
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData, SkipPanel
 
@@ -144,7 +144,7 @@ def thing2html(thing: dict, path: Path) -> str:
     """Convert webpanel() output to HTML."""
     if thing['type'] == 'figure':
         filename = thing['filename']
-        html = f'<img src="/png/{path}/{filename}" />'
+        html = image(path / filename)
     elif thing['type'] == 'table':
         html = table(thing.get('header'), thing['rows'])
     else:
