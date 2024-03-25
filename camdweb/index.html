@@ -42,6 +42,24 @@
     // Re-enable smooth scroll behavior after page refresh
     document.documentElement.style.scrollBehavior = 'smooth';
 </script>
+<style>
+    .custom-collapse {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+    .custom-collapse > div {
+        flex: 1 1 50%; /* Two columns taking half the space */
+        padding: 10px;
+        overflow: hidden;
+    }
+
+    .custom-collapse img,
+    .custom-collapse table {
+        max-width: 100%; /* Ensure images and tables don't exceed the column width */
+        height: auto;
+    }
+</style>
 
 
 <div class="container-fluid">
