@@ -46,6 +46,5 @@ def create_data_dump():
 
 
 if __name__ == '__main__':
-    # create_db_file()
-    create_data_dump()
-
+    create_db_file()
+    # create_data_dump()
