@@ -28,17 +28,21 @@ class EmassPanel(Panel):
         path = material.folder / self.datafiles[0]
         with open(path, 'r') as file:
             band_data = json.load(file)
-        vbm_data = band_data['vbm']
-        cbm_data = band_data['cbm']
+
+        def emass2html(emass):
+            if emass == np.inf:
+                emass_str = '∞'
+            else:
+                emass_str = f'{emass:.2f} m<sub>0</sub>'
+            return emass_str
+
         tables = []
         # generate data tables
-        for data in [vbm_data, cbm_data]:
-            min_emass = ('Min eff. mass', '%.2f m<sub>0</sub>' %
-                         data['min_emass'])
-            max_emass = ('Max eff. mass', '%.2f m<sub>0</sub>' %
-                         data['max_emass'])
-            dos_emass = ('DOS eff. mass', '%.2f m<sub>0</sub>' %
-                         data['m_dos'])
+        for band_name in ['vbm', 'cbm']:
+            data = band_data[band_name]
+            min_emass = ('Min eff. mass', emass2html(data['min_emass']))
+            max_emass = ('Max eff. mass', emass2html(data['max_emass']))
+            dos_emass = ('DOS eff. mass', emass2html(data['m_dos']))
             coords = ('Crystal coordinates', '[%.3f, %.3f]' % (
                 data['coords'][0], data['coords'][1]))
             warping = ('Warping parameter', '%.3f' % data['warping'])
@@ -54,7 +58,8 @@ class EmassPanel(Panel):
                 dist_to_barrier = ('Distance to barrier',
                                    '> %.3g Å<sup>-1</sup>' %
                                    data['dist_to_barrier'])
-            new_table = table(['Property (VBM)', 'Value'],
+            new_table = table(['Property (' + band_name.upper() + ')',
+                               'Value'],
                               [min_emass,
                                max_emass,
                                dos_emass,
@@ -139,6 +144,7 @@ def make_figure(data, folder: Path):
         plt.tight_layout()
 
         if len(ax.get_xticks()) >= 7:
+            ax.set_xticks(ax.get_xticks())  # hack to avoid matplotlib warning
             ax.set_xticklabels(np.round(ax.get_xticks(), 4), rotation=15)
         ax.legend()
         filename = 'emass_' + band_name + '.png'
