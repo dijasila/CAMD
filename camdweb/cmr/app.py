@@ -107,7 +107,7 @@ class CMRAtomsPanel(AtomsPanel):
         col2 = self._create_column_two(self, material)
         if not col2:
             return super().create_column_two(material)
-        return col2
+        return col2, ''
 
 
 def app_from_db(dbpath: Path,

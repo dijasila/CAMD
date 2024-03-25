@@ -2,25 +2,41 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Callable, Generator, Iterable
-
+from typing import TYPE_CHECKING, Callable, Iterable
+from dataclasses import dataclass
 from camdweb import ColVal
 
 if TYPE_CHECKING:
     from camdweb.material import Material
 
 
-class Panel(abc.ABC):
+class SkipPanel(Exception):
+    """Don't show this panel."""
+
+
+@dataclass
+class PanelData:
+    html: str
     title: str
+    info: str = ''
+    script: str = ''
+    subpanels: list[PanelData] | None = None
+
+
+class Panel(abc.ABC):
+    title: str = "Unnamed"
     info = ''
     datafiles: list[str] = []
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
 
+    def __init__(self):
+        super().__init__()
+
     @abc.abstractmethod
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         raise NotImplementedError
 
     def update_material(self, material: Material) -> None:
@@ -51,6 +67,46 @@ class Panel(abc.ABC):
                 rows.append([self.column_descriptions.get(name, name),
                              formatter(value, link=True)])
         return rows
+
+
+"""
+    def add_subpanels(self, material: Material):
+        return
+
+    def generate_webpanel(self, material: Material):
+        self.add_subpanels(material)
+        self.generator: Any = self.get_html(material)
+
+        for subpanel in self.subpanels:
+            subpanel.generate_webpanel(material=material)
+
+        try:
+            html = next(self.generator)
+        except StopIteration:
+            self.generator = None
+            return
+        if not html == '':  # result is ready
+            self.generator = iter([html])
+
+    def get_webpanel(self):  # To be called after generation started.
+        html = ''
+        script = ''
+        if self.generator is not None:
+            try:
+                html = next(self.generator)
+                html, script = cut_out_script(html)
+            except StopIteration:
+                self.generator = None
+
+        subwebpanels = list()
+        for subpanel in self.subpanels:
+            wp, scr = subpanel.get_webpanel()
+            subwebpanels.append(wp)
+
+        self.generator = None
+
+        return WebPanel(self.title, self.info, html, subwebpanels), script
+"""
 
 
 def default_formatter(value: ColVal, link: bool = False) -> str:

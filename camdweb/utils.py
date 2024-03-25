@@ -49,6 +49,7 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
     """
     values, counts = np.unique(atomic_numbers, return_counts=True)
     nunits = np.gcd.reduce(counts)
+    counts = counts.tolist()
     symbols = [chemical_symbols[v] for v in values]
     count = {symbol: c
              for c, symbol in sorted((c, symbol)
