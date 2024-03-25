@@ -96,7 +96,7 @@
     );
   }
 </script>
-<!-- accordion color style.css override -->
+<!-- accordion color, plotly size style.css override -->
 <style>
 .accordion-button:not(.collapsed) {
     color: #1B282D;
@@ -108,6 +108,13 @@
     color: #1B282D;
     background-color: #FFFFFF;
     border: 1px solid #212529;
+}
+
+.plot-container {
+    /* Ensure plotly container doesn't exceed its parent's width */
+    max-width: 100%; /* restrict based on parent's width */
+    height: auto; /* Allow the height to adjust proportionally */
+    overflow: hidden; /* Hide any content that overflows the container */
 }
 </style>
 

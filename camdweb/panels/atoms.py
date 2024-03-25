@@ -247,6 +247,7 @@ def plot_atoms(atoms: Atoms,
     fig.update_layout(scene=dict(xaxis_visible=False,
                                  yaxis_visible=False,
                                  zaxis_visible=False),
+                      autosize=True,  # XXX maybe this does nothing
                       margin=dict(l=0, r=0, b=0, t=0),
                       template='simple_white',)
 
