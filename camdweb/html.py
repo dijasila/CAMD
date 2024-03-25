@@ -53,8 +53,8 @@ def table(header: list[str] | None, rows: Sequence[Iterable],
             for row in rows) +
         '\n  </tr>\n </tbody>\n</table>')
 
-    return f'<div class="table-responsive">{html_table}</div>' if responsive \
-        else html_table
+    return f'<div class="table-responsive">\n{html_table}\n</div>' \
+        if responsive else html_table
 
 
 def image(path: Path | str, alt=None) -> str:
