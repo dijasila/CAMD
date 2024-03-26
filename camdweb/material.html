@@ -116,6 +116,7 @@
     height: auto; /* Allow the height to adjust proportionally */
     overflow: hidden; /* Hide any content that overflows the container */
 }
+
 .btn-box {
   border: none;
   background-color: transparent;
@@ -189,8 +190,7 @@
     <!--  Information Viewing Area  -->
     <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
-      % i = 0
-      % for panel in panels:
+      % for i, panel in enumerate(panels):
         % p = i
         % i += 1
         % # panel_title, info, html, sub_panels = super_panel.get_properties()
@@ -220,8 +220,7 @@
             </h2>
 
             <!--  Accordion Content (Panel info)  -->
-            <div
-                    class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}} custom-collapse"
+            <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
                  id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
                  aria-labelledby="flush-heading{{ p }}" title="{{ !panel.title }}">
               <div class="panel accordion-body">
