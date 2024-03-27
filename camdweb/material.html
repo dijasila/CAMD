@@ -79,9 +79,16 @@
     var accordionSection = document.getElementById('sec' + panelIndex);
     var accordionPosition = accordionSection.offsetTop;
 
+    // Get the height of the header row element with id to compute offset
+    var headerClickButtons = document.getElementById('header-click-buttons');
+    var headerClickButtonsHeight = headerClickButtons.offsetHeight;
+
+    // Calculate the new scroll position
+    var scrollPosition = accordionPosition - headerClickButtonsHeight;
+
     // Scroll to the top of the accordion section with smooth behavior
     window.scrollTo({
-      top: accordionPosition,
+      top: scrollPosition,
       behavior: 'smooth'
     });
   }
@@ -132,7 +139,7 @@
   <div class="row">
 
     <!-- Sidebar -->
-    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark"
+    <div class="col-3 px-sm-2 px-0 bg-dark"
          style="overflow-y: auto; height: 100vh; position: sticky; top: 0;">
       <div class="sticky-top d-flex flex-column align-items-center
                   align-items-sm-start px-3 pt-2 text-white min-vh-10">
@@ -140,7 +147,7 @@
         {{ !sidebar }}
 
         <!--  Sidebar Collapse Buttons  -->
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"   >
           <li class="nav-item nav-list affix">
              % i = 0
              % for panel in panels:
@@ -188,24 +195,24 @@
     </div>
 
     <!--  Information Viewing Area  -->
-    <div class="col">
+    <div class="col-9">
+      <!-- Logo (header) Area -->
+      <div class="row sticky-top" id="header-click-buttons">
+        <!-- expand/collapse all -->
+        <div class="btn-toolbar justify-content-end bg-white" role="toolbar" aria-label="Toolbar with button groups">
+          <div class="btn-group me-2" role="group" aria-label="First group">
+            <button type="button" class="btn btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="expandAll()">Expand All</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
       % for i, panel in enumerate(panels):
         % p = i
         % i += 1
         % # panel_title, info, html, sub_panels = super_panel.get_properties()
-        % if p == 0:
-          <!-- Logo (header) Area -->
-          <section id="materialHeader" class="py-2 sticky-top">
-            <!-- expand/collapse all -->
-            <div class="btn-toolbar justify-content-end bg-white" role="toolbar" aria-label="Toolbar with button groups">
-              <div class="btn-group me-2" role="group" aria-label="First group">
-                <button type="button" class="btn btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
-                <button type="button" class="btn btn-outline-secondary" onclick="expandAll()">Expand All</button>
-              </div>
-            </div>
-          </section>
-        % end
         <section id="sec{{ p }}">
         <div class="accordion accordion-flush" id="accordionFlush">
           <!--  Create each Accordion Body  -->
@@ -262,6 +269,7 @@
         </section>
         % end
       % end
+    </div>
     </div>
 
   </div>
