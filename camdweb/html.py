@@ -101,7 +101,6 @@ class Select(FormPart):
         ['xyz=C']
         """
         parts = [
-            '<form>',
             '<div class="form-group row pb-1">',
             f'<label for="form_{self.name}" class="col-4 col-form-label-sm">'
             f'  {self.text}</label>'
@@ -112,7 +111,7 @@ class Select(FormPart):
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == self.default else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div></div></form>')
+        parts.append('</select></div></div>')
         return '\n'.join(parts)
 
 
@@ -128,7 +127,6 @@ class Input(FormPart):
         >>> html = s.render()
         """
         parts = [
-            '<form>',
             '<div class="form-group row pb-1">',
             '<label class="col-4 col-form-label-sm">',
             f'  {self.text}',
@@ -139,7 +137,7 @@ class Input(FormPart):
             '  type="text"',
             f'  name="{self.name}"',
             '  value=""',
-            f'  placeholder="{self.placeholder}" /></div></div></form>']
+            f'  placeholder="{self.placeholder}" /></div></div>']
         return '\n'.join(parts)
 
 
@@ -189,7 +187,6 @@ class Range(FormPart):
         """
         v1, v2 = self.default
         parts = [
-            '<form>',
             '<div class="form-group row pb-1">',
             f'<label for="form_{self.name}"',
             '  class="col-4 col-form-label-sm">',
@@ -208,7 +205,7 @@ class Range(FormPart):
             '  type="text"',
             f'  id="to_{self.name}" ',
             f'  name="to_{self.name}"',
-            f'  value="{v2}" /></div></div></form>']
+            f'  value="{v2}" /></div></div>']
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -232,7 +229,6 @@ class RangeX(Range):
 
     def render(self) -> str:
         parts = [
-            '<form>',
             '<div class="form-group row pb-1">',
             f'<label for="form_{self.name}"',
             '  class="col-4 col-form-label-sm">',
@@ -260,7 +256,7 @@ class RangeX(Range):
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div></div></form>')
+        parts.append('</select></div></div>')
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -285,7 +281,6 @@ class RangeS(Range):
         names = self.names or self.options
 
         parts = [
-            '<form>',
             '<div class="form-group row pb-1">',
             f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
@@ -299,7 +294,7 @@ class RangeS(Range):
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div></div></form>')
+        parts.append('</select></div></div>')
 
         return '\n'.join(parts)
 
