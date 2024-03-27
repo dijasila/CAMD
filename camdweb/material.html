@@ -123,12 +123,6 @@
     height: auto; /* Allow the height to adjust proportionally */
     overflow: hidden; /* Hide any content that overflows the container */
 }
-
-.btn-box {
-  border: none;
-  background-color: transparent;
-  padding: 0;
-}
 </style>
 
 
@@ -137,7 +131,6 @@
 <!-- Sidebar + Panels -->
 <div class="container-fluid">
   <div class="row">
-
     <!-- Sidebar -->
     <div class="col-3 px-sm-2 px-0 bg-dark"
          style="overflow-y: auto; height: 100vh; position: sticky; top: 0;">
@@ -147,7 +140,7 @@
         {{ !sidebar }}
 
         <!--  Sidebar Collapse Buttons  -->
-        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start"   >
+        <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
              % i = 0
              % for panel in panels:
@@ -271,7 +264,6 @@
       % end
     </div>
     </div>
-
   </div>
 </div>
 
