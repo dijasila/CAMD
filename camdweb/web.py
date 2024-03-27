@@ -89,11 +89,13 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         search = '\n'.join(fp.render() for fp in self.form_parts)
         table = self.table_html(session)
+        sidebar = self.persistent_sidebar()
         return template('index.html',
                         title=self.title,
                         search=search,
                         session=session,
-                        table=table)
+                        table=table,
+                        sidebar=sidebar)
 
     def table_html(self, session=None) -> str:
         """Get HTML for table."""
@@ -138,6 +140,7 @@ class CAMDApp:
 
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
+        sidebar = self.persistent_sidebar()
         material = self.materials[uid]
         webpanels = []
         for panel in self.materials.panels:
@@ -152,7 +155,12 @@ class CAMDApp:
 
         return template('material.html',
                         title=uid,
-                        panels=webpanels)
+                        panels=webpanels,
+                        sidebar=sidebar)
+
+    def persistent_sidebar(self):
+        """Provide persistent sidebar for all pages."""
+        return template('sidebar.html')
 
     def callback(self) -> str:
         """Send new json data.

@@ -9,8 +9,7 @@
         </div>
       </div>
 
-<div id="table-div">
-      <!--  show the error message  -->
+      <!--  show the summary message  -->
       <div class="container-fluid">
         <div class="row">
           <div class="col-1"></div>
@@ -29,13 +28,13 @@
         <form>
           <input class="form-control shadow-sm" type="hidden" name="sid" value="{{ session.sid }}">
 
-          <div class="input-group">
-          <label class="form-label">Add column: </label>
+          <div class="col d-flex align-items-center">
+            <label for="addc" class="col-4 col-form-label">Add column: </label>
             <select
               hx-get="/table?sid={{ session.sid }}"
               hx-trigger="change"
               hx-target="#table-div"
-              hx-swap="outerHTML" class="form-select" name="toggle">
+              hx-swap="outerHTML" class="form-select" id="addc" name="toggle">
               % for name, value in new_columns:
                 <option value="{{ name }}">{{ !value }}</option>
               % end
