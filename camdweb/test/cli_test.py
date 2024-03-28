@@ -1,10 +1,9 @@
-from html.parser import HTMLParser
-
 from ase import Atoms
 from ase.calculators.emt import EMT
 from ase.calculators.singlepoint import SinglePointCalculator
 
 from camdweb.cli import main
+from camdweb.test.html import check_html
 
 
 def test_cli(tmp_path):
@@ -42,24 +41,3 @@ def test_cli(tmp_path):
     html = app.material_page('2')
     assert 'Maximum force' in html
     check_html(html)
-
-
-class HTMLCheckParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.tags = []
-
-    def handle_starttag(self, tag, attrs):
-        if tag in {'hr', 'input'}:
-            return
-        self.tags.append(tag)
-
-    def handle_endtag(self, tag):
-        assert tag == self.tags.pop()
-
-
-def check_html(html):
-    p = HTMLCheckParser()
-    p.feed(html)
-    p.close()
-    assert not p.tags

@@ -9,6 +9,7 @@ from camdweb.c2db.app import main
 from camdweb.c2db.copy import copy_materials, main as copymain
 from camdweb.test.c2db import create_tree
 from camdweb.c2db.oqmd123 import db2json
+from camdweb.test.html import check_html
 
 
 @pytest.fixture
@@ -55,7 +56,8 @@ def test_everything(oqmd_db_file):
     app = main(['AB2/1MoS2/1'])
     assert len(app.materials) == 1
 
-    app.index_page()
+    html = app.index_page()
+    check_html(html)
 
     # Compress one of the result files:
     bs = root / 'AB2/1MoS2/1/results-asr.bandstructure.json'
@@ -67,6 +69,7 @@ def test_everything(oqmd_db_file):
     key = 'Charges [|e|]'
     passed = key in html
     assert passed
+    check_html(html)
 
     (root / 'AB2/1MoS2/1/bader.json').unlink()
     (root / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
