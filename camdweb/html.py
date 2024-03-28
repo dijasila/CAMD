@@ -294,7 +294,7 @@ class RangeS(Range):
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div></div>')
+        parts.append('</select></div>')
 
         return '\n'.join(parts)
 

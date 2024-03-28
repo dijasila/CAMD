@@ -6,6 +6,7 @@ from boddle import boddle
 from camdweb.cmr.app import main
 from camdweb.cmr.projects import abs3_bs, create_project_description, projects
 from camdweb.test.cmr import create_db_file
+from camdweb.test.html import check_html
 
 
 @pytest.fixture
@@ -23,14 +24,14 @@ def test_cmr(in_tmp_path, tmp_path, project_name):
 
     app = main([f'{name}.db'])
 
-    app.overview()
+    check_html(app.overview())
     app.favicon()
 
     papp = app.project_apps[name]
 
-    papp.index_page()
+    check_html(papp.index_page())
     for material in papp.materials:
-        papp.material_page(material.uid)
+        check_html(papp.material_page(material.uid))
 
     if name == 'oqmd123':
         xyz = papp.download('id-1', 'xyz')
