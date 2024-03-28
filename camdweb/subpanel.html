@@ -1,16 +1,17 @@
-%#<!-- Subpanel Setup -->
-%# it would be best if panel was an object that could inform the template
-%# what kind of panel it is. Then we can have panel.title, panel.submenu_title,
-%# panel.is_submenu. I think with how HTML elements work, it is best if we can
-%# separately loop over panel and html under an enumerate. I need to be able to
-%# group together panel button elements and html body content separately so the
-%# closing html elements are at the end of the loop. e.g. for a list <li> needs
-%# to close with <\li> after all list elements are added. In a loop this is not
-%# possible unless we have some conditionally to put the end wrap element. It
-%# is messy, so I think the cleanest way to fix this is to loop over them
-%# separately. They will be connected by the correct id. In the constructor
-%# for the objects we should assert that len(panel) and len(html) are always
-%# the same.
+<!-- Subpanel Setup
+it would be best if panel was an object that could inform the template
+what kind of panel it is. Then we can have panel.title, panel.submenu_title,
+panel.is_submenu. I think with how HTML elements work, it is best if we can
+separately loop over panel and html under an enumerate. I need to be able to
+group together panel button elements and html body content separately so the
+closing html elements are at the end of the loop. e.g. for a list <li> needs
+to close with <\li> after all list elements are added. In a loop this is not
+possible unless we have some conditionally to put the end wrap element. It
+is messy, so I think the cleanest way to fix this is to loop over them
+separately. They will be connected by the correct id. In the constructor
+for the objects we should assert that len(panel) and len(html) are always
+the same.
+-->
 
 % for p, (panel, html) in enumerate(panels):
     %# <!--  Normal Panel code  -->

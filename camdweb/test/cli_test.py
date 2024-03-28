@@ -1,3 +1,5 @@
+from html.parser import HTMLParser
+
 from ase import Atoms
 from ase.calculators.emt import EMT
 from ase.calculators.singlepoint import SinglePointCalculator
@@ -32,6 +34,32 @@ def test_cli(tmp_path):
     atoms.write(cu)
 
     app = main([str(x) for x in [h2, h, cu]], run=False)
-    assert 'volume' in app.index_page()
+
+    html = app.index_page()
+    check_html(html)
+    assert 'volume' in html
+
     html = app.material_page('2')
     assert 'Maximum force' in html
+    check_html(html)
+
+
+class HTMLCheckParser(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.tags = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag in {'hr', 'input'}:
+            return
+        self.tags.append(tag)
+
+    def handle_endtag(self, tag):
+        assert tag == self.tags.pop()
+
+
+def check_html(html):
+    p = HTMLCheckParser()
+    p.feed(html)
+    p.close()
+    assert not p.tags
