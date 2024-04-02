@@ -249,13 +249,13 @@ def plot_atoms(atoms: Atoms,
                                  zaxis_visible=False),
                       autosize=True,  # XXX maybe this does nothing
                       margin=dict(l=0, r=0, b=0, t=0),
-                      template='simple_white',)
+                      template='simple_white')
 
     fig.update_xaxes(showgrid=False)
     fig.update_scenes(aspectmode='data',
                       camera=dict(projection=dict(type='orthographic'),
                                   up=dict(x=0, y=1, z=0),
-                                  eye=dict(x=0, y=0, z=1)))
+                                  eye=dict(x=0, y=0, z=10)))
     return fig
 
 
