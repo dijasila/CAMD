@@ -85,58 +85,88 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def all_dirs(root: Path,
+             patterns: list[str]) -> list[Path]:
+    return [dir
+            for pattern in patterns
+            for dir in root.glob(pattern)
+            if dir.name[0] != '.']
+
+
+def atoms_to_uid_name(atoms: Atoms) -> str:
+    f = atoms.symbols.formula()
+    stoi, reduced, nunits = f.stoichiometry()
+    return f'{nunits}{reduced}'
+
+
+def create_uids() -> None:
+    names = defaultdict(int)
+    new = []
+    for dir in all_dirs(ROOT, PATTERNS):
+        atoms = read(dir / 'structure.json')
+        energy = atoms.get_potential_energy()
+        uid = None
+        oldiud = None
+        try:
+            uid_data = json.loads((dir / 'uid.json').read_text())
+        except FileNotFoundError:
+            pass
+        else:
+            uid = uid_data['uid']
+            olduid = uid_data.get('olduid')
+
+        if oldiud is None:
+            fp = dir / 'results-asr.database.material_fingerprint.json'
+            try:
+                olduid = read_result_file(fp)['uid']
+            except FileNotFoundError:
+                pass
+
+        name = atoms_to_uid_name(atoms)
+        if uid:
+            number = int(uid.split('-')[1])
+            names[name] = max(names[name], number)
+        else:
+            new.append((name, energy, dir, oldiud))
+
+    for name, _, dir, oldiud in sorted(new):
+        number = names[name] + 1
+        uid = f'{name}-{number}'
+        names[name] = number
+        uid_data = {'uid': uid}
+        if oldiud:
+            uid_data['olduid'] = olduid
+        (dir / 'uid.json').write_text(json.dumps(uid_data, indent=2))
+
+
 def copy_materials(root: Path,
                    patterns: list[str],
                    update_chull: bool = True,
                    processes: int = 1) -> None:
-    try:
-        uids = json.loads(Path('uids.json').read_text())
-    except FileNotFoundError:
-        uids = {}
-    print(len(uids), 'UIDs')
-
-    names: defaultdict[str, int] = defaultdict(int)
-    for uid in uids.values():
-        name = uid.split('-')[0]
-        names[name] += 1
-
-    dirs = [dir
-            for pattern in patterns
-            for dir in root.glob(pattern)
-            if dir.name[0] != '.']
+    dirs = all_dirs(root, patterns)
     print(len(dirs), 'folders')
 
+    names = defaultdict(int)
     work = []
-    parent_folders = set()
     with progress.Progress() as pb:
         pid = pb.add_task('Finding UIDs:', total=len(dirs))
         for dir in dirs:
-            fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
-                olduid = read_result_file(fp)['uid']
-            except FileNotFoundError:  # pragma: no cover
-                print('No fingerprint:', fp)
-                continue
-            f = Formula(olduid.split('-')[0])
-            stoi, reduced, nunits = f.stoichiometry()
-            name = f'{nunits}{reduced}'
-            uid = uids.get(olduid)
-            if uid is not None:
-                name1, x = uid.split('-')
-                number = int(x)
-                assert name1 == name
-            else:
+                uid = json.loads((dir / 'uid.json').read_text())['uid']
+            except FileNotFoundError:
+                name = atoms_to_uid_name(read(dir / 'structure.json'))
                 names[name] += 1
                 number = names[name]
-                uid = f'{nunits}{reduced}-{number}'
-                uids[olduid] = uid
-            folder = Path(f'{stoi}/{name}/{number}')
-            parent_folders.add(folder.parent)
-            work.append((dir, folder, olduid, uid))
+                uid = f'{name}-{number}t'
+            name, tag = uid.split('-')
+            stoichiometry, _, nunits = Formula(name).stoichiometry()
+            folder = Path(f'{stoichiometry}/{name}/{tag}')
+            work.append((dir, folder, uid))
             pb.advance(pid)
 
-    Path('uids.json').write_text(json.dumps(uids, indent=1))
-
+    parent_folders = set()
+    for dir, folder, uid in work:
+        parent_folders.add(folder.parent)
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
 
@@ -167,9 +197,7 @@ def worker(args):  # pragma: no cover
 
 
 def copy_material(fro: Path,
-                  to: Path,
-                  olduid: str,
-                  uid: str) -> None:  # pragma: no cover
+                  to: Path) -> None:  # pragma: no cover
     structure_file = fro / 'structure.json'
     if not structure_file.is_file():
         return
@@ -179,19 +207,21 @@ def copy_material(fro: Path,
     def rrf(name: str) -> dict:
         return read_result_file(fro / f'results-asr.{name}.json')
 
-    # None values will be removed later:
-    data: dict[str, ColVal | None] = {
-        'uid': uid,
-        'olduid': olduid,
-        'folder': str(fro)}
+    # None values will be removed later
+    data: dict[str, ColVal | None] = {'folder': str(fro)}
+
     try:
         data['magstate'] = rrf('magstate')['magstate']
     except FileNotFoundError:
         pass
+
     try:
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
     except FileNotFoundError:
         pass
+
+    # Read uid and perhaps olduid:
+    data.update(json.loads((fro / 'uid.json').read_text()))
 
     structure = rrf('structureinfo')
     data['has_inversion_symmetry'] = structure['has_inversion_symmetry']
