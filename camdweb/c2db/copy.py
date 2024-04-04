@@ -94,19 +94,21 @@ def all_dirs(root: Path,
 
 
 def atoms_to_uid_name(atoms: Atoms) -> str:
-    f = atoms.symbols.formula()
+    f = atoms.symbols.formula
     stoi, reduced, nunits = f.stoichiometry()
     return f'{nunits}{reduced}'
 
 
-def create_uids() -> None:
+def create_uids(root: Path = ROOT,
+                patterns: list[str] = PATTERNS) -> None:
     names = defaultdict(int)
     new = []
-    for dir in all_dirs(ROOT, PATTERNS):
+    for dir in all_dirs(root, patterns):
+        print(dir)
         atoms = read(dir / 'structure.json')
         energy = atoms.get_potential_energy()
         uid = None
-        oldiud = None
+        olduid = None
         try:
             uid_data = json.loads((dir / 'uid.json').read_text())
         except FileNotFoundError:
@@ -115,9 +117,10 @@ def create_uids() -> None:
             uid = uid_data['uid']
             olduid = uid_data.get('olduid')
 
-        if oldiud is None:
+        if olduid is None:
             fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
+                print(read_result_file(fp))
                 olduid = read_result_file(fp)['uid']
             except FileNotFoundError:
                 pass
@@ -127,14 +130,15 @@ def create_uids() -> None:
             number = int(uid.split('-')[1])
             names[name] = max(names[name], number)
         else:
-            new.append((name, energy, dir, oldiud))
+            new.append((name, energy, dir, olduid))
 
-    for name, _, dir, oldiud in sorted(new):
+    print(new)
+    for name, _, dir, olduid in sorted(new):
         number = names[name] + 1
         uid = f'{name}-{number}'
         names[name] = number
         uid_data = {'uid': uid}
-        if oldiud:
+        if olduid:
             uid_data['olduid'] = olduid
         (dir / 'uid.json').write_text(json.dumps(uid_data, indent=2))
 
