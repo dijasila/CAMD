@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
-from typing import Generator, Iterable
+from typing import Iterable
 
 import plotly
 import plotly.graph_objs as go
@@ -27,7 +27,7 @@ from ase.phasediagram import PhaseDiagram
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 
 HTML = """
 <div class="row">
@@ -48,15 +48,18 @@ Plotly.newPlot('{id}', graphs, {{}});
 </script>
 """
 
+# D3 colors from plotly.express.colors.qualitative
+colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
+          '#8C564B', '#E377C2', '#7F7F7F', '#BCBD22', '#17BECF']
+
 
 class ConvexHullPanel(Panel):
-    title = 'Convex hull'
-
     def __init__(self, sources: dict[str, tuple[str, str]] | None = None):
+        super().__init__()
         self.sources = sources
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         tbl = table(
             None,
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
@@ -71,9 +74,12 @@ class ConvexHullPanel(Panel):
                                                verbose=False)
         html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
-            yield html + SCRIPT.format(chull_json=chull, id='chull')
+            script = SCRIPT.format(chull_json=chull, id='chull')
         else:
-            yield html  # pragma: no cover
+            script = ''
+        return PanelData(html,
+                         title='Convex hull',
+                         script=script)
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
@@ -133,6 +139,7 @@ def plot_2d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
             uid: str | None = None) -> go.Figure:
+
     if uids is None:
         uids = [r[2] for r in pd.references]
 
@@ -146,31 +153,37 @@ def plot_2d(pd: PhaseDiagram,
     for i, j in pd.simplices:
         X += [x[i], x[j], None]
         Y += [y[i], y[j], None]
-    data = [go.Scatter(x=X, y=Y, mode='lines', showlegend=False)]
+
+    data = [go.Scatter(x=X, y=Y, mode='lines',
+                       line=dict(color=colors[2]),
+                       showlegend=False)]
 
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
+
+    for i, source in enumerate(set(sources)):
+        mask = [True if source in label else False
+                for label in sources]
+        hovertemplate = '%{customdata} <br> ΔH: %{y:.2f} eV/atom'
+
+        data.append(go.Scatter(
+            x=x[mask],
+            y=y[mask],
+            customdata=[f'{name} ({uid})' for uid, name, x
+                        in zip(uids, names, mask) if x],
+            name=source,
+            hovertemplate=hovertemplate,
+            mode='markers',
+            marker=dict(color=colors[i], size=8)))
+
+    delta = y.ptp() / 30
+    ymin = y.min() - 2.5 * delta
+    fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
 
     # Highlight selected material:
     if uid is not None:
         this_idx = uids.index(uid)
         names[this_idx] = '<b>' + names[this_idx] + '</b>'
-
-    for source in set(sources):
-        mask = [True if source in label else False
-                for label in sources]
-
-        data.append(go.Scatter(
-            x=x[mask],
-            y=y[mask],
-            text=[uid for uid, x in zip(uids, mask) if x],
-            name=source,
-            hovertemplate='%{text}: %{y} eV/atom',
-            mode='markers'))
-
-    delta = y.ptp() / 30
-    ymin = y.min() - 2.5 * delta
-    fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
 
     # Add annotations for materials on the hull and the selected material:
     annotate_idx = [i for i, x in enumerate(pd.hull) if x]
@@ -197,6 +210,7 @@ def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
             uid: str | None = None) -> go.Figure:
+
     if uids is None:
         uids = [r[2] for r in pd.references]
 
@@ -205,31 +219,35 @@ def plot_3d(pd: PhaseDiagram,
 
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
+
     data = [go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k,
-                      opacity=0.5, hoverinfo='skip')]
+                      opacity=0.3, hoverinfo='skip', color=colors[2])]
 
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
+
+    for i, source in enumerate(set(sources)):
+        mask = [True if source in label else False
+                for label in sources]
+        hovertemplate = '%{customdata} <br> ΔH: %{z:.2f} eV/atom'
+
+        data.append(
+            go.Scatter3d(
+                x=x[mask], y=y[mask], z=z[mask],
+                customdata=[f'{name} ({uid})' for uid, name, x
+                            in zip(uids, names, mask) if x],
+                name=source,
+                hovertemplate=hovertemplate,
+                mode='markers',
+                marker=dict(color=colors[i], size=5),))
+
+    fig = go.Figure(data=data)
 
     # Highlight selected material:
     if uid is not None:
         this_idx = uids.index(uid)
         names[this_idx] = '<b>' + names[this_idx] + '</b>'
 
-    for source in set(sources):
-        mask = [True if source in label else False
-                for label in sources]
-        data.append(
-            go.Scatter3d(
-                x=x[mask], y=y[mask], z=z[mask],
-                text=[uid for uid, x in zip(uids, mask) if x],
-                name=source,
-                hovertemplate='%{text}: %{z} eV/atom',
-                mode='markers'))
-
-    fig = go.Figure(data=data)
-
-    # Add annotations for materials on the hull and the selected material:
     annotate_idx = [i for i, x in enumerate(pd.hull) if x]
     if uid is not None:
         if this_idx not in annotate_idx:
@@ -247,12 +265,11 @@ def plot_3d(pd: PhaseDiagram,
                                 opacity=0.7))
 
     A, B, C = pd.symbols
+
     fig.update_layout(scene=dict(xaxis_title=B,
                                  yaxis_title=C,
                                  zaxis_title='ΔH [eV/atom]',
-                                 annotations=annotations),
-                      template='simple_white')
-
+                                 annotations=annotations,))
     return fig
 
 

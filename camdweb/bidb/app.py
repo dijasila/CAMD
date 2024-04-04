@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 from collections import defaultdict
 from pathlib import Path
-from typing import Generator
 
 import rich.progress as progress
 from ase.db import connect
@@ -12,7 +11,7 @@ from ase.formula import Formula
 from camdweb.html import table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.web import CAMDApp
 
 COLUMN_DESCRIPTIONS = {
@@ -72,19 +71,17 @@ class BiDBAtomsPanel(AtomsPanel):
 
 
 class StackingsPanel(Panel):
-    title = 'Stackings'
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         bilayers = material.data.get('bilayers')
         if bilayers is None:
-            return
+            raise SkipPanel
         rows = []
         for uid, bilayer in bilayers.items():
             e = bilayer.binding_energy_zscan
             rows.append([f'<a href="{uid}">{uid}</a>', f'{e:.3f}'])
         tbl = table(['Stacking', 'Binding energy [meV/Å<sup>2</sup>]'], rows)
-        yield tbl
+        return PanelData(tbl, title='Stackings')
 
 
 def main(root: Path) -> CAMDApp:
@@ -113,7 +110,7 @@ def main(root: Path) -> CAMDApp:
 
     initial_columns = ['uid', 'area', 'formula']
 
-    return CAMDApp(materials, initial_columns, root)
+    return CAMDApp(materials, initial_columns, root=root)
 
 
 if __name__ == '__main__':

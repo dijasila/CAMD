@@ -7,7 +7,10 @@
     const accordionItems = document.querySelectorAll('.accordion-collapse');
     accordionItems.forEach(item => {
       item.classList.add('show');
-      });
+      const button = item.previousElementSibling.querySelector('.accordion-button');
+      button.setAttribute('aria-expanded', 'true');
+      button.classList.remove('collapsed');
+    });
   }
 
   // Function to collapse all accordion panels
@@ -15,9 +18,13 @@
     const accordionItems = document.querySelectorAll('.accordion-collapse');
     accordionItems.forEach(item => {
       item.classList.remove('show');
+      const button = item.previousElementSibling.querySelector('.accordion-button');
+      button.setAttribute('aria-expanded', 'false');
+      button.classList.add('collapsed');
     });
   }
 </script>
+
 <!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
 <script>
   function handleAnchorEvent(event, panelIndex) {
@@ -72,9 +79,16 @@
     var accordionSection = document.getElementById('sec' + panelIndex);
     var accordionPosition = accordionSection.offsetTop;
 
+    // Get the height of the header row element with id to compute offset
+    var headerClickButtons = document.getElementById('header-click-buttons');
+    var headerClickButtonsHeight = headerClickButtons.offsetHeight;
+
+    // Calculate the new scroll position
+    var scrollPosition = accordionPosition - headerClickButtonsHeight;
+
     // Scroll to the top of the accordion section with smooth behavior
     window.scrollTo({
-      top: accordionPosition,
+      top: scrollPosition,
       behavior: 'smooth'
     });
   }
@@ -89,18 +103,25 @@
     );
   }
 </script>
-<!-- accordion color style.css override -->
+<!-- accordion color, plotly size style.css override -->
 <style>
-.accordion-button.collapsed {
+.accordion-button:not(.collapsed) {
     color: #1B282D;
     background-color: #AAD5E3;
     border: 1px solid #212529;
 }
 
-.accordion-button:not(.collapsed)  {
+.accordion-button.collapsed {
     color: #1B282D;
     background-color: #FFFFFF;
     border: 1px solid #212529;
+}
+
+.plot-container {
+    /* Ensure plotly container doesn't exceed its parent's width */
+    max-width: 100%; /* restrict based on parent's width */
+    height: auto; /* Allow the height to adjust proportionally */
+    overflow: hidden; /* Hide any content that overflows the container */
 }
 </style>
 
@@ -110,73 +131,81 @@
 <!-- Sidebar + Panels -->
 <div class="container-fluid">
   <div class="row">
-
     <!-- Sidebar -->
-    <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 bg-dark"
+    <div class="col-3 px-sm-2 px-0 bg-dark"
          style="overflow-y: auto; height: 100vh; position: sticky; top: 0;">
       <div class="sticky-top d-flex flex-column align-items-center
                   align-items-sm-start px-3 pt-2 text-white min-vh-10">
         <!--  Persistent Sidebar Content  -->
-        <ul class="navbar-nav">
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="HomePageNavigation"
-               role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              <span class="fs-5 d-none d-sm-inline">Home Pages</span>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="HomePageNavigation">
-              <li>
-                <a class="dropdown-item pt-1 pb-2"
-                   aria-current="page" href="https://cmr.fysik.dtu.dk/">
-                  <span class="d-none d-sm-inline">CMR</span>
-                </a>
-              </li>
-              <li>
-                <a class="dropdown-item pb-2"
-                   href="https://cmr.fysik.dtu.dk/c2db/c2db.html">
-                  <span class="d-none d-sm-inline">C2DB</span>
-                </a>
-              </li>
-              <li>
-                <a href="/" class="dropdown-item pb-2">
-                  <span class="d-none d-sm-inline">Home</span>
-                </a>
-              </li>
-            </ul>
-          </li>
-        </ul>
+        {{ !sidebar }}
 
         <!--  Sidebar Collapse Buttons  -->
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
-            % for p, (panel_title, info, html) in enumerate(panels):
-              <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
-                 href="#sec{{ p }}" style="color: #00ABE4">
-                <span class="d-none d-sm-inline">{{ panel_title }}</span>
-              </a>
+             % i = 0
+             % for panel in panels:
+              % p = i
+              % i += 1
+              % # panel_title, info, html, sub_panels = super_panel.get_properties()
+              % if len(panel.subpanels or []) == 0:
+                <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
+                  href="#sec{{ p }}" style="color: #00ABE4">
+                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
+                </a>
+              % else:
+                <li>
+                %#<!--  Subpanel Sidebar Dropdown Name  -->
+                <a href="#submenu{{ p }}" data-bs-toggle="collapse"
+                  class="nav-link px-0 align-middle">
+                    <span class="d-none d-sm-inline dropdown-toggle">{{ !panel.title }}</span>
+                </a>
+                % for subpanel in panel.subpanels or []:
+                  % p2 = i
+                  % i += 1
+                  % # subpanel_title, info, html, sub_panels = sub_panel
+                  % #<!--  Subpanel Dropdown Content  -->
+                  <ul class="collapse nav flex-column flex-nowrap text-center ms-1 align-items-center"
+                      id="submenu{{ p }}" data-bs-parent="#menu">
+                      <li class="w-100">
+                          <button class="nav-link nav-pills nav-flush mb-auto mx-auto text-small"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#sec{{ p2 }}"
+                              aria-expanded="false"
+                              aria-controls="collapseExample">
+                            <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
+                          </button>
+                      </li>
+                  </ul>
+                % end
+              </li>
+              % end
             % end
           </li>
         </ul>
-
         <hr>
       </div>
     </div>
 
     <!--  Information Viewing Area  -->
-    <div class="col">
+    <div class="col-9">
+      <!-- Logo (header) Area -->
+      <div class="row sticky-top" id="header-click-buttons">
+        <!-- expand/collapse all -->
+        <div class="btn-toolbar justify-content-end bg-white" role="toolbar" aria-label="Toolbar with button groups">
+          <div class="btn-group me-2" role="group" aria-label="First group">
+            <button type="button" class="btn btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
+            <button type="button" class="btn btn-outline-secondary" onclick="expandAll()">Expand All</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
       <!--  Link Each Panel with Button Anchor  -->
-      % for p, (panel_title, info, html) in enumerate(panels):
-        % if p == 0:
-          <!-- Logo (header) Area -->
-          <section id="materialHeader" class="py-2 sticky-top">
-            <!-- expand/collapse all -->
-            <div class="btn-toolbar justify-content-end bg-white" role="toolbar" aria-label="Toolbar with button groups">
-              <div class="btn-group me-2" role="group" aria-label="First group">
-                <button type="button" class="btn btn-outline-secondary" onclick="collapseAll()">Collapse All</button>
-                <button type="button" class="btn btn-outline-secondary" onclick="expandAll()">Expand All</button>
-              </div>
-            </div>
-          </section>
-        % end
+      % for i, panel in enumerate(panels):
+        % p = i
+        % i += 1
+        % # panel_title, info, html, sub_panels = super_panel.get_properties()
         <section id="sec{{ p }}">
         <div class="accordion accordion-flush" id="accordionFlush">
           <!--  Create each Accordion Body  -->
@@ -186,27 +215,63 @@
                 <button class="accordion-button collapsed"
                    type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
                    aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                  <span class="d-none d-sm-inline">{{ panel_title }}</span>
+                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
                 </button>
             </h2>
 
             <!--  Accordion Content (Panel info)  -->
             <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
                  id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
-                 aria-labelledby="flush-heading{{ p }}" title="{{ panel_title }}">
+                 aria-labelledby="flush-heading{{ p }}" title="{{ !panel.title }}">
               <div class="panel accordion-body">
-                {{ !html }}
-                {{ !info }}
+                {{ !panel.html }}
+                {{ !panel.info }}
               </div>
             </div>
           </div>
         </div>
         </section>
+        % for subpanel in panel.subpanels or []:
+          % p = i
+          % i += 1
+          % # panel_title, info, html, sub_panels = sub_panel
+          <section id="sec{{ p }}">
+          <div class="accordion accordion-flush" id="accordionFlush">
+            <!--  Create each Accordion Body  -->
+            <div class="accordion-item mb-1">
+              <!--  accordion button  -->
+              <h2 class="accordion-header" id="flush-heading{{ p }}">
+                  <button class="accordion-button collapsed"
+                      type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
+                      aria-expanded="false" aria-controls="flush-collapse{{ p }}">
+                    <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
+                  </button>
+              </h2>
+
+              <!--  Accordion Content (Panel info)  -->
+              <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
+                    id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
+                    aria-labelledby="flush-heading{{ p }}" title="{{ !subpanel.title }}">
+                <div class="panel accordion-body">
+                  {{ !subpanel.html }}
+                  {{ !subpanel.info }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        % end
       % end
     </div>
-
+    </div>
   </div>
 </div>
 
 </body>
-{{ !footer }}
+
+<!-- webpage javascript for interactive plotly -->
+% for panel in panels:
+%     if panel.script:
+          {{ !panel.script }}
+%     end
+% end

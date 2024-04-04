@@ -3,6 +3,7 @@ from ase.calculators.emt import EMT
 from ase.calculators.singlepoint import SinglePointCalculator
 
 from camdweb.cli import main
+from camdweb.test.html import check_html
 
 
 def test_cli(tmp_path):
@@ -32,6 +33,11 @@ def test_cli(tmp_path):
     atoms.write(cu)
 
     app = main([str(x) for x in [h2, h, cu]], run=False)
-    assert 'volume' in app.index_page()
+
+    html = app.index_page()
+    check_html(html)
+    assert 'volume' in html
+
     html = app.material_page('2')
     assert 'Maximum force' in html
+    check_html(html)
