@@ -97,7 +97,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         p = Path(path)
         if p.name.startswith('A'):
             folders += list(p.glob('*/*/'))
-        elif p.name.isdigit():
+        elif p.name.rstrip('t').isdigit():  # 't' for temporary (AB2/1MoS2/1t)
             folders.append(p)
         else:
             folders += list(p.glob('*/'))

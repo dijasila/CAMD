@@ -169,7 +169,7 @@ def copy_materials(root: Path,
             pb.advance(pid)
 
     parent_folders = set()
-    for dir, folder, uid in work:
+    for _, folder, _ in work:
         parent_folders.add(folder.parent)
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
@@ -201,7 +201,8 @@ def worker(args):  # pragma: no cover
 
 
 def copy_material(fro: Path,
-                  to: Path) -> None:  # pragma: no cover
+                  to: Path,
+                  uid: str) -> None:  # pragma: no cover
     structure_file = fro / 'structure.json'
     if not structure_file.is_file():
         return
@@ -225,7 +226,12 @@ def copy_material(fro: Path,
         pass
 
     # Read uid and perhaps olduid:
-    data.update(json.loads((fro / 'uid.json').read_text()))
+    try:
+        data.update(json.loads((fro / 'uid.json').read_text()))
+    except FileNotFoundError:
+        data['uid'] = uid
+    else:
+        assert data['uid'] == uid
 
     structure = rrf('structureinfo')
     data['has_inversion_symmetry'] = structure['has_inversion_symmetry']
