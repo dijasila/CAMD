@@ -201,7 +201,6 @@ def copy_materials(root: Path,
         shutil.copyfile(Path(__file__).parent / 'logo.png', logo)
 
 
-
 def worker(args):  # pragma: no cover
     """Used by Pool."""
     copy_material(*args)
