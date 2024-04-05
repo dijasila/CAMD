@@ -20,7 +20,7 @@ import rich.progress as progress
 
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
-from camdweb.html import Range, RangeX, Select, table
+from camdweb.html import Range, RangeX, Select, table, image
 from camdweb.materials import Material, Materials
 from camdweb.optimade.app import add_optimade
 from camdweb.panels.atoms import AtomsPanel
@@ -63,6 +63,10 @@ class C2DBApp(CAMDApp):
     """C2DB app with /row/<olduid> endpoint."""
 
     title = 'C2DB'
+    logo = image('c2db-logo.png', alt='C2DB-logo')
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('C2DB', 'https://cmr.fysik.dtu.dk/c2db/c2db.html')]
 
     def __init__(self,
                  materials: Materials,

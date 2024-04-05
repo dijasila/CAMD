@@ -18,6 +18,9 @@ TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 class CAMDApp:
     title = 'CAMD'
+    logo = ''
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk')]
 
     def __init__(self,
                  materials: Materials,
@@ -160,7 +163,9 @@ class CAMDApp:
 
     def persistent_sidebar(self):
         """Provide persistent sidebar for all pages."""
-        return template('sidebar.html')
+        return template('sidebar.html',
+                        logo=self.logo,
+                        sidebar_links=self.links)
 
     def callback(self) -> str:
         """Send new json data.
