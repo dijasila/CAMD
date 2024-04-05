@@ -104,7 +104,11 @@ def create_uids(root: Path = ROOT,
     new = []
     for dir in all_dirs(root, patterns):
         print(dir)
-        atoms = read_atoms(dir / 'structure.json')
+        try:
+            atoms = read_atoms(dir / 'structure.json')
+        except FileNotFoundError:
+            print('ERROR:', dir)
+            continue
         energy = atoms.get_potential_energy()
         uid = None
         olduid = None
@@ -119,7 +123,6 @@ def create_uids(root: Path = ROOT,
         if olduid is None:
             fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
-                print(read_result_file(fp))
                 olduid = read_result_file(fp)['uid']
             except FileNotFoundError:
                 pass
@@ -131,7 +134,7 @@ def create_uids(root: Path = ROOT,
         else:
             new.append((name, energy, dir, olduid))
 
-    print(new)
+    print(len(new))
     for name, _, dir, olduid in sorted(new):
         number = names[name] + 1
         uid = f'{name}-{number}'
