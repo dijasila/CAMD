@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import numpy as np
-from ase.io import read
+from camdweb.utils import read_atoms
 
 if TYPE_CHECKING:
     from taskblaster.repository import Repository
@@ -93,7 +93,8 @@ def copy_material(record: Repository) -> None:  # pragma: no cover
         shutil_files.append([output.name, output.as_posix()])
         data = {}
     if Path(node.name).name == 'gsresults':
-        oqmd, atoms = Path(node.name).parts[1], read(input['groundstate'])
+        oqmd = Path(node.name).parts[1]
+        atoms = read_atoms(input['groundstate'])
         data = {
             'etot': output['etot'],
             'gap': output['gap'],

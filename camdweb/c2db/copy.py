@@ -29,7 +29,6 @@ from pathlib import Path
 import rich.progress as progress
 from ase import Atoms
 from ase.formula import Formula
-from ase.io import read
 from camdweb.c2db.emass import get_emass_data
 import numpy as np
 
@@ -37,7 +36,7 @@ from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
-from camdweb.utils import process_pool
+from camdweb.utils import process_pool, read_atoms
 
 RESULT_FILES = [
     'stiffness',
@@ -101,11 +100,11 @@ def atoms_to_uid_name(atoms: Atoms) -> str:
 
 def create_uids(root: Path = ROOT,
                 patterns: list[str] = PATTERNS) -> None:
-    names = defaultdict(int)
+    names: defaultdict[str, int] = defaultdict(int)
     new = []
     for dir in all_dirs(root, patterns):
         print(dir)
-        atoms = read(dir / 'structure.json')
+        atoms = read_atoms(dir / 'structure.json')
         energy = atoms.get_potential_energy()
         uid = None
         olduid = None
@@ -150,7 +149,7 @@ def copy_materials(root: Path,
     dirs = all_dirs(root, patterns)
     print(len(dirs), 'folders')
 
-    names = defaultdict(int)
+    names: defaultdict[str, int] = defaultdict(int)
     work = []
     with progress.Progress() as pb:
         pid = pb.add_task('Finding UIDs:', total=len(dirs))
@@ -158,7 +157,7 @@ def copy_materials(root: Path,
             try:
                 uid = json.loads((dir / 'uid.json').read_text())['uid']
             except FileNotFoundError:
-                name = atoms_to_uid_name(read(dir / 'structure.json'))
+                name = atoms_to_uid_name(read_atoms(dir / 'structure.json'))
                 names[name] += 1
                 number = names[name]
                 uid = f'{name}-{number}t'
@@ -206,8 +205,7 @@ def copy_material(fro: Path,
     structure_file = fro / 'structure.json'
     if not structure_file.is_file():
         return
-    atoms = read(structure_file)
-    assert isinstance(atoms, Atoms)
+    atoms = read_atoms(structure_file)
 
     def rrf(name: str) -> dict:
         return read_result_file(fro / f'results-asr.{name}.json')
