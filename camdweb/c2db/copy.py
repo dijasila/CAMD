@@ -53,8 +53,10 @@ RESULT_FILES = [
     'raman',
     'bse',
     'piezoelectrictensor',
+    'plasmafrequency',
     'gs',
     'gs@calculate',
+    'fermisurface',
     'shift',
     'structureinfo',
     'collect_spiral',
@@ -314,6 +316,14 @@ def copy_material(fro: Path,
                 data[f'alpha{a}'] = (
                     data[f'alpha{a}_el'] +  # type: ignore[operator]
                     data[f'alpha{a}_lat'])
+
+    try:
+        pol = rrf('plasmafrequency')
+    except FileNotFoundError:
+        pass
+    else:
+        for a in 'xy':
+            data[f'plasmafrequency_{a}'] = pol[f'plasmafrequency_{a}']
 
     data['energy'] = atoms.get_potential_energy()
 
