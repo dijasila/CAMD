@@ -6,7 +6,8 @@ from typing import Iterable, Sequence
 from ase.formula import Formula
 
 
-def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
+def table(header: list[str] | None, rows: Sequence[Iterable],
+          responsive: bool = True) -> str:
     """Create HTML table.
 
     Example:
@@ -19,46 +20,53 @@ def table(header: list[str] | None, rows: Sequence[Iterable]) -> str:
     === =====
 
     >>> print(table(['A', 'B'], [[1.2, 'hello'], [2.0, 'hi!']]))
-    <table class="table table-striped">
-     <thead>
-      <tr>
-       <th>A</th>
-       <th>B</th>
-      </tr>
-     </thead>
-     <tbody>
-      <tr>
-       <td>1.2</td>
-       <td>hello</td>
-      </tr>
-      <tr>
-       <td>2.0</td>
-       <td>hi!</td>
-      </tr>
-     </tbody>
-    </table>
+    <div class="table-responsive">
+     <table class="table table-striped">
+      <thead>
+       <tr>
+        <th>A</th>
+        <th>B</th>
+       </tr>
+      </thead>
+      <tbody>
+       <tr>
+        <td>1.2</td>
+        <td>hello</td>
+       </tr>
+       <tr>
+        <td>2.0</td>
+        <td>hi!</td>
+       </tr>
+      </tbody>
+     </table>
+    </div>
     """
     if header is None:
         head = ''
     else:
-        head = (' <thead>\n  <tr>\n   <th>' +
-                '</th>\n   <th>'.join(header) +
-                '</th>\n  </tr>\n </thead>\n')
-    return (
-        f'<table class="table table-striped">\n{head} <tbody>\n  <tr>\n   ' +
-        '\n  </tr>\n  <tr>\n   '.join(
-            '\n   '.join(f'<td>{x}</td>' for x in row)
+        head = ('  <thead>\n   <tr>\n    <th>' +
+                '</th>\n    <th>'.join(header) +
+                '</th>\n   </tr>\n  </thead>\n')
+
+    html_table = (
+        f' <table class="table table-striped">\n{head}' +
+        '  <tbody>\n   <tr>\n    ' +
+        '\n   </tr>\n   <tr>\n    '.join(
+            '\n    '.join(f'<td>{x}</td>' for x in row)
             for row in rows) +
-        '\n  </tr>\n </tbody>\n</table>')
+        '\n   </tr>\n  </tbody>\n </table>')
+
+    return f'<div class="table-responsive">\n{html_table}\n</div>' \
+        if responsive else html_table
 
 
 def image(path: Path | str, alt=None) -> str:
     """Create <img> tag.
 
     >>> image('abc/def.png', alt='Short description')
-    '<img alt="Short description" src="/png/abc/def.png" />'
+    '<img alt="Short description" src="/png/abc/def.png" class="img-fluid">'
     """
-    return f'<img alt="{alt or path}" src="/png/{path}" />'
+    return f'<img alt="{alt or path}" src="/png/{path}" class="img-fluid">'
 
 
 class FormPart(abc.ABC):
@@ -78,10 +86,11 @@ class FormPart(abc.ABC):
 
 
 class Select(FormPart):
-    def __init__(self, text, name, options, names=None):
+    def __init__(self, text, name, options, names=None, default=None):
         super().__init__(text, name)
         self.options = options
         self.names = names
+        self.default = default or options[0]
 
     def render(self) -> str:
         """Render select block.
@@ -92,17 +101,16 @@ class Select(FormPart):
         ['xyz=C']
         """
         parts = [
-            '<div class="row">',
-            '<div class="col-4">',
-            f'<label class="form-label">{self.text}</label>',
-            '</div>',
-            '<div class="col">',
-            f'<select name="{self.name}" class="form-select">']
+            '<div class="form-group row pb-1">',
+            f'<label for="form_{self.name}" class="col-4 col-form-label-sm">'
+            f'  {self.text}</label>'
+            '<div class="col d-flex align-items-center">',
+            f'<select class="form-select" name="{self.name}" id="{self.name}">'
+        ]
         names = self.names or self.options
-        selected = ' selected'
         for val, txt in zip(self.options, names):
+            selected = ' selected' if val == self.default else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-            selected = ''
         parts.append('</select></div></div>')
         return '\n'.join(parts)
 
@@ -119,10 +127,11 @@ class Input(FormPart):
         >>> html = s.render()
         """
         parts = [
-            '<div class="row">',
-            '<div class="col-4">',
-            f'<label class="form-label">{self.text}</label>',
-            '</div><div class="col">',
+            '<div class="form-group row pb-1">',
+            '<label class="col-4 col-form-label-sm">',
+            f'  {self.text}',
+            '</label>',
+            '<div class="col d-flex align-items-center">',
             '<input',
             '  class="form-control"',
             '  type="text"',
@@ -161,9 +170,14 @@ class StoichiometryInput(Input):
 
 
 class Range(FormPart):
-    def __init__(self, text: str, name: str, nonnegative=False):
+    def __init__(self,
+                 text: str,
+                 name: str,
+                 nonnegative: bool = False,
+                 default: tuple[str, str] = ('', '')):
         super().__init__(text, name)
         self.nonnegative = nonnegative
+        self.default = default
 
     def render(self) -> str:
         """Render range block.
@@ -171,22 +185,27 @@ class Range(FormPart):
         >>> s = Range('Band gap', 'gap')
         >>> html = s.render()
         """
+        v1, v2 = self.default
         parts = [
-            '<div class="row">',
-            '<div class="col-4">',
-            f'<label class="form-label">{self.text}</label>',
-            '</div><div class="col">',
-            '<input',
-            '  class="form-control"',
+            '<div class="form-group row pb-1">',
+            f'<label for="form_{self.name}"',
+            '  class="col-4 col-form-label-sm">',
+            f'  {self.text}',
+            '</label>',
+            '<div class="col d-flex align-items-center">',
+            '<input class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
-            '  value="" />',
-            '</div>-<div class="col">',
-            '<input',
-            '  class="form-control"',
+            f'  id="form_{self.name}"',
+            f'  value="{v1}" />\n</div>',
+            f'<label for="to_{self.name}" class="col-1 align-items-center ',
+            'd-flex justify-content-center">-</label>',
+            '<div class="col d-flex align-items-center">',
+            '<input class="form-control"',
             '  type="text"',
+            f'  id="to_{self.name}" ',
             f'  name="to_{self.name}"',
-            '  value="" /></div></div>']
+            f'  value="{v2}" /></div></div>']
         return '\n'.join(parts)
 
     def get_filter_strings(self, query: dict) -> list[str]:
@@ -210,22 +229,28 @@ class RangeX(Range):
 
     def render(self) -> str:
         parts = [
-            '<div class="row">',
-            '<div class="col-4">',
-            f'<label class="form-label">{self.text}</label>',
-            '</div><div class="col">',
+            '<div class="form-group row pb-1">',
+            f'<label for="form_{self.name}"',
+            '  class="col-4 col-form-label-sm">',
+            f'  {self.text}',
+            '</label>',
+            '<div class="col d-flex align-items-center">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
             '  value="" />',
-            '</div>-<div class="col">',
+            '</div>',
+            f'<label for="to_{self.name}" class="col-1 align-items-center ',
+            'd-flex justify-content-center">-</label>',
+            '<div class="col d-flex align-items-center">',
             '<input',
             '  class="form-control"',
             '  type="text"',
             f'  name="to_{self.name}"',
             '  value="" />',
-            '</div><div class="col">',
+            '</div>'
+            '<div class="col d-flex align-items-center">',
             f'<select name="{self.name}" class="form-select">']
         names = self.names or self.options
         for val, txt in zip(self.options, names):
@@ -256,8 +281,7 @@ class RangeS(Range):
         names = self.names or self.options
 
         parts = [
-            '<div class="row">',
-            '<div class="col-4">',
+            '<div class="form-group row pb-1">',
             f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
@@ -270,7 +294,7 @@ class RangeS(Range):
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div></div>')
+        parts.append('</select></div>')
 
         return '\n'.join(parts)
 

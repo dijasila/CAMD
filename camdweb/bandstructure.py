@@ -169,8 +169,9 @@ def prettify_labels(orig_labels, label_xcoords):
         if kpt == 'G':
             return 'Γ'
 
-        # Convert Abc123 ----> Abc_{123}:
-        return re.sub('[0-9]+', lambda match: rf'_{{{match.group()}}}', kpt)
+        # Convert Abc123 ----> Abc<sub>123</sub>:
+        return re.sub('[0-9]+', lambda match:
+                      rf'<sub>{match.group()}</sub>', kpt)
 
     labels = [pretty(name) for name in orig_labels]
 
@@ -187,5 +188,4 @@ def prettify_labels(orig_labels, label_xcoords):
         else:
             i += 1
 
-    fancylabels = [rf'$\mathrm{{{label}}}$' for label in labels]
-    return fancylabels, label_xcoords
+    return labels, label_xcoords

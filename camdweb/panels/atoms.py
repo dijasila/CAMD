@@ -21,7 +21,6 @@ import json
 import sys
 from functools import cache
 from math import nan
-from typing import Generator
 
 import numpy as np
 import plotly
@@ -29,17 +28,15 @@ import plotly.graph_objects as go
 from ase import Atoms
 from ase.data import covalent_radii
 from ase.data.colors import jmol_colors
-from ase.io import read
 from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from camdweb.html import table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
-from camdweb.utils import html_format_formula
+from camdweb.panels.panel import Panel, PanelData
+from camdweb.utils import html_format_formula, read_atoms
 
 HTML = """
-<h4>{formula}</h4>
 <div class="row">
   <div class="col-6">
     {column1}
@@ -76,16 +73,18 @@ COLUMN2 = """
     &emsp;
 
     <label>Download:</label>
-    <a download="atoms.xyz"
+    <a download="{uid}.xyz"
        class="btn btn-info btn-sm" href={uid}/download/xyz>XYZ</a>
-    <a download="atoms.cif"
+    <a download="{uid}.cif"
        class="btn btn-info btn-sm" href={uid}/download/cif>CIF</a>
-    <a download="atoms.json"
+    <a download="{uid}.json"
        class="btn btn-info btn-sm" href={uid}/download/json>JSON</a>
 
     <div id='atoms' class='atoms'></div>
     {axes}
+"""
 
+SCRIPT = """
 <script type='text/javascript'>
 var graphs = {atoms_json};
 Plotly.newPlot('atoms', graphs, {{}});
@@ -99,28 +98,33 @@ class AtomsPanel(Panel):
     title = 'Atoms'
 
     def __init__(self) -> None:
+        super().__init__()
         self.callbacks = {'atoms': self.plot}
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         col1 = self.create_column_one(material)
-        col2 = self.create_column_two(material)
-        yield HTML.format(column1=col1,
-                          column2=col2,
-                          formula=html_format_formula(material.formula))
+        col2, script = self.create_column_two(material)
+
+        return PanelData(
+            HTML.format(column1=col1,
+                        column2=col2),
+            title=f'Atoms: {html_format_formula(material.formula)}',
+            script=script)
 
     def create_column_one(self,
                           material: Material) -> str:
         return ''
 
     def create_column_two(self,
-                          material: Material) -> str:
+                          material: Material) -> tuple[str, str]:
         defrep = default_repeat(material)
-        return COLUMN2.format(
-            axes=self.axes(material),
-            options=repeat_options(defrep, 4),
-            uid=material.uid,
-            atoms_json=self.plot(material, defrep))
+        return (
+            COLUMN2.format(
+                axes=self.axes(material),
+                options=repeat_options(defrep, 4),
+                uid=material.uid),
+            SCRIPT.format(atoms_json=self.plot(material, defrep)))
 
     def axes(self, material: Material) -> str:
         atoms = material.atoms
@@ -235,19 +239,22 @@ def plot_atoms(atoms: Atoms,
                              hovertemplate='',
                              hoverinfo='skip',
                              name='',
-                             line=dict(color='#fa9fb5', width=10),
+                             line=dict(color='red', width=3),
                              showlegend=False))
 
     fig = go.Figure(data=data)
     fig.update_layout(scene=dict(xaxis_visible=False,
                                  yaxis_visible=False,
                                  zaxis_visible=False),
+                      autosize=True,  # XXX maybe this does nothing
                       margin=dict(l=0, r=0, b=0, t=0),
-                      template='simple_white',)
+                      template='simple_white')
 
     fig.update_xaxes(showgrid=False)
     fig.update_scenes(aspectmode='data',
-                      camera=dict(projection=dict(type='orthographic')))
+                      camera=dict(projection=dict(type='orthographic'),
+                                  up=dict(x=0, y=1, z=0),
+                                  eye=dict(x=0, y=0, z=10)))
     return fig
 
 
@@ -441,6 +448,5 @@ def color(Z: int) -> str:
 
 
 if __name__ == '__main__':
-    atoms = read(sys.argv[1])
-    assert isinstance(atoms, Atoms)
+    atoms = read_atoms(sys.argv[1])
     plot_atoms(atoms).show()

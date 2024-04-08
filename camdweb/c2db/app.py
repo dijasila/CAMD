@@ -14,17 +14,19 @@ from __future__ import annotations
 
 import argparse
 import json
-# import multiprocessing as mp
 from pathlib import Path
 
 import rich.progress as progress
+
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
-from camdweb.html import Range, RangeX, Select, table
+from camdweb.html import Range, RangeX, Select, table, image
 from camdweb.materials import Material, Materials
+from camdweb.optimade.app import add_optimade
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
+from camdweb.panels.emass import EmassPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
@@ -35,14 +37,12 @@ OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
 
 
 class C2DBAtomsPanel(AtomsPanel):
-    title = 'Summary'
-
     def create_column_one(self,
                           material: Material) -> str:
         html1 = table(['Structure info', ''],
                       self.table_rows(material,
-                                      ['layergroup', 'lgnum', 'lable',
-                                       'cod_id', 'icsd_id', 'doi', 'olduid']))
+                                      ['layergroup', 'lgnum', 'label',
+                                       'cod_id', 'icsd_id', 'doi']))
         html2 = table(['Stability', ''],
                       self.table_rows(material,
                                       ['ehull', 'hform', 'dyn_stab']))
@@ -59,6 +59,34 @@ def olduid(uid, link=False):  # pragma: no cover
     return uid
 
 
+class C2DBApp(CAMDApp):
+    """C2DB app with /row/<olduid> endpoint."""
+
+    title = 'C2DB'
+    logo = image('c2db-logo.png', alt='C2DB-logo')
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('C2DB', 'https://cmr.fysik.dtu.dk/c2db/c2db.html')]
+
+    def __init__(self,
+                 materials: Materials,
+                 initial_columns: list[str],
+                 root: Path | None = None,
+                 olduid2uid: dict[str, str] | None = None):
+        super().__init__(materials,
+                         initial_columns=initial_columns,
+                         initial_filter_string='dyn_stab=True, ehull<0.2',
+                         root=root)
+        self.olduid2uid = olduid2uid or {}
+
+    def route(self):
+        super().route()
+        self.app.route('/row/<olduid>')(self.material_page_old_uid)
+
+    def material_page_old_uid(self, olduid: str) -> str:
+        return self.material_page(self.olduid2uid[olduid])
+
+
 def main(argv: list[str] | None = None) -> CAMDApp:
     """Create C2DB app."""
     parser = argparse.ArgumentParser()
@@ -68,17 +96,18 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         '"AB2/1MoS2" (same as "AB2/1MoS2/*/") or "AB2/1MoS2/1".')
     args = parser.parse_args(argv)
 
-    mlist: list[Material] = []
     folders = []
     for path in args.path:
         p = Path(path)
         if p.name.startswith('A'):
             folders += list(p.glob('*/*/'))
-        elif p.name.isdigit():
+        elif p.name.rstrip('t').isdigit():  # 't' for temporary (AB2/1MoS2/1t)
             folders.append(p)
         else:
             folders += list(p.glob('*/'))
 
+    olduid2uid = {}
+    mlist: list[Material] = []
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
@@ -87,12 +116,9 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             data = json.loads((f / 'data.json').read_text())
             material.columns.update(data)
             mlist.append(material)
+            if hasattr(material, 'olduid'):
+                olduid2uid[material.olduid] = uid
             pb.advance(pid)
-
-    pool = None  # mp.Pool(maxtasksperchild=100)
-
-    def asr_panel(name):
-        return ASRPanel(name, pool)
 
     panels: list[Panel] = [
         C2DBAtomsPanel(),
@@ -100,26 +126,26 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             sources={'OQMD': ('Bulk crystals from OQMD123',
                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
                      'C2DB': ('Monolayers from C2DB',
-                              '<a href={uid}>{formula:html}</a>')}),
-        asr_panel('stiffness'),
-        asr_panel('phonons'),
-        asr_panel('deformationpotentials'),
+                              '{formula:html}, <a href={uid}>{uid}</a>')}),
+        ASRPanel('stiffness'),
+        ASRPanel('phonons'),
+        ASRPanel('deformationpotentials'),
         BSDOSBZPanel(),
-        asr_panel('effective_masses'),
-        asr_panel('hse'),
-        asr_panel('gw'),
-        asr_panel('borncharges'),
-        asr_panel('shg'),
-        asr_panel('polarizability'),
-        asr_panel('infraredpolarizability'),
-        asr_panel('raman'),
-        asr_panel('bse'),
+        EmassPanel(),
+        ASRPanel('hse'),
+        ASRPanel('gw'),
+        ASRPanel('borncharges'),
+        ASRPanel('shg'),
+        ASRPanel('polarizability'),
+        ASRPanel('infraredpolarizability'),
+        ASRPanel('raman'),
+        ASRPanel('bse'),
         BaderPanel(),
-        asr_panel('piezoelectrictensor'),
+        ASRPanel('piezoelectrictensor'),
         ShiftCurrentPanel(),
-        asr_panel('collect_spiral'),
-        asr_panel('dmi'),
-        asr_panel('spinorbit')]
+        ASRPanel('collect_spiral'),
+        ASRPanel('dmi'),
+        ASRPanel('spinorbit')]
 
     materials = Materials(mlist, panels)
 
@@ -135,13 +161,15 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         efermi='Fermi level [eV]',
         dyn_stab='Dynamically stable',
         cod_id='COD id of parent bulk structure',
-        iscd_id='ICSD id of parent bulk structure',
-        doi='Reported DOI',
+        icsd_id='ICSD id of parent bulk structure',
+        doi='Mono/few-layer report(s)',
+        layergroup='Layer group',
         lgnum='Layer group number',
         label='Structure origin',
         gap='Band gap [eV]',
         gap_hse='Band gap (HSE06) [eV]',
-        gap_gw='Band gap (G₀W₀) [eV]')
+        gap_gw='Band gap (G₀W₀) [eV]',
+        folder='Original file-system folder')
 
     materials.html_formatters.update(
         cod_id=cod,
@@ -153,15 +181,19 @@ def main(argv: list[str] | None = None) -> CAMDApp:
                        'layergroup']
 
     root = folders[0].parent.parent.parent
-    app = CAMDApp(materials, initial_columns, root)
+    app = C2DBApp(materials,
+                  initial_columns,
+                  root,
+                  olduid2uid)
     app.form_parts += [
-        Select('Dynamically stable', 'dyn_stab',
-               ['', 'True', 'False'], ['-', 'Yes', 'No']),
-        Range('Energy above convex hull [eV/atom]', 'ehull', nonnegative=True),
-        Select('Magnetic', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
-        RangeX('Band gap range [eV]', 'bg',
+        Select('Magnetic:', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
+        Select('Dynamically stable:', 'dyn_stab',
+               ['', 'True', 'False'], ['-', 'Yes', 'No'], default='True'),
+        Range('Energy above convex hull [eV/atom]:', 'ehull',
+              nonnegative=True, default=('0.0', '0.2')),
+        RangeX('Band gap range [eV]:', 'bg',
                ['gap', 'gap_hse', 'gap_gw'], ['PBE', 'HSE06', 'GW'])]
-    app.title = 'C2DB'
+
     return app
 
 
@@ -172,7 +204,9 @@ def test():  # pragma: no cover
 
 def create_app():  # pragma: no cover
     """Create the WSGI app."""
-    return main([str(path) for path in Path().glob('A*/')]).app
+    app = main([str(path) for path in Path().glob('A*/')])
+    add_optimade(app)
+    return app.app
 
 
 def check_all(pattern: str):  # pragma: no cover

@@ -3,9 +3,13 @@ from __future__ import annotations
 import multiprocessing as mp
 import re
 from contextlib import contextmanager
+from pathlib import Path
 
 import numpy as np
+from ase import Atoms
 from ase.data import chemical_symbols
+from ase.io import read
+
 from camdweb import ColVal
 
 
@@ -49,6 +53,7 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
     """
     values, counts = np.unique(atomic_numbers, return_counts=True)
     nunits = np.gcd.reduce(counts)
+    counts = counts.tolist()
     symbols = [chemical_symbols[v] for v in values]
     count = {symbol: c
              for c, symbol in sorted((c, symbol)
@@ -61,6 +66,12 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
             formula_dict_to_string(count),
             formula_dict_to_string(reduced),
             formula_dict_to_string(stoichiometry))
+
+
+def read_atoms(path: Path | str) -> Atoms:
+    atoms = read(path)
+    assert isinstance(atoms, Atoms)
+    return atoms
 
 
 COD = 'https://www.crystallography.net/cod/'

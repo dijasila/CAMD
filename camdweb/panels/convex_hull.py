@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import sys
 from collections import defaultdict
-from typing import Generator, Iterable
+from typing import Iterable
 
 import plotly
 import plotly.graph_objs as go
@@ -27,7 +27,8 @@ from ase.phasediagram import PhaseDiagram
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
+from camdweb.utils import html_format_formula
 
 HTML = """
 <div class="row">
@@ -54,15 +55,14 @@ colors = ['#1F77B4', '#FF7F0E', '#2CA02C', '#D62728', '#9467BD',
 
 
 class ConvexHullPanel(Panel):
-    title = 'Convex hull'
-
     def __init__(self, sources: dict[str, tuple[str, str]] | None = None):
+        super().__init__()
         self.sources = sources
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         tbl = table(
-            None,
+            [f'{html_format_formula(material.formula)} ({material.uid})', ''],
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
              ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
         root = material.folder.parents[2] / 'convex-hulls'
@@ -75,9 +75,12 @@ class ConvexHullPanel(Panel):
                                                verbose=False)
         html = HTML.format(table=tbl, tables=tables, id='chull')
         if chull:
-            yield html + SCRIPT.format(chull_json=chull, id='chull')
+            script = SCRIPT.format(chull_json=chull, id='chull')
         else:
-            yield html  # pragma: no cover
+            script = ''
+        return PanelData(html,
+                         title='Convex hull',
+                         script=script)
 
 
 def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
@@ -110,7 +113,10 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
-        _, frmt = sources.get(source, ('', '{formula}, {uid}'))
+        if uid == higlight_uid or source not in sources:
+            frmt = '{formula:html}, {uid}'
+        else:
+            _, frmt = sources[source]
         tables[source].append((hform, frmt.format(uid=uid, formula=f)))
         source_names.append(source)
         uids.append(uid)

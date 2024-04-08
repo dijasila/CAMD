@@ -29,13 +29,14 @@ from pathlib import Path
 import rich.progress as progress
 from ase import Atoms
 from ase.formula import Formula
-from ase.io import read
+from camdweb.c2db.emass import get_emass_data
+import numpy as np
 
 from camdweb import ColVal
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.c2db.convex_hull import update_chull_data
 from camdweb.c2db.oqmd123 import read_oqmd123_data
-from camdweb.utils import process_pool
+from camdweb.utils import process_pool, read_atoms
 
 RESULT_FILES = [
     'stiffness',
@@ -43,7 +44,6 @@ RESULT_FILES = [
     'deformationpotentials',
     'bandstructure',
     'pdos',
-    'effective_masses',
     'hse',
     'gw',
     'borncharges',
@@ -75,58 +75,104 @@ PATTERNS = [
     'tree_Wang23/A*/*/*/']
 
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.int64):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
+
+
+def all_dirs(root: Path,
+             patterns: list[str]) -> list[Path]:
+    return [dir
+            for pattern in patterns
+            for dir in root.glob(pattern)
+            if dir.name[0] != '.']
+
+
+def atoms_to_uid_name(atoms: Atoms) -> str:
+    f = atoms.symbols.formula
+    stoi, reduced, nunits = f.stoichiometry()
+    return f'{nunits}{reduced}'
+
+
+def create_uids(root: Path = ROOT,
+                patterns: list[str] = PATTERNS) -> None:
+    names: defaultdict[str, int] = defaultdict(int)
+    new = []
+    for dir in all_dirs(root, patterns):
+        print(dir)
+        try:
+            atoms = read_atoms(dir / 'structure.json')
+        except FileNotFoundError:
+            print('ERROR:', dir)
+            continue
+        energy = atoms.get_potential_energy()
+        uid = None
+        olduid = None
+        try:
+            uid_data = json.loads((dir / 'uid.json').read_text())
+        except FileNotFoundError:
+            pass
+        else:
+            uid = uid_data['uid']
+            olduid = uid_data.get('olduid')
+
+        if olduid is None:
+            fp = dir / 'results-asr.database.material_fingerprint.json'
+            try:
+                olduid = read_result_file(fp)['uid']
+            except FileNotFoundError:
+                pass
+
+        name = atoms_to_uid_name(atoms)
+        if uid:
+            number = int(uid.split('-')[1])
+            names[name] = max(names[name], number)
+        else:
+            new.append((name, energy, dir, olduid))
+
+    print(len(new))
+    for name, _, dir, olduid in sorted(new):
+        number = names[name] + 1
+        uid = f'{name}-{number}'
+        names[name] = number
+        uid_data = {'uid': uid}
+        if olduid:
+            uid_data['olduid'] = olduid
+        (dir / 'uid.json').write_text(json.dumps(uid_data, indent=2))
+
+
 def copy_materials(root: Path,
                    patterns: list[str],
                    update_chull: bool = True,
                    processes: int = 1) -> None:
-    try:
-        uids = json.loads(Path('uids.json').read_text())
-    except FileNotFoundError:
-        uids = {}
-    print(len(uids), 'UIDs')
-
-    names: defaultdict[str, int] = defaultdict(int)
-    for uid in uids.values():
-        name = uid.split('-')[0]
-        names[name] += 1
-
-    dirs = [dir
-            for pattern in patterns
-            for dir in root.glob(pattern)
-            if dir.name[0] != '.']
+    dirs = all_dirs(root, patterns)
     print(len(dirs), 'folders')
 
+    names: defaultdict[str, int] = defaultdict(int)
     work = []
-    parent_folders = set()
     with progress.Progress() as pb:
         pid = pb.add_task('Finding UIDs:', total=len(dirs))
         for dir in dirs:
-            fp = dir / 'results-asr.database.material_fingerprint.json'
             try:
-                olduid = read_result_file(fp)['uid']
-            except FileNotFoundError:  # pragma: no cover
-                print('No fingerprint:', fp)
-                continue
-            f = Formula(olduid.split('-')[0])
-            stoi, reduced, nunits = f.stoichiometry()
-            name = f'{nunits}{reduced}'
-            uid = uids.get(olduid)
-            if uid is not None:
-                name1, x = uid.split('-')
-                number = int(x)
-                assert name1 == name
-            else:
+                uid = json.loads((dir / 'uid.json').read_text())['uid']
+            except FileNotFoundError:
+                name = atoms_to_uid_name(read_atoms(dir / 'structure.json'))
                 names[name] += 1
                 number = names[name]
-                uid = f'{nunits}{reduced}-{number}'
-                uids[olduid] = uid
-            folder = Path(f'{stoi}/{name}/{number}')
-            parent_folders.add(folder.parent)
-            work.append((dir, folder, olduid, uid))
+                uid = f'{name}-{number}t'
+            name, tag = uid.split('-')
+            stoichiometry, _, nunits = Formula(name).stoichiometry()
+            folder = Path(f'{stoichiometry}/{name}/{tag}')
+            work.append((dir, folder, uid))
             pb.advance(pid)
 
-    Path('uids.json').write_text(json.dumps(uids, indent=1))
-
+    parent_folders = set()
+    for _, folder, _ in work:
+        parent_folders.add(folder.parent)
     for folder in parent_folders:
         folder.mkdir(exist_ok=True, parents=True)
 
@@ -150,6 +196,10 @@ def copy_materials(root: Path,
                 '   python -m camdweb.c2db.oqmd123 <path-to-oqmd123.db>\n')
         update_chull_data(atomic_energies, refs)
 
+    logo = Path('c2db-logo.png')
+    if not logo.is_file():
+        shutil.copyfile(Path(__file__).parent / 'logo.png', logo)
+
 
 def worker(args):  # pragma: no cover
     """Used by Pool."""
@@ -158,30 +208,35 @@ def worker(args):  # pragma: no cover
 
 def copy_material(fro: Path,
                   to: Path,
-                  olduid: str,
                   uid: str) -> None:  # pragma: no cover
     structure_file = fro / 'structure.json'
     if not structure_file.is_file():
         return
-    atoms = read(structure_file)
-    assert isinstance(atoms, Atoms)
+    atoms = read_atoms(structure_file)
 
     def rrf(name: str) -> dict:
         return read_result_file(fro / f'results-asr.{name}.json')
 
-    # None values will be removed later:
-    data: dict[str, ColVal | None] = {
-        'uid': uid,
-        'olduid': olduid,
-        'folder': str(fro)}
+    # None values will be removed later
+    data: dict[str, ColVal | None] = {'folder': str(fro)}
+
     try:
         data['magstate'] = rrf('magstate')['magstate']
     except FileNotFoundError:
         pass
+
     try:
         data['spin_axis'] = rrf('magnetic_anisotropy')['spin_axis']
     except FileNotFoundError:
         pass
+
+    # Read uid and perhaps olduid:
+    try:
+        data.update(json.loads((fro / 'uid.json').read_text()))
+    except FileNotFoundError:
+        data['uid'] = uid
+    else:
+        assert data['uid'] == uid
 
     structure = rrf('structureinfo')
     data['has_inversion_symmetry'] = structure['has_inversion_symmetry']
@@ -283,6 +338,15 @@ def copy_material(fro: Path,
         (to / 'bader.json').write_text(
             json.dumps({'charges': bc.tolist()}))
 
+    try:
+        emass_data = rrf('effective_masses')
+    except FileNotFoundError:
+        pass
+    else:
+        emass_webpanel_data = get_emass_data(emass_data, atoms)
+        with open(to / 'emass.json', 'w') as file:
+            json.dump(emass_webpanel_data, file, indent=4, cls=NumpyEncoder)
+
     # Copy result json-files:
     for name in RESULT_FILES:
         result = fro / f'results-asr.{name}.json'
@@ -305,7 +369,8 @@ def copy_material(fro: Path,
 
 def main(argv: list[str] | None = None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('root', help='Root of ASR-tree to copy from.')
+    parser.add_argument('root', help='Root of ASR-tree to copy from. '
+                        'Example: "~cmr/C2DB-ASR/".')
     patterns = ', '.join(f'"{p}"' for p in PATTERNS)
     parser.add_argument(
         'pattern', nargs='+',

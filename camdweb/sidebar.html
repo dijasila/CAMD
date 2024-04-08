@@ -1,0 +1,30 @@
+% if logo:
+    {{ !logo }}
+% end
+<ul class="navbar-nav">
+  <!-- THIS Home Page Button -->
+  <li class="nav-item dropdown">
+    <a href="/" class="nav-link pb-2">
+      <span class="fs-5 d-none d-sm-inline">Home</span>
+    </a>
+  </li>
+  <!-- Sidebar Other Pages Button -->
+  <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="/" id="HomePageNavigation"
+       role="button" data-bs-toggle="dropdown" aria-expanded="false">
+      <span class="fs-5 d-none d-sm-inline">Other Pages</span>
+    </a>
+    <!-- Dropdown Menu Links Target -->
+    <ul class="dropdown-menu dropdown-menu-dark"
+       aria-labelledby="HomePageNavigation">
+      % for name, url in sidebar_links:
+      <li>
+        <a class="dropdown-item pt-1 pb-2"
+           aria-current="page" href="{{ !url }}">
+          <span class="d-none d-sm-inline">{{ name }}</span>
+        </a>
+      </li>
+      % end
+    </ul>
+  </li>
+</ul>

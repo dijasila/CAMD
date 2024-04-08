@@ -2,13 +2,11 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ase import Atoms
-from ase.io import read
-
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
 from camdweb.html import table
+from camdweb.utils import read_atoms
 
 COLUMN_DESCRIPTIONS = dict(
     energy='Energy [eV]',
@@ -56,8 +54,7 @@ def main(argv: list[str] | None = None,
     rows: list[Material] = []
     for i, filename in enumerate(args.filename):
         path = Path(filename)
-        atoms = read(path)
-        assert isinstance(atoms, Atoms)
+        atoms = read_atoms(path)
         rows.append(Material(str(i), atoms))
 
     panels = [MyAtomsPanel()]
@@ -70,7 +67,7 @@ def main(argv: list[str] | None = None,
 
     root = Path.cwd()
 
-    app = CAMDApp(materials, initial_columns, root)
+    app = CAMDApp(materials, initial_columns, root=root)
     if run:  # pragma: no cover
         app.app.run(host='0.0.0.0', port=8080, debug=True)
     return app
