@@ -215,6 +215,8 @@ def copy_material(fro: Path,
         return
     atoms = read_atoms(structure_file)
 
+    to.mkdir(exist_ok=True)
+
     def rrf(name: str) -> dict:
         return read_result_file(fro / f'results-asr.{name}.json')
 
@@ -303,9 +305,11 @@ def copy_material(fro: Path,
     else:
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
-        dct = {'frequences': pol['frequencies']}
+        dct = {'frequences': pol['frequencies'].tolist()}
         for v in 'xyz':
-            dct[f'alpha{v}_w'] = pol[f'alpha{v}_w'].tolist()
+            alpha = pol[f'alpha{v}_w']
+            dct[f'alpha{v}_re_w'] = alpha.real.tolist()
+            dct[f'alpha{v}_im_w'] = alpha.imag.tolist()
         (to / 'polarizability.json').write_text(json.dumps(dct))
 
     try:
@@ -338,8 +342,6 @@ def copy_material(fro: Path,
         for key in ['icsd_id', 'cod_id', 'doi']:
             if key in info:
                 data[key] = info[key]
-
-    to.mkdir(exist_ok=True)
 
     atoms.write(to / 'structure.xyz')
 
