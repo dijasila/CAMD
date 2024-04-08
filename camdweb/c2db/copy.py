@@ -48,7 +48,6 @@ RESULT_FILES = [
     'gw',
     'borncharges',
     'shg',
-    'polarizability',
     'infraredpolarizability',
     'raman',
     'bse',
@@ -301,9 +300,13 @@ def copy_material(fro: Path,
         pol = rrf('polarizability')
     except FileNotFoundError:
         pass
-    else:  # pragma: no cover
+    else:
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
+        dct = {'frequences': pol['frequencies']}
+        for v in 'xyz':
+            dct[f'alpha{v}_w'] = pol[f'alpha{v}_w'].tolist()
+        (to / 'polarizability.json').write_text(json.dumps(dct))
 
     try:
         irpol = rrf('infraredpolarizability')
@@ -318,12 +321,12 @@ def copy_material(fro: Path,
                     data[f'alpha{a}_lat'])
 
     try:
-        pol = rrf('plasmafrequency')
+        dct = rrf('plasmafrequency')
     except FileNotFoundError:
         pass
     else:
         for a in 'xy':
-            data[f'plasmafrequency_{a}'] = pol[f'plasmafrequency_{a}']
+            data[f'plasmafrequency_{a}'] = dct[f'plasmafrequency_{a}']
 
     data['energy'] = atoms.get_potential_energy()
 
