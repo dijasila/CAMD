@@ -89,22 +89,6 @@
     );
   }
 </script>
-<!-- custom implementation for popover -->
-<script>
-$(function(){
-    $("[data-toggle=popover]").popover({
-        html : true,
-        content: function() {
-          var content = $(this).attr("data-popover-content");
-          return $(content).children(".popover-body").html();
-        },
-        title: function() {
-          var title = $(this).attr("data-popover-content");
-          return $(title).children(".popover-heading").html();
-        }
-    });
-});
-</script>
 <!-- accordion color style.css override -->
 <style>
 .accordion-button.collapsed {
@@ -236,6 +220,14 @@ $(function(){
 
   </div>
 </div>
+
+<!-- custom implementation for popover -->
+<script>
+var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+  return new bootstrap.Popover(popoverTriggerEl)
+})
+</script>
 
 </body>
 {{ !footer }}
