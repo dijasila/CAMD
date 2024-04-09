@@ -47,7 +47,7 @@ class OpticalPolarizability(Panel):
     info = INFO
 
     def get_data(self, material):
-        file = material.folder / 'polarizability.json'
+        file = material.folder / 'opt-polarizability.json'
         if not file.is_file():
             raise SkipPanel
 
@@ -73,7 +73,7 @@ class OpticalPolarizability(Panel):
             title='Optical polarizability')
 
 
-def json_dct_to_alpha_vw(data: dict) -> tuple(np.ndarray, np.ndarray):
+def json_dct_to_alpha_vw(data: dict) -> tuple[np.ndarray, np.ndarray]:
     return (np.array(data['omega_w']),
             np.array([np.array(data[f'alpha{v}_re_w']) +
                       1j * np.array(data[f'alpha{v}_im_w'])
@@ -184,9 +184,10 @@ class IRPolarizability(Panel):
                 (material.folder / 'opt-polarizability.json').read_text())
             omega_el_w, alpha_el_vw = json_dct_to_alpha_vw(opt_data)
             data = json.loads(file.read_text())
+            omega_w, alpha_wvv = json_dct_to_alpha_wvv(data)
             create_ir_figures(
-                np.array(data['omega_w']),
-                np.array(data['alpha_wvv']),
+                omega_w,
+                alpha_wvv,
                 omega_el_w,
                 alpha_el_vw,
                 data['maxphononfreq'],
@@ -203,6 +204,12 @@ class IRPolarizability(Panel):
         return PanelData(
             HTML.format(x=x, y=y, z=z, table=tab),
             title='Infrared polarizability')
+
+
+def json_dct_to_alpha_wvv(data: dict) -> tuple[np.ndarray, np.ndarray]:
+    return (np.array(data['omega_w']),
+            np.array(data['alpha_re_wvv']) +
+            1j * np.array(data['alpha_im_wvv']))
 
 
 def create_ir_figures(omega_w: np.ndarray,

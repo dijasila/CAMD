@@ -305,7 +305,7 @@ def copy_material(fro: Path,
     else:
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
-        dct = {'frequencies': pol['frequencies'].tolist()}
+        dct = {'omega_w': pol['frequencies'].tolist()}
         for v in 'xyz':
             alpha = pol[f'alpha{v}_w']
             dct[f'alpha{v}_re_w'] = alpha.real.tolist()
@@ -323,9 +323,11 @@ def copy_material(fro: Path,
                 data[f'alpha{a}'] = (
                     data[f'alpha{a}_el'] +  # type: ignore[operator]
                     data[f'alpha{a}_lat'])
+        alpha_wvv = irpol['alpha_wvv']
         dct = {'maxphononfreq': maxphononfreq,
-               'omega_w': irpol['frequencies'].tolist(),
-               'alpha_wvv': irpol['alpha_wvv'].tolist()}
+               'omega_w': irpol['omega_w'].tolist(),
+               'alpha_re_wvv': alpha_wvv.real.tolist(),
+               'alpha_im_wvv': alpha_wvv.imag.tolist()}
         (to / 'ir-polarizability.json').write_text(json.dumps(dct))
 
     try:
