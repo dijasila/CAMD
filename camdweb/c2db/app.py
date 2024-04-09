@@ -17,9 +17,10 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
+
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
-from camdweb.c2db.polarizability import Polarizability
+from camdweb.c2db.polarizability import IRPolarizability, OpticalPolarizability
 from camdweb.html import Range, RangeX, Select, image, table
 from camdweb.materials import Material, Materials
 from camdweb.optimade.app import add_optimade
@@ -137,8 +138,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         ASRPanel('gw'),
         ASRPanel('borncharges'),
         ASRPanel('shg'),
-        Polarizability(),
-        ASRPanel('infraredpolarizability'),
+        OpticalPolarizability(),
+        IRPolarizability(),
         ASRPanel('raman'),
         ASRPanel('bse'),
         BaderPanel(),
@@ -172,11 +173,15 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         gap_gw='Band gap (G₀W₀) [eV]',
         folder='Original file-system folder')
     for v in 'xyz':
-        materials.column_descriptions['alpha{v}_el'] = (
-            f'Electronic polarizability at omega=0 ({v}-direction).')
+        materials.column_descriptions[f'alpha{v}_el'] = (
+            f'Static interband polarizability at ({v}) [Å]')
+        materials.column_descriptions[f'alpha{v}_lat'] = (
+            f'Static polarizability (phonons) ({v}) [Å]')
+        materials.column_descriptions[f'alpha{v}'] = (
+            f'Static polarizability (phonons + electrons) ({v}) [Å]')
     for v in 'xy':
         materials.column_descriptions['plasmafrequency_{v}'] = (
-            f'Plasmefrwquency ({v}-direction).')
+            f'Plasma frequency ({v}) [Å<sup>0.5</sup>]')
 
     materials.html_formatters.update(
         cod_id=cod,

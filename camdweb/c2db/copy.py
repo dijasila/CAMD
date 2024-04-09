@@ -48,8 +48,6 @@ RESULT_FILES = [
     'gw',
     'borncharges',
     'shg',
-    'infraredpolarizability',
-    'polarizability',
     'raman',
     'bse',
     'piezoelectrictensor',
@@ -270,6 +268,7 @@ def copy_material(fro: Path,
     else:
         data['minhessianeig'] = ph['minhessianeig']
         dyn_stab_phonons = ph['dynamic_stability_phonons']
+        maxphononfreq = ph['omega_kl'][0].max()
 
     try:
         ph = rrf('stiffness')
@@ -311,7 +310,7 @@ def copy_material(fro: Path,
             alpha = pol[f'alpha{v}_w']
             dct[f'alpha{v}_re_w'] = alpha.real.tolist()
             dct[f'alpha{v}_im_w'] = alpha.imag.tolist()
-        (to / 'polarizability.json').write_text(json.dumps(dct))
+        (to / 'opt-polarizability.json').write_text(json.dumps(dct))
 
     try:
         irpol = rrf('infraredpolarizability')
@@ -322,16 +321,20 @@ def copy_material(fro: Path,
             data[f'alpha{a}_lat'] = irpol.get(f'alpha{a}_lat')
             if f'alpha{a}_el' in data:
                 data[f'alpha{a}'] = (
-                    data[f'alpha{a}_el'] +  # type: ignore
+                    data[f'alpha{a}_el'] +  # type: ignore[operator]
                     data[f'alpha{a}_lat'])
+        dct = {'maxphononfreq': maxphononfreq,
+               'omega_w': irpol['frequencies'].tolist(),
+               'alpha_wvv': irpol['alpha_wvv'].tolist()}
+        (to / 'ir-polarizability.json').write_text(json.dumps(dct))
 
     try:
         dct = rrf('plasmafrequency')
     except FileNotFoundError:
         pass
     else:
-        for a in 'xy':
-            data[f'plasmafrequency_{a}'] = dct[f'plasmafrequency_{a}']
+        for v in 'xy':
+            data[f'plasmafrequency_{v}'] = dct[f'plasmafrequency_{v}']
 
     data['energy'] = atoms.get_potential_energy()
 

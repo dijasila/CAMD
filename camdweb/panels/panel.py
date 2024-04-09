@@ -59,6 +59,7 @@ class Panel(abc.ABC):
     def table_rows(self,
                    material: Material,
                    names: Iterable[str]) -> list[list[str]]:
+        print(self.column_descriptions)
         rows = []
         for name in names:
             value = material.columns.get(name)
