@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -62,8 +63,11 @@ class Polarizability(Panel):
                 material.plasmafrequency_y,
                 material.folder)
 
-        tab = table(['Properties', ' '],
-                    [])
+        tab = table(
+            ['Properties', ' '],
+            self.table_rows(material,
+                            [f'alpha{v}_el' for v in 'xyz'] +
+                            [f'plasmafrequency_{v}]' for v in 'xy']))
         x, y, z = (image(material.folder / f'rpa-pol-{v}.png') for v in 'xyz')
         return PanelData(
             HTML.format(x=x, y=y, z=z, table=tab),

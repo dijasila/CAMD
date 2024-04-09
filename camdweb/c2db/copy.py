@@ -317,13 +317,12 @@ def copy_material(fro: Path,
         irpol = rrf('infraredpolarizability')
     except FileNotFoundError:
         pass
-    else:  # pragma: no cover
+    else:
         for a in 'xyz':
             data[f'alpha{a}_lat'] = irpol.get(f'alpha{a}_lat')
             if f'alpha{a}_el' in data:
                 data[f'alpha{a}'] = (
-                    data[f'alpha{a}_el'] +  # type: ignore[operator]
-                    data[f'alpha{a}_lat'])
+                    data[f'alpha{a}_el'] + data[f'alpha{a}_lat'])
 
     try:
         dct = rrf('plasmafrequency')

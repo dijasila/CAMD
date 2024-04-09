@@ -171,6 +171,12 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         gap_hse='Band gap (HSE06) [eV]',
         gap_gw='Band gap (G₀W₀) [eV]',
         folder='Original file-system folder')
+    for v in 'xyz':
+        materials.column_descriptions['alpha{v}_el'] = (
+            f'Electronic polarizability at omega=0 ({v}-direction).')
+    for v in 'xy':
+        materials.column_descriptions['plasmafrequency_{v}'] = (
+            f'Plasmefrwquency ({v}-direction).')
 
     materials.html_formatters.update(
         cod_id=cod,
