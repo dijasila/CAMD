@@ -49,6 +49,7 @@ RESULT_FILES = [
     'borncharges',
     'shg',
     'infraredpolarizability',
+    'polarizability',
     'raman',
     'bse',
     'piezoelectrictensor',
@@ -305,7 +306,7 @@ def copy_material(fro: Path,
     else:
         for a in 'xyz':
             data[f'alpha{a}_el'] = pol[f'alpha{a}_el']
-        dct = {'frequences': pol['frequencies'].tolist()}
+        dct = {'frequencies': pol['frequencies'].tolist()}
         for v in 'xyz':
             alpha = pol[f'alpha{v}_w']
             dct[f'alpha{v}_re_w'] = alpha.real.tolist()

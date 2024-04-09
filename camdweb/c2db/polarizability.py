@@ -2,17 +2,12 @@
 
 from __future__ import annotations
 
-import typing
-from pathlib import Path
+import json
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ase.io import read
-from asr.core import ASRResult, command, option, prepare_result
 from camdweb.html import image, table
-from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData, SkipPanel
-from click import Choice
 
 HTML = """
 <div class="row">
@@ -28,11 +23,11 @@ HTML = """
 HTML = """
 <div class="row">
   <div class="col-6">
-   {images[0]}
-   {images[2]}
+   {x}
+   {z}
   </div>
   <div class="col-6">
-   {images[1]}
+   {y}
    {table}
   </div>
 </div>
@@ -51,27 +46,27 @@ class Polarizability(Panel):
     info = INFO
 
     def get_data(self, material):
-        file = material.folder / 'polarization.json'
+        file = material.folder / 'polarizability.json'
         if not file.is_file():
             raise SkipPanel
 
         png = material.folder / 'rpa-pol-x.png'
         if not png.is_file():
-            data = json.loads(png.read_text())
-            polarizability(data['frequencies'],
-                           data['alphax_w'],
-                           data['alphay_w'],
-                           data['alphaz_w'],
-                           material.plasmafrequency_x,
-                           material.plasmafrequency_y):
+            data = json.loads(file.read_text())
+            create_figures(
+                np.array(data['frequencies']),
+                np.array([np.array(data[f'alpha{v}_re_w']) +
+                          1j * np.array(data[f'alpha{v}_im_w'])
+                          for v in 'xyz']),
+                material.plasmafrequency_x,
+                material.plasmafrequency_y,
+                material.folder)
 
         tab = table(['Properties', ' '],
                     [])
-
+        x, y, z = (image(material.folder / f'rpa-pol-{v}.png') for v in 'xyz')
         return PanelData(
-            HTML.format(**{f'i{v}': image('rpa-pol-{v}.png')
-                           for v in 'xyz'},
-                        table=tab),
+            HTML.format(x=x, y=y, z=z, table=tab),
             title='Optical polarizability')
 
 
@@ -98,17 +93,14 @@ def plot_polarizability(ax, frequencies, alpha_w, filename, direction):
     plt.close()
 
 
-def polarizability(frequencies,
-                   alphax_w,
-                   alphay_w,
-                   alphaz_w,
-                   plasmafrequency_x,
-                   plasmafrequency_y):
+def create_figures(frequencies: np.ndarray,
+                   alpha_vw: np.ndarray,
+                   plasmafrequency_x: float,
+                   plasmafrequency_y: float,
+                   folder: Path) -> None:
     i2 = abs(frequencies - 50.0).argmin()
     frequencies = frequencies[:i2]
-    alphax_w = alphax_w[:i2]
-    alphay_w = alphay_w[:i2]
-    alphaz_w = alphaz_w[:i2]
+    alphax_w, alphay_w, alphaz_w = alpha_vw[:, :i2]
 
     ax = plt.figure().add_subplot(111)
     try:
@@ -134,7 +126,7 @@ def polarizability(frequencies,
         ax.plot(frequencies, np.real(alphax_w), c='C1', label='real')
     ax.plot(frequencies, np.imag(alphax_w), c='C0', label='imag')
 
-    fx, fy, fz = (f'rpa-pol-{v}.png' for v in 'xyz')
+    fx, fy, fz = (folder / f'rpa-pol-{v}.png' for v in 'xyz')
 
     plot_polarizability(ax, frequencies, alphax_w, filename=fx, direction='x')
 
