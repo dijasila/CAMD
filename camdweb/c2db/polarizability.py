@@ -13,17 +13,6 @@ from camdweb.panels.panel import Panel, PanelData, SkipPanel
 HTML = """
 <div class="row">
   <div class="col-6">
-    <div id='bandstructure'></div>
-  </div>
-  <div class="col-6">
-    {dos}
-    {bz}
-  </div>
-</div>
-"""
-HTML = """
-<div class="row">
-  <div class="col-6">
    {x}
    {z}
   </div>
@@ -34,17 +23,15 @@ HTML = """
 </div>
 """
 
-INFO = """\
+
+class OpticalPolarizability(Panel):
+    info = """\
 The frequency-dependent polarisability in the long wave length limit (q=0)
 calculated in the random phase approximation (RPA) without spin–orbit
 interactions.  For metals a Drude term accounts for intraband transitions.
 The contribution from polar lattice vibrations is added (see infrared
 polarisability) and may be visible at low frequencies.
 """
-
-
-class OpticalPolarizability(Panel):
-    info = INFO
 
     def get_data(self, material):
         file = material.folder / 'opt-polarizability.json'
@@ -71,6 +58,47 @@ class OpticalPolarizability(Panel):
         return PanelData(
             HTML.format(x=x, y=y, z=z, table=tab),
             title='Optical polarizability')
+
+
+class IRPolarizability(Panel):
+    def get_data(self, material):
+        file = material.folder / 'ir-polarizability.json'
+        if not file.is_file():
+            raise SkipPanel
+
+        png = material.folder / 'ir-pol-x.png'
+        if not png.is_file():
+            opt_data = json.loads(
+                (material.folder / 'opt-polarizability.json').read_text())
+            omega_el_w, alpha_el_vw = json_dct_to_alpha_vw(opt_data)
+            data = json.loads(file.read_text())
+            omega_w, alpha_wvv = json_dct_to_alpha_wvv(data)
+            create_ir_figures(
+                omega_w,
+                alpha_wvv,
+                omega_el_w,
+                alpha_el_vw,
+                data['maxphononfreq'],
+                material.folder)
+
+        alpha_lat_v = [material.alphax_lat,
+                       material.alphay_lat,
+                       material.alphaz_lat]
+        alpha_v = [material.alphax,
+                   material.alphay,
+                   material.alphaz]
+        tab = table(
+            ['Static polarizability', '[Å]'],
+            [[f'Phonons only ({v})', f'{alpha:.2f}']
+             for v, alpha in zip('xyz', alpha_lat_v)] +
+            [[f'Total (phonons + electrons) ({v})', f'{alpha:.2f}']
+             for v, alpha in zip('xyz', alpha_v)])
+
+        x, y, z = (image(material.folder / f'ir-pol-{v}.png') for v in 'xyz')
+
+        return PanelData(
+            HTML.format(x=x, y=y, z=z, table=tab),
+            title='Infrared polarizability')
 
 
 def json_dct_to_alpha_vw(data: dict) -> tuple[np.ndarray, np.ndarray]:
@@ -170,40 +198,6 @@ def plot_polarizability(ax, frequencies, alpha_w, filename, direction):
     fig.tight_layout()
     fig.savefig(filename)
     plt.close()
-
-
-class IRPolarizability(Panel):
-    def get_data(self, material):
-        file = material.folder / 'ir-polarizability.json'
-        if not file.is_file():
-            raise SkipPanel
-
-        png = material.folder / 'ir-pol-x.png'
-        if not png.is_file():
-            opt_data = json.loads(
-                (material.folder / 'opt-polarizability.json').read_text())
-            omega_el_w, alpha_el_vw = json_dct_to_alpha_vw(opt_data)
-            data = json.loads(file.read_text())
-            omega_w, alpha_wvv = json_dct_to_alpha_wvv(data)
-            create_ir_figures(
-                omega_w,
-                alpha_wvv,
-                omega_el_w,
-                alpha_el_vw,
-                data['maxphononfreq'],
-                material.folder)
-
-        tab = table(
-            ['Properties', ' '],
-            self.table_rows(material,
-                            [f'alpha{v}_el' for v in 'xyz'] +
-                            [f'plasmafrequency_{v}]' for v in 'xy']))
-
-        x, y, z = (image(material.folder / f'ir-pol-{v}.png') for v in 'xyz')
-
-        return PanelData(
-            HTML.format(x=x, y=y, z=z, table=tab),
-            title='Infrared polarizability')
 
 
 def json_dct_to_alpha_wvv(data: dict) -> tuple[np.ndarray, np.ndarray]:
