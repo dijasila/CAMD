@@ -160,7 +160,11 @@ def copy_materials(root: Path,
             try:
                 uid = json.loads((dir / 'uid.json').read_text())['uid']
             except FileNotFoundError:
-                name = atoms_to_uid_name(read_atoms(dir / 'structure.json'))
+                try:
+                    name = atoms_to_uid_name(read_atoms(dir / 'structure.json'))
+                except FileNotFoundError:
+                    pb.advance(pid)
+                    continue
                 names[name] += 1
                 number = names[name]
                 uid = f'{name}-{number}t'
