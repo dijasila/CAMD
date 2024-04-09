@@ -69,46 +69,6 @@ class Panel(abc.ABC):
         return rows
 
 
-"""
-    def add_subpanels(self, material: Material):
-        return
-
-    def generate_webpanel(self, material: Material):
-        self.add_subpanels(material)
-        self.generator: Any = self.get_html(material)
-
-        for subpanel in self.subpanels:
-            subpanel.generate_webpanel(material=material)
-
-        try:
-            html = next(self.generator)
-        except StopIteration:
-            self.generator = None
-            return
-        if not html == '':  # result is ready
-            self.generator = iter([html])
-
-    def get_webpanel(self):  # To be called after generation started.
-        html = ''
-        script = ''
-        if self.generator is not None:
-            try:
-                html = next(self.generator)
-                html, script = cut_out_script(html)
-            except StopIteration:
-                self.generator = None
-
-        subwebpanels = list()
-        for subpanel in self.subpanels:
-            wp, scr = subpanel.get_webpanel()
-            subwebpanels.append(wp)
-
-        self.generator = None
-
-        return WebPanel(self.title, self.info, html, subwebpanels), script
-"""
-
-
 def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, str):
         return value
