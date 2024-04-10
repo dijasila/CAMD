@@ -22,48 +22,49 @@ from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel
 from camdweb.panels.charge_neutrality import ChargeNeutralitySuperpanel
 from camdweb.panels.slater_janak import SlaterJanakPanel
+from camdweb.panels.defect_symmetry import DefectSymmetryPanel
 from camdweb.web import CAMDApp
 
+HTML = """
+<h4>{defect_title}</h4>
+<div class="row">
+  <div class="col-6">
+    {column1}
+  </div>
+  <div class="col-6">
+    {column2}
+  </div>
+</div>
+"""
 
 class QPODAtomsPanel(AtomsPanel):
     title = 'Summary'
 
+    def get_html(self,
+                 material: Material) -> Generator[str, None, None]:
+        col1 = self.create_column_one(material)
+        col2 = self.create_column_two(material)
+        host = material.columns['host_name']
+        defect = material.columns['defect_name']
+        charge = material.columns['charge_state']
+        yield HTML.format(column1=col1,
+                          column2=col2,
+                          defect_title=f'{defect} in {host} {charge}')
+
     def create_column_one(self,
                           material: Material) -> str:
-        # html1 = table(['Structure info', ''],
-        #               self.table_rows(material,
-        #                               ['host_uid']))
-        # html2 = table(['Stability', ''],
-        #               self.table_rows(material,
-        #                               ['host_hof']))
+        html1 = table(['Pristine crystal info', ''],
+                      self.table_rows(material,
+                                      ['host_name', 'host_crystal', 'host_spacegroup',
+                                       'host_pointgroup', 'host_hof', 'host_gap_pbe',
+                                       'host_gap_hse', 'host_uid'])) # add c2db link to host_uid
+        html2 = table(['Defect properties', ''],
+                      self.table_rows(material,
+                                      ['r_nn']))
         html3 = table(['Basic properties', ''],
                       self.table_rows(material,
-                                      ['energy', 'host_gap_pbe']))
-        return '\n'.join([html3])
-    # def __init__(self):
-    #     super().__init__()
-        # self.column_names.update(
-        #     magstate='Magnetic state',
-        #     host_name='Host crystal',
-        #     defect_name='Defect',
-        #     charge_state='Charge',
-        #     host_crystal='Host crystal type',
-        #     host_uid='Host C2DB link',
-        #     host_spacegroup='Host space group',
-        #     host_pointgroup='Host point group',
-        #     host_hof='Heat of formation of host material [eV/atom]',
-        #     host_gap_pbe='Band gap of host material (PBE) [eV]',
-        #     host_gap_hse='Band gap of host material (HSE) [eV]',
-        #     energy='Energy [eV]',
-        #     r_nn='Defect-defect distance [Ang]')  # change to r_nn
-        # self.columns = list(self.column_names)
-
-    def update_data(self, material: Material):
-        super().update_data(material)
-        data = json.loads((material.folder / 'data.json').read_text())
-        for key, value in data.items():
-            if key != 'uid':
-                material.add_column(key, value)
+                                      ['magnetic']))
+        return '\n'.join([html1, html2, html3])
 
 
 def main(root: Path) -> CAMDApp:
@@ -78,8 +79,9 @@ def main(root: Path) -> CAMDApp:
                 with open(data_file, 'r') as json_file:
                     data = json.load(json_file)
                     uid = data.get('uid')
-                    mlist.append(Material.from_file(f / 'structure.xyz', 
-                                                    uid=uid))
+                    material = Material.from_file(f / 'structure.xyz', uid)
+                    material.columns.update(data)
+                    mlist.append(material)
             else:
                 print(f'''Warning: data.json file not found 
                         or not readable in {f}''')
@@ -87,7 +89,8 @@ def main(root: Path) -> CAMDApp:
 
     panels: list[Panel] = [QPODAtomsPanel(),
                            ChargeNeutralitySuperpanel(),
-                           SlaterJanakPanel()]
+                           SlaterJanakPanel(),
+                           DefectSymmetryPanel()]
     # for name in ['bandstructure',
     #              'phonons',
     #              'bader']:
@@ -97,6 +100,39 @@ def main(root: Path) -> CAMDApp:
     materials = Materials(mlist, panels)
 
     initial_columns = ['host_name', 'defect_name', 'charge_state', 'formula', 'uid']
+
+        # def __init__(self):
+        # super().__init__()
+        # self.column_names.update(
+        #     magstate='Magnetic state',
+        #     host_name='Host crystal',
+        #     defect_name='Defect',
+        #     charge_state='Charge',
+        #     host_crystal='Host crystal type',
+        #     host_uid='Host C2DB link',
+        #     host_spacegroup='Host space group',
+        #     host_pointgroup='Host point group',
+        #     host_hof='Heat of formation of host material [eV/atom]',
+        #     host_gap_pbe='Band gap of host material (PBE) [eV]',
+        #     host_gap_hse='Band gap of host material (HSE) [eV]',
+        #     energy='Energy [eV]',
+        #     r_nn='Defect-defect distance [Ang]')
+        # self.columns = list(self.column_names)
+
+    materials.column_descriptions.update(
+        magstate='Magnetic state',
+        host_name='Host crystal',
+        defect_name='Defect',
+        charge_state='Charge',
+        host_crystal='Host crystal type',
+        host_uid='Host C2DB link',
+        host_spacegroup='Host space group',
+        host_pointgroup='Host point group',
+        host_hof='Heat of formation of host material [eV/atom]',
+        host_gap_pbe='Band gap of host material (PBE) [eV]',
+        host_gap_hse='Band gap of host material (HSE) [eV]',
+        energy='Energy [eV]',
+        r_nn='Defect-defect distance [Ang]')
 
     return CAMDApp(materials, initial_columns, root)
 

@@ -54,7 +54,8 @@ class SlaterJanakPanel(Panel):
     def plot_and_tables(self, sj_file: Path, sj_png: Path):
         defect_name = sj_file.parent.parent.name
         data = read_result_file(sj_file)
-        
+        vbm = data['pristine']['kwargs']['data']['vbm']
+
         transitions_data = []
         for transition in data['transitions']:
           transition_data = transition['kwargs']['data']
@@ -62,19 +63,25 @@ class SlaterJanakPanel(Panel):
           transition_values = transition_data['transition_values']['kwargs']['data']
           transitions_data.append((transition_name, transition_values))
 
+        
+        ## tbl0 rows, sorted by transition energy
+        rows0 = [(f"{defect_name} ({name})",
+                 f"{(values['transition'] - values['evac'] - vbm):.2f}",
+                 f"{values['erelax']:.2f}")
+                for name, values in transitions_data]
+        rows0.sort(key=lambda row: float(row[1]))
+        
         tbl0 = table(
             header=['Transition', 'Transition energy', 'Relaxation correction'],
-            rows=[(f"{defect_name} ({name})",
-                   f"{values['transition']:.2f}", f"{values['erelax']:.2f}")
-                   for name, values in transitions_data])
+            rows=rows0) 
 
         tbl1 = table(
             header=['Defect formation energy', 'Value'],
             rows=[(f"{defect_name} (q = {row[1]} @ VBM)", f"{row[0]:.2f}") 
                   for row in data['eform']])
 
-        if not sj_png.is_file():
-          plot_charge_transitions(data, transitions_data, sj_png)
+        # if not sj_png.is_file():
+        plot_charge_transitions(data, transitions_data, sj_png)
 
         return tbl0, tbl1
 
@@ -95,10 +102,7 @@ def plot_charge_transitions(data, transitions_data, sj_png: Path):
 
     vbm = data['pristine']['kwargs']['data']['vbm']
     cbm = data['pristine']['kwargs']['data']['cbm']
-
     gap = abs(cbm - vbm)
-
-    transitions = data['transitions']
 
     plt.xlim(-1, 1)
     plt.ylim(-0.2 * gap, gap + 0.2 * gap)
@@ -116,22 +120,25 @@ def plot_charge_transitions(data, transitions_data, sj_png: Path):
     for name, trans_data in transitions_data:
         q = int(name.split('/')[-1])
         q_new = int(name.split('/')[0])
-        if q > 0:
+        if q > 0 and q <= 3:
             y = (trans_data['transition']
-                 + trans_data['erelax']
+                 - trans_data['erelax']   # Changed sign /ks
                  - trans_data['evac'])
             color1 = colors[str(q)]
             color2 = colors[str(q_new)]
-        elif q < 0:
+        elif q < 0 and q >= -3:
             y = (trans_data['transition']
-                 - trans_data['erelax']
+                 + trans_data['erelax']   # Changed sign /ks
                  - trans_data['evac'])
             color1 = colors[str(q)]
             color2 = colors[str(q_new)]
-        if y <= (cbm + 0.2 * gap) and y >= (vbm - 0.2 * gap):
-            plt.plot(np.linspace(-0.9, 0.5, 20), 20 * [y - vbm], label=name,
-                     color=color1, mec=color2, mfc=color2, marker='s', markersize=3)
 
+        if -3 <= q <= 3:
+            if y <= (cbm + 0.2 * gap) and y >= (vbm - 0.2 * gap):
+              plt.plot(np.linspace(-0.9, 0.5, 20), 20 * [y - vbm], label=name,
+                       color=color1, mec=color2, mfc=color2, marker='s', markersize=3)
+        else:
+            continue
     plt.legend(loc='center right')
     plt.ylabel(r'$E - E_{\mathrm{VBM}}$ [eV]')
     plt.yticks()

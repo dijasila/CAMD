@@ -44,14 +44,11 @@ SCRIPT = """
 
 class ChargeNeutralitySuperpanel(Panel):
     title = f'Equilibrium energetics: All defects'
-    def get_html(self,
-                 material: Material) -> Generator[str, None]:
-        
+
+    def add_subpanels(self, material: Material):
         root = material.folder.parent.parent
         cn_file = root / 'pristine_sc' / 'results-asr.charge_neutrality.json'
         result = read_result_file(cn_file)
-        
-        html=''
 
         self.subpanels = list()
 
@@ -61,6 +58,12 @@ class ChargeNeutralitySuperpanel(Panel):
             condition = scresult['condition']
             
             self.subpanels.append(ChargeNeutralityPanel(result, scresult, condition))
+            
+        return None
+
+    def get_html(self,
+                 material: Material) -> Generator[str, None]:
+        html=''
 
         yield html
 

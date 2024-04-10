@@ -17,7 +17,10 @@ class Panel(abc.ABC):
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-    subpanels = None
+    
+    def __init__(self):
+        super().__init__()
+        self.subpanels = None
 
     @abc.abstractmethod
     def get_html(self,
@@ -53,13 +56,16 @@ class Panel(abc.ABC):
                              formatter(value, link=True)])
         return rows
 
-    def generate_webpanel(self, material: Material):               
+    def add_subpanels(self, material: Material): 
+        return None
+
+    def generate_webpanel(self, material: Material):
+        self.add_subpanels(material)               
         self.generator = self.get_html(material)
 
         if self.subpanels is not None:
             for subpanel in self.subpanels:
                 subpanel.generate_webpanel(material = material)
-
         try:
             html = next(self.generator)
         except StopIteration:
