@@ -92,5 +92,11 @@ def main(root: Path) -> CAMDApp:
     return CAMDApp(materials, initial_columns, root=root)
 
 
+def create_app():
+    """Create the WSGI app."""
+    app = main(Path())
+    return app.app
+
+
 if __name__ == '__main__':
     main(Path()).app.run(host='0.0.0.0', port=8083, debug=True)
