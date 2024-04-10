@@ -245,7 +245,8 @@ if __name__ == '__main__':
     try:
         import lark
     except ImportError:
-        print('Lark:', lark.__version__)
+        pass
     else:
+        print('Lark:', lark.__version__)
         add_optimade(app)
     app.app.run(host='0.0.0.0', port=8081, debug=True)
