@@ -11,7 +11,7 @@ import shutil
 
 import rich.progress as progress
 from ase.db import connect
-from ase.io import read
+from camdweb.utils import read_atoms
 
 
 def create_db_file():
@@ -21,7 +21,7 @@ def create_db_file():
         pid = pb.add_task('Reading matrerials:', total=len(folders))
         for f in folders:
             # uid = f'{f.parent.name}-{f.name}'
-            atoms = read(f / 'structure.xyz')
+            atoms = read_atoms(f / 'structure.xyz')
             data = json.loads((f / 'data.json').read_text())
             data.pop('energy')
             db.write(atoms, **data)

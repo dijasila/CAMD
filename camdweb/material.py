@@ -5,10 +5,9 @@ from typing import Any
 
 import numpy as np
 from ase import Atoms
-from ase.io import read
 
 from camdweb import ColVal
-from camdweb.utils import fft
+from camdweb.utils import fft, read_atoms
 
 
 class Material:
@@ -60,6 +59,5 @@ class Material:
 
     @classmethod
     def from_file(cls, file: Path, uid: str) -> Material:
-        atoms = read(file)
-        assert isinstance(atoms, Atoms)
+        atoms = read_atoms(file)
         return cls(uid, atoms, file.parent)

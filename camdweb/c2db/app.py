@@ -20,7 +20,8 @@ import rich.progress as progress
 
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
-from camdweb.html import Range, RangeX, Select, table
+from camdweb.c2db.polarizability import IRPolarizability, OpticalPolarizability
+from camdweb.html import Range, RangeX, Select, image, table
 from camdweb.materials import Material, Materials
 from camdweb.optimade.app import add_optimade
 from camdweb.panels.atoms import AtomsPanel
@@ -63,6 +64,10 @@ class C2DBApp(CAMDApp):
     """C2DB app with /row/<olduid> endpoint."""
 
     title = 'C2DB'
+    logo = image('c2db-logo.png', alt='C2DB-logo')
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('C2DB', 'https://cmr.fysik.dtu.dk/c2db/c2db.html')]
 
     def __init__(self,
                  materials: Materials,
@@ -97,7 +102,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         p = Path(path)
         if p.name.startswith('A'):
             folders += list(p.glob('*/*/'))
-        elif p.name.isdigit():
+        elif p.name.rstrip('t').isdigit():  # 't' for temporary (AB2/1MoS2/1t)
             folders.append(p)
         else:
             folders += list(p.glob('*/'))
@@ -122,18 +127,19 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             sources={'OQMD': ('Bulk crystals from OQMD123',
                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
                      'C2DB': ('Monolayers from C2DB',
-                              '<a href={uid}>{formula:html}</a>')}),
+                              '{formula:html}, <a href={uid}>{uid}</a>')}),
         ASRPanel('stiffness'),
         ASRPanel('phonons'),
         ASRPanel('deformationpotentials'),
         BSDOSBZPanel(),
         EmassPanel(),
+        ASRPanel('fermisurface'),
         ASRPanel('hse'),
         ASRPanel('gw'),
         ASRPanel('borncharges'),
         ASRPanel('shg'),
-        ASRPanel('polarizability'),
-        ASRPanel('infraredpolarizability'),
+        OpticalPolarizability(),
+        IRPolarizability(),
         ASRPanel('raman'),
         ASRPanel('bse'),
         BaderPanel(),
@@ -158,7 +164,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         dyn_stab='Dynamically stable',
         cod_id='COD id of parent bulk structure',
         icsd_id='ICSD id of parent bulk structure',
-        doi='Mono/few-later report',
+        doi='Mono/few-layer report(s)',
         layergroup='Layer group',
         lgnum='Layer group number',
         label='Structure origin',
@@ -166,6 +172,16 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         gap_hse='Band gap (HSE06) [eV]',
         gap_gw='Band gap (G₀W₀) [eV]',
         folder='Original file-system folder')
+    for v in 'xyz':
+        materials.column_descriptions[f'alpha{v}_el'] = (
+            f'Static interband polarizability at ({v}) [Å]')
+        materials.column_descriptions[f'alpha{v}_lat'] = (
+            f'Static polarizability (phonons) ({v}) [Å]')
+        materials.column_descriptions[f'alpha{v}'] = (
+            f'Static polarizability (phonons + electrons) ({v}) [Å]')
+    for v in 'xy':
+        materials.column_descriptions['plasmafrequency_{v}'] = (
+            f'Plasma frequency ({v}) [Å<sup>0.5</sup>]')
 
     materials.html_formatters.update(
         cod_id=cod,

@@ -28,14 +28,13 @@ import plotly.graph_objects as go
 from ase import Atoms
 from ase.data import covalent_radii
 from ase.data.colors import jmol_colors
-from ase.io import read
 from ase.neighborlist import neighbor_list
 from scipy.spatial import ConvexHull
 
 from camdweb.html import table
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData
-from camdweb.utils import html_format_formula
+from camdweb.utils import html_format_formula, read_atoms
 
 HTML = """
 <div class="row">
@@ -449,6 +448,5 @@ def color(Z: int) -> str:
 
 
 if __name__ == '__main__':
-    atoms = read(sys.argv[1])
-    assert isinstance(atoms, Atoms)
+    atoms = read_atoms(sys.argv[1])
     plot_atoms(atoms).show()

@@ -28,6 +28,7 @@ from camdweb.c2db.asr_panel import read_result_file
 from camdweb.html import table
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData
+from camdweb.utils import html_format_formula
 
 HTML = """
 <div class="row">
@@ -61,7 +62,7 @@ class ConvexHullPanel(Panel):
     def get_data(self,
                  material: Material) -> PanelData:
         tbl = table(
-            None,
+            [f'{html_format_formula(material.formula)} ({material.uid})', ''],
             [['Heat of formation [eV/atom]', f'{material.hform:.2f}'],
              ['Energy above convex hull [eV/atom]', f'{material.ehull:.2f}']])
         root = material.folder.parents[2] / 'convex-hulls'
@@ -112,7 +113,10 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
     for uid, (count, e, source) in refs.items():
         f = Formula.from_dict(count)
         hform = e / len(f)
-        _, frmt = sources.get(source, ('', '{formula}, {uid}'))
+        if uid == higlight_uid or source not in sources:
+            frmt = '{formula:html}, {uid}'
+        else:
+            _, frmt = sources[source]
         tables[source].append((hform, frmt.format(uid=uid, formula=f)))
         source_names.append(source)
         uids.append(uid)
