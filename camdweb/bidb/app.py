@@ -1,17 +1,13 @@
 from __future__ import annotations
 
 import json
-from collections import defaultdict
 from pathlib import Path
 
 import rich.progress as progress
-from ase.db import connect
-from ase.formula import Formula
 
 from camdweb.html import table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.web import CAMDApp
 
 COLUMN_DESCRIPTIONS = {
@@ -34,29 +30,6 @@ COLUMN_DESCRIPTIONS = {
     'space_group_number': 'Space group number'}
 
 
-def expand(db_file: str) -> None:
-    monolayers: defaultdict[str, dict[str, int]] = defaultdict(dict)
-    for row in connect(db_file).select():
-        f = Formula(row.formula)
-        ab, xy, n = f.stoichiometry()
-        n //= row.number_of_layers
-        name = f'{ab}/{n}{xy}'
-        ids = monolayers[name]
-        if row.monolayer_uid in ids:
-            i = ids[row.monolayer_uid]
-        else:
-            i = len(ids)
-            ids[row.monolayer_uid] = i
-        folder = Path(name + f'-{i}')
-        if row.number_of_layers == 1:
-            folder /= 'monolayer'
-        else:
-            folder /= row.bilayer_uid.split('-', 2)[2]
-        folder.mkdir(exist_ok=True, parents=True)
-        row.toatoms().write(folder / 'structure.xyz')
-        (folder / 'data.json').write_text(json.dumps(row.key_value_pairs))
-
-
 class BiDBAtomsPanel(AtomsPanel):
     column_descriptions = COLUMN_DESCRIPTIONS
 
@@ -68,20 +41,6 @@ class BiDBAtomsPanel(AtomsPanel):
                           material: Material) -> str:
         rows = self.table_rows(material, COLUMN_DESCRIPTIONS)
         return table(None, rows)
-
-
-class StackingsPanel(Panel):
-    def get_data(self,
-                 material: Material) -> PanelData:
-        bilayers = material.data.get('bilayers')
-        if bilayers is None:
-            raise SkipPanel
-        rows = []
-        for uid, bilayer in bilayers.items():
-            e = bilayer.binding_energy_zscan
-            rows.append([f'<a href="{uid}">{uid}</a>', f'{e:.3f}'])
-        tbl = table(['Stacking', 'Binding energy [meV/Å<sup>2</sup>]'], rows)
-        return PanelData(tbl, title='Stackings')
 
 
 def main(root: Path) -> CAMDApp:
