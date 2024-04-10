@@ -9,6 +9,7 @@ from camdweb.html import table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
+from camdweb.bidb.stackings import StackingsPanel
 
 COLUMN_DESCRIPTIONS = {
     'binding_energy_zscan': 'Binding energy (zscan)',
@@ -27,7 +28,8 @@ COLUMN_DESCRIPTIONS = {
     'layer_group': 'Layer group',
     'layer_group_number': 'Layer group number',
     'space_group': 'Space group',
-    'space_group_number': 'Space group number'}
+    'space_group_number': 'Space group number',
+    'distance': 'Distance [Å]'}
 
 
 class BiDBAtomsPanel(AtomsPanel):
@@ -50,14 +52,15 @@ def main(root: Path) -> CAMDApp:
         pid = pb.add_task('Reading matrerials:', total=len(paths))
         for f1 in paths:
             uid1 = f1.parent.name
+            monolayer = Material.from_file(f1 / 'structure.xyz', uid1)
             bilayers = {}
             for f2 in f1.parent.glob('*/'):
                 if f2.name != 'monolayer':
                     uid2 = f'{f2.parent.name}-{f2.name}'
                     bilayer = Material.from_file(f2 / 'structure.xyz', uid2)
+                    bilayer.data['monolayer'] = monolayer
                     bilayers[uid2] = bilayer
                     mlist.append(bilayer)
-            monolayer = Material.from_file(f1 / 'structure.xyz', uid1)
             monolayer.data['bilayers'] = bilayers
             mlist.append(monolayer)
         pb.advance(pid)

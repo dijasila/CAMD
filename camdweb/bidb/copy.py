@@ -34,6 +34,8 @@ def copy_files(db_file: str) -> None:
             data['distance'] = distance(atoms)
             print(row.folder)
         (folder / 'data.json').write_text(json.dumps(data))
+        for f in Path(row.folder).glob('results-asr.*.json'):
+            (folder / f.name).write_bytes(f.read_bytes())
 
 
 def distance(bilayer: Atoms) -> float:
