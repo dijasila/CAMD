@@ -1,13 +1,13 @@
 from collections import namedtuple
 from itertools import combinations
 from pathlib import Path
-from typing import Iterable, Generator
+from typing import Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from camdweb.html import table
-from camdweb.panels.panel import Panel
+from camdweb.html import table, image
+from camdweb.panels.panel import Panel, PanelData
 from camdweb.material import Material
 
 Desc = namedtuple('Desc', ['short', 'long', 'unit'])
@@ -107,10 +107,8 @@ HTML = """
 
 
 class LowDimPanel(Panel):
-    title = 'Dimensionality analysis'
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         uid = material.uid
         path = material.folder / f'lowdim/{uid}.png'
         path.parent.mkdir(exist_ok=True)
@@ -119,6 +117,6 @@ class LowDimPanel(Panel):
 
         descriptions = {key: all_keydescs[key].long for key in keysfortable2}
         col1 = table(['Item', ''], self.table_rows(material, descriptions))
-        col2 = (f'<img alt="Dim. analysis for {uid}" '
-                f'src="/png/lowdim/{uid}.png" />')
-        yield HTML.format(col1, col2)
+        col2 = image(f'lowdim/{uid}.png', alt=f'Dim. analysis for {uid}')
+        return PanelData(HTML.format(col1, col2),
+                         title='Dimensionality analysis')

@@ -9,6 +9,7 @@ from camdweb.c2db.app import main
 from camdweb.c2db.copy import copy_materials, main as copymain
 from camdweb.test.c2db import create_tree
 from camdweb.c2db.oqmd123 import db2json
+from camdweb.test.html import check_html
 
 
 @pytest.fixture
@@ -52,24 +53,26 @@ def test_everything(oqmd_db_file):
     assert len(app.materials) == 1
     app = main(['AB2/1MoS2'])
     assert len(app.materials) == 1
-    app = main(['AB2/1MoS2/1'])
+    app = main(['AB2/1MoS2/1t'])
     assert len(app.materials) == 1
 
-    app.index_page()
+    html = app.index_page()
+    check_html(html)
 
     # Compress one of the result files:
-    bs = root / 'AB2/1MoS2/1/results-asr.bandstructure.json'
+    bs = root / 'AB2/1MoS2/1t/results-asr.bandstructure.json'
     with gzip.open(bs.with_suffix('.json.gz'), 'wt') as fd:
         fd.write(bs.read_text())
     bs.unlink()
 
-    html = app.material_page('1MoS2-1')
+    html = app.material_page('1MoS2-1t')
     key = 'Charges [|e|]'
     passed = key in html
     assert passed
+    check_html(html)
 
-    (root / 'AB2/1MoS2/1/bader.json').unlink()
-    (root / 'AB2/1MoS2/1/results-asr.shift.json').unlink()
-    html = app.material_page('1MoS2-1')
+    (root / 'AB2/1MoS2/1t/bader.json').unlink()
+    (root / 'AB2/1MoS2/1t/results-asr.shift.json').unlink()
+    html = app.material_page('1MoS2-1t')
     passed = key not in html  # Bader charge
     assert passed

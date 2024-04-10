@@ -1,18 +1,19 @@
-from typing import Generator
-
 from camdweb.material import Material
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
+from camdweb.html import image
 
 HTML = """
 <div class="row">
-<img alt="DOS for {uid}" src="/png/{uid}/dos.png" />
+{img}
 </div>
 """
 
 
 class DOSPanel(Panel):
-    title = 'Density of states'
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
-        yield HTML.format(uid=material.uid)
+    def get_data(self,
+                 material: Material) -> PanelData:
+        return PanelData(
+            HTML.format(
+                img=image(material.folder / 'dos.png',
+                          alt=f'DOS for {material.uid}')),
+            title='Density of states')

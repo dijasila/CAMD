@@ -5,7 +5,7 @@ from asr.pdos import plot_pdos
 from asr.gs import bz_with_band_extremums
 import numpy as np
 
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.c2db.asr_panel import Row
 from camdweb.html import image
 from camdweb.bandstructure import PlotUtil
@@ -51,12 +51,10 @@ def plotter_from_row(row):
 
 
 class BSDOSBZPanel(Panel):
-    title = 'Electronic band structure and density of states'
-
-    def get_html(self, material):
+    def get_data(self, material):
         bs = material.folder / 'results-asr.bandstructure.json'
         if not (bs.is_file() or bs.with_suffix('.json.gz').is_file()):
-            return
+            raise SkipPanel
         row = Row(material)
         plotter = plotter_from_row(row)
         fig = plotter.plot()
@@ -71,6 +69,8 @@ class BSDOSBZPanel(Panel):
 
         bs_json = json.dumps(
             fig, cls=plotly.utils.PlotlyJSONEncoder)
-        yield HTML.format(bs_data=bs_json,
-                          dos=image(dos_file, 'DOS'),
-                          bz=image(bz_file, 'BZ'))
+        return PanelData(
+            HTML.format(bs_data=bs_json,
+                        dos=image(dos_file, 'DOS'),
+                        bz=image(bz_file, 'BZ')),
+            title='Electronic band structure and density of states')

@@ -32,6 +32,8 @@ test = [
     "coverage",
     "pytest",
     "boddle"]
+optimade = [
+    "lark"]
 
 [tool.mypy]
 packages = "camdweb"

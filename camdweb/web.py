@@ -1,11 +1,9 @@
 """Base web-app class."""
 from __future__ import annotations
 
-import re
 from functools import partial
 from io import BytesIO, StringIO
 from pathlib import Path
-from typing import Iterator
 
 from ase.io import write
 from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
@@ -13,16 +11,22 @@ from bottle import TEMPLATE_PATH, Bottle, request, static_file, template
 from camdweb.html import FormPart, Select, StoichiometryInput
 from camdweb.materials import Materials
 from camdweb.session import Sessions
+from camdweb.panels.panel import SkipPanel
 
 TEMPLATE_PATH[:] = [str(Path(__file__).parent)]
 
 
 class CAMDApp:
     title = 'CAMD'
+    logo = ''
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk')]
 
     def __init__(self,
                  materials: Materials,
                  initial_columns: list[str],
+                 *,
+                 initial_filter_string: str = '',
                  root: Path | None = None):
         self.materials = materials
         self.root = root or Path()
@@ -33,7 +37,8 @@ class CAMDApp:
         self.callbacks = self.materials.get_callbacks()
 
         # User sessions (selected columns, sorting, filter string, ...)
-        self.sessions = Sessions(initial_columns)
+        self.sessions = Sessions(initial_columns,
+                                 filter_string=initial_filter_string)
 
         self.form_parts: list[FormPart] = []
 
@@ -44,13 +49,13 @@ class CAMDApp:
             self.form_parts.append(StoichiometryInput())
         else:
             self.form_parts.append(
-                Select('Stoichiometry', 'stoichiometry',
+                Select('Stoichiometry:', 'stoichiometry',
                        [''] + stoichiometries))
 
         # For nspecies selection:
         maxnspecies = max(len(material.count) for material in self.materials)
         self.form_parts.append(
-            Select('Number of chemical species', 'nspecies',
+            Select('Number of chemical species:', 'nspecies',
                    [''] + [str(i) for i in range(1, maxnspecies + 1)]))
 
     def route(self):
@@ -87,11 +92,13 @@ class CAMDApp:
         session = self.sessions.get(int(query.get('sid', '-1')))
         search = '\n'.join(fp.render() for fp in self.form_parts)
         table = self.table_html(session)
+        sidebar = self.persistent_sidebar()
         return template('index.html',
                         title=self.title,
                         search=search,
                         session=session,
-                        table=table)
+                        table=table,
+                        sidebar=sidebar)
 
     def table_html(self, session=None) -> str:
         """Get HTML for table."""
@@ -105,10 +112,12 @@ class CAMDApp:
                 session.update(query=query)
         rows, header, pages, new_columns, error = self.materials.get_rows(
             session)
+        summary_string = pages.summary(len(self.materials))
         return template('table.html',
                         session=session,
                         pages=pages,
                         rows=rows,
+                        summary_string=summary_string,
                         header=header,
                         new_columns=new_columns,
                         error=error)
@@ -134,32 +143,29 @@ class CAMDApp:
 
     def material_page(self, uid: str) -> str:
         """Page showing one selected material."""
+        sidebar = self.persistent_sidebar()
         material = self.materials[uid]
+        webpanels = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
-                    for datafile in panel.datafiles):
+                       for datafile in panel.datafiles):
                 continue
-
-            panel.generate_webpanel(material=material)
-
-        panels = []
-        scripts = []
-        for panel in self.materials.panels:
-            if not all((material.folder / datafile).is_file()
-                    for datafile in panel.datafiles):
-                continue
-            
             try:
-                webpanel, script = panel.get_webpanel()
-            except:
+                data = panel.get_data(material)
+            except SkipPanel:
                 continue
-            panels.append(webpanel)
-            scripts.append(script)
+            webpanels.append(data)
 
         return template('material.html',
                         title=uid,
-                        panels=panels,
-                        footer='\n'.join(scripts))
+                        panels=webpanels,
+                        sidebar=sidebar)
+
+    def persistent_sidebar(self):
+        """Provide persistent sidebar for all pages."""
+        return template('sidebar.html',
+                        logo=self.logo,
+                        sidebar_links=self.links)
 
     def callback(self) -> str:
         """Send new json data.
