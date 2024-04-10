@@ -24,7 +24,8 @@ def index():
 
 @pytest.mark.parametrize(
     'query, result',
-    [['x=7', [2]],
+    [['', [1, 2]],
+     ['x=7', [2]],
      ['y=7', []],
      ['x=8', []],
      ['8=x', []],

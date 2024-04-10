@@ -200,6 +200,7 @@ def copy_materials(root: Path,
                 '   python -m camdweb.c2db.oqmd123 <path-to-oqmd123.db>\n')
         update_chull_data(atomic_energies, refs)
 
+    # Put logo in the right place:
     logo = Path('c2db-logo.png')
     if not logo.is_file():
         shutil.copyfile(Path(__file__).parent / 'logo.png', logo)
