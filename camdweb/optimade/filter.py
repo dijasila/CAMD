@@ -49,6 +49,8 @@ LENGTH_ALIASES = {
 def select(node: Any,
            index: Index):
     """Create SELECT SQL-statement."""
+    if len(node) == 0:
+        return index.ids  # all rows
     if len(node) == 3:
         n1, n2, n3 = node
         if n2[0] == 'OPERATOR' and n3[0] == 'IDENTIFIER':

@@ -241,4 +241,11 @@ def check_def_pot():  # pragma: no cover
 
 
 if __name__ == '__main__':
-    main().app.run(host='0.0.0.0', port=8081, debug=True)
+    app = main()
+    try:
+        import lark
+    except ImportError:
+        print('Lark:', lark.__version__)
+    else:
+        add_optimade(app)
+    app.app.run(host='0.0.0.0', port=8081, debug=True)

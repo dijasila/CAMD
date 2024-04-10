@@ -18,7 +18,7 @@ CFG = {'url': 'http://localhost:8080/v1',
            'homepage': 'https://gitlab.com/camd/camd-web'}}
 
 API_VERSION = (1, 1, 0)
-API_VERSION_STR = ".".join(str(d) for d in API_VERSION)
+API_VERSION_STR = '.'.join(str(d) for d in API_VERSION)
 
 
 INFO = {
@@ -68,18 +68,18 @@ def add_meta(method: Callable) -> Callable:
     def new_method(self, *args: Any, **kwargs: Any) -> Any:
         dct = method(self, *args, **kwargs)
 
-        data_returned = dct.get("meta", {}).get("data_returned", 0)
+        data_returned = dct.get('meta', {}).get('data_returned', 0)
 
         endpoint = request.urlparts.path.split('/')[-1]
         data_available = getattr(
-            self, "meta", {}).get("entries_available", {}).get(endpoint, 1)
+            self, 'meta', {}).get('entries_available', {}).get(endpoint, 1)
 
         dct['meta'] = META | {
             'time_stamp': f'{datetime.now().isoformat()}',
             'provider': CFG['provider'],
             'query': {
-                'representation': "?".join((request.urlparts.path,
-                                            request.urlparts.query or ""))},
+                'representation': '?'.join((request.urlparts.path,
+                                            request.urlparts.query or ''))},
             'data_available': data_available,
             'data_returned': data_returned}
 
@@ -101,7 +101,7 @@ def add_error_handling(method: Callable) -> Callable:
             # omit any unhandled error details from the response
             return {'errors': [{'status': '500',
                                 'title': 'Internal Server Error',
-                                'detail': ""}]}
+                                'detail': ''}]}
 
     return new_method
 
@@ -111,14 +111,14 @@ class Optimade:
         self.materials = materials
         self.parse = create_parse_function()
         self.meta = {
-            "entries_available": {
-                "structures": len(materials),
-                "references": 0,
-                "links": 0}}
+            'entries_available': {
+                'structures': len(materials),
+                'references': 0,
+                'links': 0}}
 
     def versions(self):
         response.content_type = (
-            "text/csv; header=present; charset=utf-8")
+            'text/csv; header=present; charset=utf-8')
         return 'version\n1\n'
 
     @add_meta
@@ -159,7 +159,7 @@ class Optimade:
         limited_rowids = sorted(rowids)[offset:offset + limit]
 
         response = self.response(limited_rowids)
-        response["meta"]["data_returned"] = len(limited_rowids)
+        response['meta']['data_returned'] = len(limited_rowids)
         return response
 
     def structures_id(self, id: str) -> dict:
@@ -198,10 +198,10 @@ def add_optimade(webapp) -> None:
     app = webapp.app
     app.route('/optimade/versions')(om.versions)
 
-    for prefix in ["",
-                   f"/v{API_VERSION[0]}",
-                   f"/v{API_VERSION[0]}.{API_VERSION[1]}",
-                   f"/v{API_VERSION[0]}.{API_VERSION[1]}.{API_VERSION[2]}"]:
+    for prefix in ['',
+                   f'/v{API_VERSION[0]}',
+                   f'/v{API_VERSION[0]}.{API_VERSION[1]}',
+                   f'/v{API_VERSION[0]}.{API_VERSION[1]}.{API_VERSION[2]}']:
         prefix = f'/optimade{prefix}'
         app.route(f'{prefix}/info')(om.info)
         app.route(f'{prefix}/links')(om.links)
