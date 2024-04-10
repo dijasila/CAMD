@@ -2,13 +2,8 @@
 from __future__ import annotations
 
 import abc
-<<<<<<< HEAD
-from typing import TYPE_CHECKING, Callable, Generator, Iterable, List
-
-=======
 from typing import TYPE_CHECKING, Callable, Iterable
 from dataclasses import dataclass
->>>>>>> origin/main
 from camdweb import ColVal
 
 if TYPE_CHECKING:
@@ -35,16 +30,9 @@ class Panel(abc.ABC):
     column_descriptions: dict[str, str] = {}
     html_formatters: dict[str, Callable[..., str]] = {}
     callbacks: dict[str, Callable[[Material, int], str]] = {}
-<<<<<<< HEAD
-    
-    def __init__(self):
-        super().__init__()
-        self.subpanels = None
-=======
 
     def __init__(self):
         super().__init__()
->>>>>>> origin/main
 
     @abc.abstractmethod
     def get_data(self,
@@ -80,59 +68,6 @@ class Panel(abc.ABC):
                              formatter(value, link=True)])
         return rows
 
-<<<<<<< HEAD
-    def add_subpanels(self, material: Material): 
-        return None
-
-    def generate_webpanel(self, material: Material):
-        self.add_subpanels(material)               
-        self.generator = self.get_html(material)
-
-        if self.subpanels is not None:
-            for subpanel in self.subpanels:
-                subpanel.generate_webpanel(material = material)
-        try:
-            html = next(self.generator)
-        except StopIteration:
-            self.generator = None
-            return
-        if not html == '':  # result is ready
-            self.generator = iter([html])
-
-    def get_webpanel(self): # To be called after generation started.
-        assert self.generator is not None
-        
-        html = next(self.generator)
-        html, script = cut_out_script(html)
-        subwebpanels = None
-
-        if self.subpanels is not None:
-            subwebpanels = list()
-            for subpanel in self.subpanels:
-                subwebpanels.append(subpanel.get_webpanel())
-
-        # Should i purge the generators here?
-        self.generator = None
-
-        return WebPanel(self.title, self.info, html, subwebpanels), script
-
-def cut_out_script(html: str) -> tuple[str, str]:
-    r"""We need to put the script tags in the footer.
-
-    >>> cut_out_script('''Hello
-    ... <script>
-    ...   ...
-    ... </script>
-    ... CAMd''')
-    ('Hello\n\nCAMd', '<script>\n  ...\n</script>')
-    """
-    m = re.search(r'(<script.*</script>)', html, re.MULTILINE | re.DOTALL)
-    if m:
-        i, j = m.span()
-        return html[:i] + html[j:], html[i:j]
-    return html, ''            
-=======
->>>>>>> origin/main
 
 def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, str):
@@ -142,22 +77,3 @@ def default_formatter(value: ColVal, link: bool = False) -> str:
     if isinstance(value, bool):
         return 'Yes' if value else 'No'
     return str(value)
-<<<<<<< HEAD
-
-# Simple class for parsing panel and subpanel html info to the front end.
-class WebPanel:
-    def __init__(self, panel_title, info, html, subpanels = None):
-        self.panel_title = panel_title
-        self.info = info
-        self.html = html
-        self.subpanels = subpanels
-
-    def get_properties(self):
-        subpanel_properties = None
-        if self.subpanels is not None:
-            subpanel_properties = list()
-            for subpanel in self.subpanels:
-                subpanel_properties.append(subpanel.get_properties())
-        return self.panel_title, self.info, self.html, subpanel_properties
-=======
->>>>>>> origin/main
