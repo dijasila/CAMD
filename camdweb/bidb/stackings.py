@@ -45,13 +45,13 @@ class StackingsPanel(Panel):
             title='Stackings')
 
 
-def create_figure(bilayers: list[Material],
+def create_figure(bilayers: dict[str, Material],
                   path: Path) -> None:
     fig, ax = plt.subplots()
-    x = [bilayer.distance for bilayer in bilayers]
-    y = [bilayer.binding_energy_gs for bilayer in bilayers]
+    x = [bilayer.distance for bilayer in bilayers.values()]
+    y = [bilayer.binding_energy_gs for bilayer in bilayers.values()]
     ax.plot(x, y)
     ax.set_xlabel('distance [Å]')
     ax.set_ylabel('binding energy [eV]')
     plt.savefig(path)
-    fig.close()
+    plt.close()

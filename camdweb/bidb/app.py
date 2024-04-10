@@ -10,6 +10,7 @@ from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
 from camdweb.bidb.stackings import StackingsPanel
+from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
 
 COLUMN_DESCRIPTIONS = {
     'binding_energy_zscan': 'Binding energy (zscan)',
@@ -66,7 +67,8 @@ def main(root: Path) -> CAMDApp:
         pb.advance(pid)
 
     panels = [BiDBAtomsPanel(),
-              StackingsPanel()]
+              StackingsPanel(),
+              BSDOSBZPanel()]
 
     materials = Materials(mlist, panels)
 
