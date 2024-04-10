@@ -45,8 +45,8 @@ polarisability) and may be visible at low frequencies.
             create_optical_figures(
                 omega_w,
                 alpha_vw,
-                material.plasmafrequency_x,
-                material.plasmafrequency_y,
+                getattr(material, 'plasmafrequency_x', 0.0),
+                getattr(material, 'plasmafrequency_y', 0.0),
                 material.folder)
 
         tab = table(
