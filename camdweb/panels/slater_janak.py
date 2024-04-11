@@ -9,7 +9,7 @@ from camdweb.html import image
 from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file
 import numpy as np
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 
 # panel_description = make_panel_description(
 #     """
@@ -37,9 +37,11 @@ HTML = """
 """
 
 class SlaterJanakPanel(Panel):
-    title = f'Formation energies and charge transition levels'
-    def get_html(self,
-                 material: Material) -> Generator[str, None]:
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_data(self,
+                 material: Material) -> PanelData:
         
         root = material.folder.parent
         sj_file = root / 'charge_0' / 'results-asr.sj_analyze.json'
@@ -48,8 +50,13 @@ class SlaterJanakPanel(Panel):
         
         sj_png = root / 'charge_0' / 'sj_transitions.png'
         tbl0, tbl1 = self.plot_and_tables(sj_file, sj_png)
-        yield HTML.format(tbl0=tbl0, tbl1=tbl1,
+
+        html = HTML.format(tbl0=tbl0, tbl1=tbl1,
                           sj_png=image(sj_png, 'Slater-Janak charge transitions'))
+    
+        return PanelData(html,
+                    title = 'Formation energies and Slater-Janak charge transitions',
+                    script='')
 
     def plot_and_tables(self, sj_file: Path, sj_png: Path):
         defect_name = sj_file.parent.parent.name

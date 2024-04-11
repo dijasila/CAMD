@@ -5,12 +5,11 @@ from typing import Iterable, Generator
 from pathlib import Path
 import warnings
 
-from camdweb.html import table
-from camdweb.html import image
+from camdweb.html import table, image
 from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file as rrf
 import numpy as np
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 
 # reference = """\
 # S. Kaappa et al. Point group symmetry analysis of the electronic structure
@@ -42,31 +41,38 @@ HTML = """
 """
 ### Panel class
 class DefectSymmetryPanel(Panel):
-    title = f'One-electron defect states'
-    def get_html(self,
-                 material: Material) -> Generator[str, None]:
+    def __init__(self) -> None:
+        super().__init__()
+        
+    def get_data(self,
+                 material: Material) -> PanelData:
         
         root = material.folder
         defsym_file = root / 'results-asr.defect_symmetry.json'
         if not defsym_file.is_file():
-            return
+            raise SkipPanel('No defect symmetry analysis present.')
         
         ks_gap_png = root / 'ks_gap.png'
         tbl0, tbl1, tbl2 = self.plot_and_tables(root, ks_gap_png)
-        yield HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2,
+
+        html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2,
                           ks_gap_png=image(ks_gap_png, 'One-electon defect states'))
+    
+        return PanelData(html,
+                    title='One-electron defect states',
+                    script='')
+
     
     def plot_and_tables(self, root: Path, ks_gap_png: Path):
         data = rrf(root / 'results-asr.defect_symmetry.json')
-        e_fermi = rrf(root / 'results-asr.gs.json')['efermi']
         eref = rrf(root / 'results-asr.get_wfs.json')['eref']
-
+        e_fermi = rrf(root / 'results-asr.gs.json')['efermi'] - eref # shift to pristine vac level
 
         vbm = data['pristine']['kwargs']['data']['vbm']
         cbm = data['pristine']['kwargs']['data']['cbm']
         symmetries_data = [symmetries['kwargs']['data'] 
                            for symmetries in data['symmetries']]
-
+        
         if symmetries_data[0]['best'] is None:
             warnings.warn("no symmetry analysis present for this defect. "
                       "Only plot gapstates!", UserWarning)
@@ -75,9 +81,9 @@ class DefectSymmetryPanel(Panel):
             style = 'symmetry'
             
         state_tables, transition_table = get_symmetry_tables(
-            symmetries_data, vbm, cbm, e_fermi, eref, style=style)
+            symmetries_data, vbm, cbm, e_fermi, style=style)
         
-        plot_gapstates(symmetries_data, cbm, vbm, eref, e_fermi, ks_gap_png)
+        plot_gapstates(symmetries_data, cbm, vbm, e_fermi, ks_gap_png)
 
         return state_tables[0], state_tables[1], transition_table
 
@@ -85,9 +91,9 @@ class DefectSymmetryPanel(Panel):
 
 ### Tables and plots for the defect symmetry panel
 
-def get_symmetry_tables(state_results, vbm, cbm, e_fermi, eref, style):
+def get_symmetry_tables(state_results, vbm, cbm, e_fermi, style):
     state_tables = []
-    ef = e_fermi - eref # shift to vacuum level
+    ef = e_fermi
 
     E_hls = []
     for spin in range(2):
@@ -289,14 +295,14 @@ class Level:
                      size=12,
                      color=labelcolor)
 
-def plot_gapstates(symmetries_data, cbm, vbm, eref, e_fermi, fname):
+def plot_gapstates(symmetries_data, cbm, vbm, e_fermi, fname):
     from matplotlib import pyplot as plt
 
     fig, ax = plt.subplots()
 
     # extract pristine data
     gap = cbm - vbm
-    ef = e_fermi - eref
+    ef = e_fermi
 
     # Draw band edges
     draw_band_edge(vbm, 'vbm', offset=gap / 5, ax=ax)
@@ -373,7 +379,7 @@ def draw_levels_occupations_labels(ax, spin, spin_data, ecbm, evbm, ef,
             irrep = sym['best']
             # only do drawing left and right if levelflag, i.e.
             # if there is a symmetry analysis to evaluate degeneracies
-            if levelflag:
+            if levelflag and 0.5 < sym['error'] <= 1:
                 deg = [1, 2]['E' in irrep]
             else:
                 deg = 1
@@ -394,7 +400,7 @@ def draw_levels_occupations_labels(ax, spin, spin_data, ecbm, evbm, ef,
             if energy <= ef:
                 lev.add_occupation(length=gap / 15.)
             # draw label based on irrep
-            if levelflag:
+            if levelflag and 0.5 < sym['error'] <= 1:
                 static = None
             else:
                 static = 'A'

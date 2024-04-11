@@ -16,17 +16,16 @@ from pathlib import Path
 import rich.progress as progress
 
 from camdweb.materials import Material, Materials
-from camdweb.html import table
+from camdweb.html import table, image
 from camdweb.c2db.asr_panel import ASRPanel, read_result_file
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 from camdweb.panels.charge_neutrality import ChargeNeutralitySuperpanel
 from camdweb.panels.slater_janak import SlaterJanakPanel
 from camdweb.panels.defect_symmetry import DefectSymmetryPanel
 from camdweb.web import CAMDApp
 
 HTML = """
-<h4>{defect_title}</h4>
 <div class="row">
   <div class="col-6">
     {column1}
@@ -39,17 +38,36 @@ HTML = """
 
 class QPODAtomsPanel(AtomsPanel):
     title = 'Summary'
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.callbacks = {'atoms': self.plot}
 
-    def get_html(self,
-                 material: Material) -> Generator[str, None, None]:
+    def get_data(self,
+                 material: Material) -> PanelData:
         col1 = self.create_column_one(material)
-        col2 = self.create_column_two(material)
+        col2, script = self.create_column_two(material)
+        
         host = material.columns['host_name']
         defect = material.columns['defect_name']
         charge = material.columns['charge_state']
-        yield HTML.format(column1=col1,
-                          column2=col2,
-                          defect_title=f'{defect} in {host} {charge}')
+
+        return PanelData(HTML.format(column1=col1, column2=col2),
+                         title=f'{defect} in {host} {charge}',
+                         script=script)
+
+    # title = 'Summary'
+
+    # def get_html(self,
+    #              material: Material) -> Generator[str, None, None]:
+    #     col1 = self.create_column_one(material)
+    #     col2 = self.create_column_two(material)
+    #     host = material.columns['host_name']
+    #     defect = material.columns['defect_name']
+    #     charge = material.columns['charge_state']
+    #     yield HTML.format(column1=col1,
+    #                       column2=col2,
+    #                       defect_title=f'{defect} in {host} {charge}')
 
     def create_column_one(self,
                           material: Material) -> str:
@@ -66,6 +84,23 @@ class QPODAtomsPanel(AtomsPanel):
                                       ['magnetic']))
         return '\n'.join([html1, html2, html3])
 
+class QPODApp(CAMDApp):
+    """QPOD app with /row/<olduid> endpoint."""
+
+    title = 'QPOD'
+    logo = image('qpod-logo.png', alt='QPOD-logo')
+    links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('QPOD', 'https://cmr.fysik.dtu.dk/qpod/qpod.html')]
+
+    def __init__(self,
+                 materials: Materials,
+                 initial_columns: list[str],
+                 root: Path | None = None):
+        super().__init__(materials,
+                         initial_columns=initial_columns,
+                         #initial_filter_string='dyn_stab=True, ehull<0.2',  # ADD charge 0 as initial _ks
+                         root=root)
 
 def main(root: Path) -> CAMDApp:
     """Create QPOD app."""
@@ -91,33 +126,10 @@ def main(root: Path) -> CAMDApp:
                            ChargeNeutralitySuperpanel(),
                            SlaterJanakPanel(),
                            DefectSymmetryPanel()]
-    # for name in ['bandstructure',
-    #              'phonons',
-    #              'bader']:
-    #     panels.append(ASRPanel(name))
-    #panels.append(ShiftCurrentPanel())
 
     materials = Materials(mlist, panels)
 
     initial_columns = ['host_name', 'defect_name', 'charge_state', 'formula', 'uid']
-
-        # def __init__(self):
-        # super().__init__()
-        # self.column_names.update(
-        #     magstate='Magnetic state',
-        #     host_name='Host crystal',
-        #     defect_name='Defect',
-        #     charge_state='Charge',
-        #     host_crystal='Host crystal type',
-        #     host_uid='Host C2DB link',
-        #     host_spacegroup='Host space group',
-        #     host_pointgroup='Host point group',
-        #     host_hof='Heat of formation of host material [eV/atom]',
-        #     host_gap_pbe='Band gap of host material (PBE) [eV]',
-        #     host_gap_hse='Band gap of host material (HSE) [eV]',
-        #     energy='Energy [eV]',
-        #     r_nn='Defect-defect distance [Ang]')
-        # self.columns = list(self.column_names)
 
     materials.column_descriptions.update(
         magstate='Magnetic state',
@@ -134,7 +146,11 @@ def main(root: Path) -> CAMDApp:
         energy='Energy [eV]',
         r_nn='Defect-defect distance [Ang]')
 
-    return CAMDApp(materials, initial_columns, root)
+    app = QPODApp(materials,
+                  initial_columns,
+                  root)
+
+    return app
 
 
 if __name__ == '__main__':

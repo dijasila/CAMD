@@ -2,12 +2,12 @@ from __future__ import annotations
 import json
 import sys
 import plotly
-from typing import Iterable, Generator
+from typing import Iterable
 
 from camdweb.html import table
 from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file
-from camdweb.panels.panel import Panel
+from camdweb.panels.panel import Panel, PanelData
 import numpy as np
 import plotly.graph_objects as go
 
@@ -43,30 +43,27 @@ SCRIPT = """
 """
 
 class ChargeNeutralitySuperpanel(Panel):
-    title = f'Equilibrium energetics: All defects'
+    def __init__(self) -> None:
+        super().__init__()
+        self.subpanels: list[Panel] = []
 
     def add_subpanels(self, material: Material):
         root = material.folder.parent.parent
         cn_file = root / 'pristine_sc' / 'results-asr.charge_neutrality.json'
         result = read_result_file(cn_file)
 
-        self.subpanels = list()
+        subpanels = list()
 
         # Iterate over each "condition" in "scresults"
         for i, scresult in enumerate(result['scresults']):
             scresult = scresult['kwargs']['data']
             condition = scresult['condition']
             
-            self.subpanels.append(ChargeNeutralityPanel(result, scresult, condition))
+            subpanels.append(ChargeNeutralityPanel(result, scresult, condition))
             
-        return None
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None]:
-        html=''
-
-        yield html
-
+    def get_data(self, material: Material) -> PanelData:
+        self.add_subpanels(material)
+        return PanelData(html='', title='Equilibrium energetics: All defects', subpanels=self.subpanels)
 
 class ChargeNeutralityPanel(Panel):
     def __init__(self, result, scresult, condition) -> None:
@@ -74,10 +71,10 @@ class ChargeNeutralityPanel(Panel):
         self.result = result
         self.scresult = scresult
         self.title = condition
-
-    def get_html(self,
-                 material: Material) -> Generator[str, None]:
-
+        
+    def get_data(self,
+                 material: Material) -> PanelData:
+        
         html=''
         graphs_js = ''
         
@@ -98,7 +95,10 @@ class ChargeNeutralityPanel(Panel):
         graphs_js += f"Plotly.newPlot('charge_neutrality_{title}', graph{title}, {{}});\n"
         
         html += SCRIPT.format(graphs=graphs_js) + '<br>'
-        yield html
+    
+        return PanelData(html,
+                    title=title,
+                    script=graphs_js)
 
 # Make equilibrium defects energetics plot (from asr.charge_neutrality), //
 # an overview table for SCF results, and a table for each defect's equilibrium concentration
