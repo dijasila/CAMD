@@ -111,6 +111,8 @@ def main(root: Path) -> CAMDApp:
         Range('Band gap range [eV]', 'gap_pbe'),
         Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
+    return app
+
 
 def create_app():
     """Create the WSGI app."""

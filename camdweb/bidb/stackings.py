@@ -30,7 +30,7 @@ class StackingsPanel(Panel):
         for uid, bilayer in bilayers.items():
             e = bilayer.binding_energy_gs
             rows.append(
-                [f'<a href="{uid}">{uid}</a>' if uid != material.uid else,
+                [f'<a href="{uid}">{uid}</a>' if uid != material.uid else
                  f'{uid}',
                  f'{e:.3f}'])
         tbl = table(

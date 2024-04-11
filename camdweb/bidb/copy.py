@@ -10,9 +10,9 @@ from ase.formula import Formula
 
 
 def copy_files(db_file: str,
-               folder_file: str,
+               folders_file: str,
                home: str = '/home/') -> None:
-    folder_dict = json.loads(Path(folder_file).read_text())
+    folder_dict = json.loads(Path(folders_file).read_text())
     include_folders = set()
     for monolayer_folder, bilayer_folders in folder_dict.items():
         include_folders.add(monolayer_folder)
