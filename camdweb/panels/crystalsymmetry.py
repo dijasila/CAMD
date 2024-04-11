@@ -1,10 +1,9 @@
-from typing import Generator
-
 from ase.io import read
 
 from camdweb.panels.panel import Panel, PanelData
 from camdweb.material import Material
 from camdweb.html import table, image
+from camdweb.oqmd12345.utils import StructureInfo
 
 HTML = """
 <div class="row">
@@ -21,12 +20,12 @@ HTML = """
 class CrystalSymmetryPanel(Panel):
     title = 'Crystal Symmetry'
     datafiles = ['structure.xyz']
-
-    # SPGLIB Symmetry Analysis params
-    symprec = 0.3
-    angle_tolerance = 0.01
-    hall_number = 0
-    wrap = True
+    header_spgkey_lookup = {
+        'pointgroup': 'Point group', 'wyckoffs': 'Wyckoff sites',
+        'international': 'Space group', 'number': 'Space group No.',
+        'layergroup': 'Layer group', 'lgnum': 'Layer group No.'}
+    spglib_params = {'symprec': 0.3, 'angle_tolerance': 0.01, 'hall_number': 0,
+                     'wrap': True}
 
     def get_data(self, material: Material) -> PanelData:
         col1 = self.create_column_one(material)
@@ -39,23 +38,14 @@ class CrystalSymmetryPanel(Panel):
     def create_column_one(self, material: Material) -> str:
         path = material.folder / self.datafiles[0]
         atoms = read(path)
-        from asrlib.postprocessing.structureinfo import StructureInfo
         sinfo = StructureInfo(atoms=atoms)
+        spglib_analysis = sinfo.get_spglib_analysis(**self.spglib_params)
 
-        # generate spglib_data
-        spglib_analysis = sinfo.get_spglib_analysis(
-            symprec=self.symprec, angle_tolerance=self.angle_tolerance,
-            hall_number=self.hall_number, wrap=self.wrap)
-
-        sinfo_keys = ['pointgroup', 'wyckoffs', 'international', 'number',
-                      'layergroup', 'lgnum']
-        header = ['Point group', 'Wyckoff sites', 'Space group',
-                  'Space group No.', 'Layer group', 'Layer group No.']
-        data = {key: spglib_analysis.dataset[dataset_key]
-                for key, dataset_key in zip(header, sinfo_keys)
-                if dataset_key in spglib_analysis.dataset}
+        tableinfo = {header: spglib_analysis.dataset[spg_key]
+                     for spg_key, header in self.header_spgkey_lookup.items()
+                     if spg_key in spglib_analysis.dataset}
         return table(['Property', 'Value'],
-                     list(map(lambda kvp: list(kvp), data.items())))
+                     list(map(lambda kvp: list(kvp), tableinfo.items())))
 
     def create_column_two(self, material: Material) -> str:
         col2 = image(material.folder / 'dos.png',  # change to BravisLattice
