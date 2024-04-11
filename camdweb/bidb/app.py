@@ -5,7 +5,7 @@ from pathlib import Path
 
 import rich.progress as progress
 
-from camdweb.html import table, image
+from camdweb.html import table, image, Select, Range
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
@@ -87,15 +87,29 @@ def main(root: Path) -> CAMDApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['uid', 'binding_energy_gs', 'gap_pbe', 'formula']
+    initial_columns = [
+        'formula',
+        'number_of_layers',
+        'binding_energy_gs',
+        'slide_stability',
+        'uid',
+        'magnetic']
 
     app = CAMDApp(materials, initial_columns, root=root)
+
     app.title = 'BiDB'
     app.logo = image('bidb-logo.png', alt='BiDB-logo')
     app.links = [
         ('CMR', 'https://cmr.fysik.dtu.dk'),
         ('BiDB', 'https://cmr.fysik.dtu.dk/bidb/bidb.html')]
-
+    app.form_parts += [
+        Select('Number of layers', 'number_of_layers', ['', '1', '2']),
+        Range('Binding energy [meV/Å<sup>2</sup>] (bilayers)',
+              'binding_energy_gs'),
+        Select('Slide stability (bilayers)', 'slide_stability',
+               ['', 'Stable']),
+        Range('Band gap range [eV]', 'gap_pbe'),
+        Select('Magnetic', 'magnetic', ['', '0', '1'])]
 
 
 def create_app():
