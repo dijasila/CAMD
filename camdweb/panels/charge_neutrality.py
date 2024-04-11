@@ -45,7 +45,7 @@ SCRIPT = """
 class ChargeNeutralitySuperpanel(Panel):
     def __init__(self) -> None:
         super().__init__()
-        self.subpanels: list[Panel] = []
+        #self.subpanels: list[Panel] = []
 
     def add_subpanels(self, material: Material):
         root = material.folder.parent.parent
@@ -58,12 +58,15 @@ class ChargeNeutralitySuperpanel(Panel):
         for i, scresult in enumerate(result['scresults']):
             scresult = scresult['kwargs']['data']
             condition = scresult['condition']
-            
-            subpanels.append(ChargeNeutralityPanel(result, scresult, condition))
-            
+
+            subpanels.append(
+                ChargeNeutralityPanel(result, scresult, condition).get_data(material))
+        return subpanels
+
     def get_data(self, material: Material) -> PanelData:
-        self.add_subpanels(material)
-        return PanelData(html='', title='Equilibrium energetics: All defects', subpanels=self.subpanels)
+        subpanels = self.add_subpanels(material)
+        return PanelData(html='', title='Equilibrium energetics: All defects', subpanels=subpanels)
+
 
 class ChargeNeutralityPanel(Panel):
     def __init__(self, result, scresult, condition) -> None:
@@ -71,21 +74,21 @@ class ChargeNeutralityPanel(Panel):
         self.result = result
         self.scresult = scresult
         self.title = condition
-        
+
     def get_data(self,
                  material: Material) -> PanelData:
-        
+
         html=''
         graphs_js = ''
-        
+
         result = self.result
         scresult = self.scresult
         title = self.title
 
-        charge_neutrality_fig, tbl0, tbl1 = make_figure_and_tables(scresult, 
-                                                                    result, 
+        charge_neutrality_fig, tbl0, tbl1 = make_figure_and_tables(scresult,
+                                                                    result,
                                                                     verbose=False)
-        
+
         charge_neutrality_json = json.dumps(charge_neutrality_fig,
                                             cls=plotly.utils.PlotlyJSONEncoder)
         html += f'<h3>{title}</h3>'
@@ -93,9 +96,9 @@ class ChargeNeutralityPanel(Panel):
 
         graphs_js = f"var graph{title} = {charge_neutrality_json};\n"
         graphs_js += f"Plotly.newPlot('charge_neutrality_{title}', graph{title}, {{}});\n"
-        
+
         html += SCRIPT.format(graphs=graphs_js) + '<br>'
-    
+
         return PanelData(html,
                     title=title,
                     script=graphs_js)
@@ -109,19 +112,19 @@ def make_figure_and_tables(scresult: dict[str, tuple[dict[str, int],
                                                  float,
                                                  str]],
                            verbose: bool = True) -> tuple[str, str, str]:
-    
+
     unit = result['conc_unit']
     unitstring = f"cm<sup>{unit.split('^')[-1]}</sup>"
-    
+
     """Make charge neutrality figure and tables."""
     condition = scresult['condition']
     plotname = f'neutrality-{condition}.png'
     fig = plot_formation_scf(scresult, result, plotname)
 
     tbl0 = get_overview_table(scresult, result, unitstring)
-    
+
     tbl1 = [] # this is list of tables [[(header1, rows1)],[(header2, rows2)], ...]
-    
+
     conc_rows = []
     conc_headers = []
     for defect_concentration in scresult['defect_concentrations']:
@@ -168,7 +171,7 @@ def get_overview_table(scresult, result, unitstring):
     else:
         ptype_val = int((1 - ef / gap) * 100)
         ntype_val = int((100 - ptype_val))
-    
+
     pn_strength = f'{ptype_val:3}% / {ntype_val:3}%'
     pn = 'Strength of p-/n-type dopability in percent'
 
@@ -213,7 +216,7 @@ def get_conc_table(result, element, unitstring):
             scf_conc_table.append(
                 (f'Charge {altel[1]:1d}',
                   f'{altel[0]:.1e}'))
-    
+
     return scf_conc_table, def_name, def_type
 
 def plot_formation_scf(scresult, result, fname) -> go.Figure:
@@ -346,7 +349,7 @@ def plot_lowest_lying(fig, array_in, gap, name):
         if index == len(array_tmp):
             break
     xs, ys = get_last_element(array_tmp, xs, ys, gap)
-    
+
     fig.add_trace(go.Scatter(x=xs, y=ys, mode='lines', name=name))
     fig.update_layout(xaxis_title="E<sub>F</sub> [eV]")
     fig.write_html('plt_lowest_lying.html')
