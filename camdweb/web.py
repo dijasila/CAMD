@@ -152,9 +152,9 @@ class CAMDApp:
                 continue
             try:
                 data = panel.get_data(material)
-                print(panel, data is None)
             except SkipPanel:
                 continue
+            print(panel, data, len(data.subpanels or []))
             webpanels.append(data)
 
         return template('material.html',
