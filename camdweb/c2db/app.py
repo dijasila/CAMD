@@ -180,7 +180,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         materials.column_descriptions[f'alpha{v}'] = (
             f'Static polarizability (phonons + electrons) ({v}) [Å]')
     for v in 'xy':
-        materials.column_descriptions['plasmafrequency_{v}'] = (
+        materials.column_descriptions[f'plasmafrequency_{v}'] = (
             f'Plasma frequency ({v}) [Å<sup>0.5</sup>]')
 
     materials.html_formatters.update(

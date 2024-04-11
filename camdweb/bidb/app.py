@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import json
-from collections import defaultdict
 from pathlib import Path
 
 import rich.progress as progress
-from ase.db import connect
-from ase.formula import Formula
 
-from camdweb.html import table
+from camdweb.html import table, image, Select, Range
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
-from camdweb.panels.panel import Panel, PanelData, SkipPanel
 from camdweb.web import CAMDApp
+from camdweb.bidb.stackings import StackingsPanel
+from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
+from camdweb.c2db.asr_panel import ASRPanel, read_result_file
 
 COLUMN_DESCRIPTIONS = {
     'binding_energy_zscan': 'Binding energy (zscan)',
@@ -31,30 +30,8 @@ COLUMN_DESCRIPTIONS = {
     'layer_group': 'Layer group',
     'layer_group_number': 'Layer group number',
     'space_group': 'Space group',
-    'space_group_number': 'Space group number'}
-
-
-def expand(db_file: str) -> None:
-    monolayers: defaultdict[str, dict[str, int]] = defaultdict(dict)
-    for row in connect(db_file).select():
-        f = Formula(row.formula)
-        ab, xy, n = f.stoichiometry()
-        n //= row.number_of_layers
-        name = f'{ab}/{n}{xy}'
-        ids = monolayers[name]
-        if row.monolayer_uid in ids:
-            i = ids[row.monolayer_uid]
-        else:
-            i = len(ids)
-            ids[row.monolayer_uid] = i
-        folder = Path(name + f'-{i}')
-        if row.number_of_layers == 1:
-            folder /= 'monolayer'
-        else:
-            folder /= row.bilayer_uid.split('-', 2)[2]
-        folder.mkdir(exist_ok=True, parents=True)
-        row.toatoms().write(folder / 'structure.xyz')
-        (folder / 'data.json').write_text(json.dumps(row.key_value_pairs))
+    'space_group_number': 'Space group number',
+    'distance': 'Distance [Å]'}
 
 
 class BiDBAtomsPanel(AtomsPanel):
@@ -70,18 +47,16 @@ class BiDBAtomsPanel(AtomsPanel):
         return table(None, rows)
 
 
-class StackingsPanel(Panel):
-    def get_data(self,
-                 material: Material) -> PanelData:
-        bilayers = material.data.get('bilayers')
-        if bilayers is None:
-            raise SkipPanel
-        rows = []
-        for uid, bilayer in bilayers.items():
-            e = bilayer.binding_energy_zscan
-            rows.append([f'<a href="{uid}">{uid}</a>', f'{e:.3f}'])
-        tbl = table(['Stacking', 'Binding energy [meV/Å<sup>2</sup>]'], rows)
-        return PanelData(tbl, title='Stackings')
+def read_material(path: Path,
+                  uid: str) -> Material:
+    material = Material.from_file(path / 'structure.xyz', uid)
+    try:
+        evac = read_result_file(path / 'results-asr.gs.json')['evac']
+    except FileNotFoundError:
+        pass
+    else:
+        material.columns['evac'] = evac
+    return material
 
 
 def main(root: Path) -> CAMDApp:
@@ -91,26 +66,58 @@ def main(root: Path) -> CAMDApp:
         pid = pb.add_task('Reading matrerials:', total=len(paths))
         for f1 in paths:
             uid1 = f1.parent.name
+            monolayer = read_material(f1, uid1)
             bilayers = {}
             for f2 in f1.parent.glob('*/'):
                 if f2.name != 'monolayer':
                     uid2 = f'{f2.parent.name}-{f2.name}'
-                    bilayer = Material.from_file(f2 / 'structure.xyz', uid2)
+                    bilayer = read_material(f2, uid2)
+                    bilayer.data['monolayer'] = monolayer
                     bilayers[uid2] = bilayer
                     mlist.append(bilayer)
-            monolayer = Material.from_file(f1 / 'structure.xyz', uid1)
             monolayer.data['bilayers'] = bilayers
             mlist.append(monolayer)
-        pb.advance(pid)
+            pb.advance(pid)
 
     panels = [BiDBAtomsPanel(),
-              StackingsPanel()]
+              StackingsPanel(),
+              BSDOSBZPanel(),
+              ASRPanel('fermisurface'),
+              ASRPanel('raman')]
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['uid', 'area', 'formula']
+    initial_columns = [
+        'formula',
+        'number_of_layers',
+        'binding_energy_gs',
+        'slide_stability',
+        'uid',
+        'magnetic']
 
-    return CAMDApp(materials, initial_columns, root=root)
+    app = CAMDApp(materials, initial_columns, root=root)
+
+    app.title = 'BiDB'
+    app.logo = image('bidb-logo.png', alt='BiDB-logo')
+    app.links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('BiDB', 'https://cmr.fysik.dtu.dk/bidb/bidb.html')]
+    app.form_parts += [
+        Select('Number of layers', 'number_of_layers', ['', '1', '2']),
+        Range('Binding energy [meV/Å<sup>2</sup>] (bilayers)',
+              'binding_energy_gs'),
+        Select('Slide stability (bilayers)', 'slide_stability',
+               ['', 'Stable']),
+        Range('Band gap range [eV]', 'gap_pbe'),
+        Select('Magnetic', 'magnetic', ['', '0', '1'])]
+
+    return app
+
+
+def create_app():
+    """Create the WSGI app."""
+    app = main(Path())
+    return app.app
 
 
 if __name__ == '__main__':

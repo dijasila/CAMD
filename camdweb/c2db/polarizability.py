@@ -53,7 +53,7 @@ polarisability) and may be visible at low frequencies.
             ['Properties', ' '],
             self.table_rows(material,
                             [f'alpha{v}_el' for v in 'xyz'] +
-                            [f'plasmafrequency_{v}]' for v in 'xy']))
+                            [f'plasmafrequency_{v}' for v in 'xy']))
         x, y, z = (image(material.folder / f'rpa-pol-{v}.png') for v in 'xyz')
         return PanelData(
             HTML.format(x=x, y=y, z=z, table=tab),
