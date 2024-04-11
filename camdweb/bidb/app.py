@@ -5,7 +5,7 @@ from pathlib import Path
 
 import rich.progress as progress
 
-from camdweb.html import table
+from camdweb.html import table, image
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
@@ -77,7 +77,7 @@ def main(root: Path) -> CAMDApp:
                     mlist.append(bilayer)
             monolayer.data['bilayers'] = bilayers
             mlist.append(monolayer)
-        pb.advance(pid)
+            pb.advance(pid)
 
     panels = [BiDBAtomsPanel(),
               StackingsPanel(),
@@ -87,9 +87,15 @@ def main(root: Path) -> CAMDApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['uid', 'area', 'formula']
+    initial_columns = ['uid', 'binding_energy_gs', 'gap_pbe', 'formula']
 
-    return CAMDApp(materials, initial_columns, root=root)
+    app = CAMDApp(materials, initial_columns, root=root)
+    app.title = 'BiDB'
+    app.logo = image('bidb-logo.png', alt='BiDB-logo')
+    app.links = [
+        ('CMR', 'https://cmr.fysik.dtu.dk'),
+        ('BiDB', 'https://cmr.fysik.dtu.dk/bidb/bidb.html')]
+
 
 
 def create_app():

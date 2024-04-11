@@ -29,8 +29,10 @@ class StackingsPanel(Panel):
         rows = []
         for uid, bilayer in bilayers.items():
             e = bilayer.binding_energy_gs
-            rows.append([f'<a href="{uid}">{uid}</a>',
-                         f'{e:.3f}'])
+            rows.append(
+                [f'<a href="{uid}">{uid}</a>' if uid != material.uid else,
+                 f'{uid}',
+                 f'{e:.3f}'])
         tbl = table(
             ['Stacking',
              'Binding energy [meV/Å<sup>2</sup>]'],
@@ -50,8 +52,8 @@ def create_figure(bilayers: dict[str, Material],
     fig, ax = plt.subplots()
     x = [bilayer.distance for bilayer in bilayers.values()]
     y = [bilayer.binding_energy_gs for bilayer in bilayers.values()]
-    ax.plot(x, y)
+    ax.plot(x, y, 'o')
     ax.set_xlabel('distance [Å]')
-    ax.set_ylabel('binding energy [eV]')
+    ax.set_ylabel('binding energy [meV/Å/Å]')
     plt.savefig(path)
     plt.close()

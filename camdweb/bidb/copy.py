@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -8,9 +9,18 @@ from ase.db import connect
 from ase.formula import Formula
 
 
-def copy_files(db_file: str) -> None:
+def copy_files(db_file: str,
+               folder_file: str,
+               home: str = '/home/') -> None:
+    folder_dict = json.loads(Path(folder_file).read_text())
+    include_folders = set()
+    for monolayer_folder, bilayer_folders in folder_dict.items():
+        include_folders.add(monolayer_folder)
+        include_folders.update(bilayer_folders)
     monolayers: defaultdict[str, dict[str, int]] = defaultdict(dict)
     for row in connect(db_file).select():
+        if row.folder not in include_folders:
+            continue
         f = Formula(row.formula)
         ab, xy, n = f.stoichiometry()
         n //= row.number_of_layers
@@ -32,10 +42,15 @@ def copy_files(db_file: str) -> None:
         data = dict(row.key_value_pairs)
         if row.number_of_layers == 2:
             data['distance'] = distance(atoms)
-            print(row.folder)
         (folder / 'data.json').write_text(json.dumps(data))
-        for file in Path(row.folder).glob('results-asr.*.json'):
+        dir = Path(row.folder.replace('/home/', home))
+        for file in dir.glob('results-asr.*.json'):
             (folder / file.name).write_bytes(file.read_bytes())
+
+    # Put logo in the right place:
+    logo = Path('bidb-logo.png')
+    if not logo.is_file():
+        shutil.copyfile(Path(__file__).parent / 'logo.png', logo)
 
 
 def distance(bilayer: Atoms) -> float:
@@ -44,4 +59,4 @@ def distance(bilayer: Atoms) -> float:
 
 
 if __name__ == '__main__':
-    copy_files(sys.argv[1])
+    copy_files(*sys.argv[1:])
