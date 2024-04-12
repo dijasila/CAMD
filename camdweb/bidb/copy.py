@@ -53,6 +53,16 @@ def copy_files(db_file: str,
         if 0:
             for file in dir.glob('results-asr.*.json'):
                 (folder / file.name).write_bytes(file.read_bytes())
+        for name in ['pdos']:
+            file = dir / f'results-asr.{name}.json'
+            if file.is_file():
+                txt = file.read_text()
+                try:
+                    json.loads(txt)
+                except json.JSONDecodeError:
+                    print(file)
+                else:
+                    (folder / file.name).write_text(txt)
 
     # Put logo in the right place:
     logo = Path('bidb-logo.png')

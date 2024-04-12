@@ -31,14 +31,14 @@ class StackingsPanel(Panel):
             e = getattr(bilayer, 'binding_energy_gs', None)
             if e is None:
                 e = bilayer.binding_energy_zscan
-            rows.append(
-                [f'<a href="{uid}">{uid}</a>' if uid != material.uid else
-                 f'{uid}',
-                 f'{e:.3f}'])
+            rows.append((e, uid))
         tbl = table(
             ['Stacking',
              'Binding energy [meV/Å<sup>2</sup>]'],
-            rows)
+            [[f'<a href="{uid}">{uid}</a>' if uid != material.uid else
+              f'{uid}',
+              f'{e:.3f}']
+             for e, uid in sorted(rows)])
         pngfile = monolayer.folder / 'stackings.png'
         if not pngfile.is_file():
             create_figure(bilayers, pngfile)
@@ -53,7 +53,12 @@ def create_figure(bilayers: dict[str, Material],
                   path: Path) -> None:
     fig, ax = plt.subplots()
     x = [bilayer.distance for bilayer in bilayers.values()]
-    y = [bilayer.binding_energy_gs for bilayer in bilayers.values()]
+    y = []
+    for bilayer in bilayers.values():
+        e = getattr(bilayer, 'binding_energy_gs', None)
+        if e is None:
+            e = bilayer.binding_energy_zscan
+        y.append(e)
     ax.plot(x, y, 'o')
     ax.set_xlabel('distance [Å]')
     ax.set_ylabel('binding energy [meV/Å/Å]')
