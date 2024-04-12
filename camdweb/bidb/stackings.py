@@ -61,6 +61,6 @@ def create_figure(bilayers: dict[str, Material],
         y.append(e)
     ax.plot(x, y, 'o')
     ax.set_xlabel('distance [Å]')
-    ax.set_ylabel('binding energy [meV/Å/Å]')
+    ax.set_ylabel('binding energy [meV/Å$^2$]')
     plt.savefig(path)
     plt.close(fig)
