@@ -20,7 +20,8 @@ COLUMN_DESCRIPTIONS = {
     'bilayer_uid': 'Bilayer ID',
     'dynamically_stable': 'Dynamically stable',
     'magnetic': 'Magnetic',
-    'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+    'interlayer_magnetic_state': 'Interlayer magnetic state',
+    'interlayer_magnetic_exchange': 'Interlayer magnetic exchange',
     'slide_stability': 'Slide Stability',
     'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
     'ehull': 'Energy above convex hull [eV/atom]',
@@ -43,7 +44,10 @@ class BiDBAtomsPanel(AtomsPanel):
 
     def create_column_one(self,
                           material: Material) -> str:
-        rows = self.table_rows(material, COLUMN_DESCRIPTIONS)
+        skip = {'interlayer_magnetic_exchange',
+                'binding_energy_zscan'}
+        keys = COLUMN_DESCRIPTIONS.keys() - skip
+        rows = self.table_rows(material, keys)
         return table(None, rows)
 
 
