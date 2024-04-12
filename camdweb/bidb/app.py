@@ -133,4 +133,4 @@ def check_all(pattern: str):  # pragma: no cover
 
 
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8083, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8084, debug=True)
