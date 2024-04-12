@@ -124,8 +124,7 @@ def main(root: Path) -> CAMDApp:
                     material.columns.update(data)
                     mlist.append(material)
             else:
-                print(f'''Warning: data.json file not found
-                        or not readable in {f}''')
+                print(f'Warning: data.json file not found or not readable in {f}')
             pb.advance(pid)
 
     panels: list[Panel] = [QPODAtomsPanel(),
