@@ -21,7 +21,7 @@ def test_bidb(tmp_path):
                  bilayer_uid='H-xyz-stacking',
                  cod_id='A23462346',
                  extra=27,
-                 binding_energy_gs=15.0,
+                 binding_energy_gs=0.015,  # eV/Å^2
                  folder=f)
         atoms = Atoms('H', pbc=(1, 1, 0))
         atoms.center(vacuum=1)
@@ -37,4 +37,4 @@ def test_bidb(tmp_path):
     app.index_page()
     app.material_page('1H-1-stacking')
     html = app.material_page('1H-1')
-    assert '15.000' in html
+    assert '15.000' in html  # meV/Å^2
