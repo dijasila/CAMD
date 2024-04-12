@@ -9,7 +9,7 @@ from camdweb.html import image
 from camdweb.material import Material
 from camdweb.c2db.asr_panel import read_result_file
 import numpy as np
-from camdweb.panels.panel import Panel, PanelData
+from camdweb.panels.panel import Panel, PanelData, SkipPanel
 
 # panel_description = make_panel_description(
 #     """
@@ -36,24 +36,25 @@ HTML = """
 </div>
 """
 
+
 class SlaterJanakPanel(Panel):
     def __init__(self) -> None:
         super().__init__()
 
     def get_data(self,
                  material: Material) -> PanelData:
-        
+
         root = material.folder.parent
         sj_file = root / 'charge_0' / 'results-asr.sj_analyze.json'
         if not sj_file.is_file():
-            return
-        
+            raise SkipPanel
+
         sj_png = root / 'charge_0' / 'sj_transitions.png'
         tbl0, tbl1 = self.plot_and_tables(sj_file, sj_png)
 
         html = HTML.format(tbl0=tbl0, tbl1=tbl1,
                           sj_png=image(sj_png, 'Slater-Janak charge transitions'))
-    
+
         return PanelData(html,
                     title = 'Formation energies and Slater-Janak charge transitions',
                     script='')
@@ -70,21 +71,21 @@ class SlaterJanakPanel(Panel):
           transition_values = transition_data['transition_values']['kwargs']['data']
           transitions_data.append((transition_name, transition_values))
 
-        
+
         ## tbl0 rows, sorted by transition energy
         rows0 = [(f"{defect_name} ({name})",
                  f"{(values['transition'] - values['evac'] - vbm):.2f}",
                  f"{values['erelax']:.2f}")
                 for name, values in transitions_data]
         rows0.sort(key=lambda row: float(row[1]))
-        
+
         tbl0 = table(
             header=['Transition', 'Transition energy', 'Relaxation correction'],
-            rows=rows0) 
+            rows=rows0)
 
         tbl1 = table(
             header=['Defect formation energy', 'Value'],
-            rows=[(f"{defect_name} (q = {row[1]} @ VBM)", f"{row[0]:.2f}") 
+            rows=[(f"{defect_name} (q = {row[1]} @ VBM)", f"{row[0]:.2f}")
                   for row in data['eform']])
 
         # if not sj_png.is_file():

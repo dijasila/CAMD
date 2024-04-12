@@ -114,6 +114,7 @@ def make_figure_and_tables(scresult: dict[str, tuple[dict[str, int],
                            verbose: bool = True) -> tuple[str, str, str]:
 
     unit = result['conc_unit']
+    assert isinstance(unit, str)
     unitstring = f"cm<sup>{unit.split('^')[-1]}</sup>"
 
     """Make charge neutrality figure and tables."""

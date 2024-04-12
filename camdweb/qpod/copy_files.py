@@ -30,7 +30,7 @@ from ase import Atoms
 from ase.io import read
 
 from camdweb.c2db.asr_panel import read_result_file
-
+from camdweb.utils import read_atoms
 import re
 
 RESULT_FILES = [
@@ -43,8 +43,8 @@ RESULT_FILES = [
     'database.material_fingerprint'
     ]
 
-CHARGE_0_RESULT_FILES = ['defectinfo', 
-                         'sj_analyze'] 
+CHARGE_0_RESULT_FILES = ['defectinfo',
+                         'sj_analyze']
                          #'charge_neutrality'] handled in pris folder, same file
 RESULT_FILES.extend(CHARGE_0_RESULT_FILES)
 
@@ -109,7 +109,7 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     except FileNotFoundError:
         print("Database.fingerprint file not found", dir)
         return
-    
+
     try:
         defectinfo = rrf('defectinfo')     # Maybe take data from json directly at some later point
         data['host_name'] = defectinfo['host_name']
@@ -125,11 +125,12 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     except FileNotFoundError:
         pass
 
-    data['energy'] = read(gpw).get_potential_energy()
+    atoms = read_atoms(gpw)
+    data['energy'] = atoms.get_potential_energy()
 
     folder.mkdir(exist_ok=False, parents=True)
 
-    read(gpw).write(folder / 'structure.xyz')
+    atoms.write(folder / 'structure.xyz')
 
     # Copy result json-files:
     for name in RESULT_FILES:
