@@ -107,6 +107,9 @@ class Index:
             values = np.array([value for value, i in fdata])
             self.floats[name] = (values, ids)
 
+        print(self.strings.keys() & self.floats.keys())
+        print(self.strings.keys() & self.integers.keys())
+        print(self.floats.keys() & self.integers.keys())
         print(f'Rows: {len(rows)} | '
               f'Strings: {len(self.strings)} | '
               f'Integers: {len(self.integers)} | '

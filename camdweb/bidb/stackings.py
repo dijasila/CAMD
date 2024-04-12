@@ -28,7 +28,9 @@ class StackingsPanel(Panel):
             monolayer = material
         rows = []
         for uid, bilayer in bilayers.items():
-            e = bilayer.binding_energy_gs
+            e = getattr(bilayer, 'binding_energy_gs')
+            if e is None:
+                e = bilayer.binding_energy_zscan
             rows.append(
                 [f'<a href="{uid}">{uid}</a>' if uid != material.uid else
                  f'{uid}',

@@ -40,6 +40,12 @@ def copy_files(db_file: str,
         atoms = row.toatoms()
         atoms.write(folder / 'structure.xyz')
         data = dict(row.key_value_pairs)
+        for key in ['binding_energy_gs', 'binding_energy_zscan']:
+            if key in data:
+                if data[key] == '-':
+                    del data[key]
+                else:
+                    data[key] *= 1000
         if row.number_of_layers == 2:
             data['distance'] = distance(atoms)
         (folder / 'data.json').write_text(json.dumps(data))
