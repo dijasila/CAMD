@@ -28,7 +28,7 @@ class StackingsPanel(Panel):
             monolayer = material
         rows = []
         for uid, bilayer in bilayers.items():
-            e = getattr(bilayer, 'binding_energy_gs')
+            e = getattr(bilayer, 'binding_energy_gs', None)
             if e is None:
                 e = bilayer.binding_energy_zscan
             rows.append(
@@ -58,4 +58,4 @@ def create_figure(bilayers: dict[str, Material],
     ax.set_xlabel('distance [Å]')
     ax.set_ylabel('binding energy [meV/Å/Å]')
     plt.savefig(path)
-    plt.close()
+    plt.close(fig)

@@ -48,10 +48,11 @@ def copy_files(db_file: str,
                     data[key] *= 1000
         if row.number_of_layers == 2:
             data['distance'] = distance(atoms)
-        (folder / 'data.json').write_text(json.dumps(data))
+        (folder / 'data.json').write_text(json.dumps(data, indent=2))
         dir = Path(row.folder.replace('/home/', home))
-        for file in dir.glob('results-asr.*.json'):
-            (folder / file.name).write_bytes(file.read_bytes())
+        if 0:
+            for file in dir.glob('results-asr.*.json'):
+                (folder / file.name).write_bytes(file.read_bytes())
 
     # Put logo in the right place:
     logo = Path('bidb-logo.png')
