@@ -20,7 +20,8 @@ COLUMN_DESCRIPTIONS = {
     'bilayer_uid': 'Bilayer ID',
     'dynamically_stable': 'Dynamically stable',
     'magnetic': 'Magnetic',
-    'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
+    'interlayer_magnetic_state': 'Interlayer magnetic state',
+    'interlayer_magnetic_exchange': 'Interlayer magnetic exchange',
     'slide_stability': 'Slide Stability',
     'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
     'ehull': 'Energy above convex hull [eV/atom]',
@@ -43,7 +44,10 @@ class BiDBAtomsPanel(AtomsPanel):
 
     def create_column_one(self,
                           material: Material) -> str:
-        rows = self.table_rows(material, COLUMN_DESCRIPTIONS)
+        skip = {'interlayer_magnetic_exchange',
+                'binding_energy_zscan'}
+        keys = COLUMN_DESCRIPTIONS.keys() - skip
+        rows = self.table_rows(material, keys)
         return table(None, rows)
 
 
@@ -59,9 +63,9 @@ def read_material(path: Path,
     return material
 
 
-def main(root: Path) -> CAMDApp:
+def main(root: Path, pattern: str = '*') -> CAMDApp:
     mlist: list[Material] = []
-    paths = list(root.glob('*/*/monolayer/'))
+    paths = list(root.glob(f'{pattern}/*/monolayer/'))
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(paths))
         for f1 in paths:
@@ -120,5 +124,13 @@ def create_app():
     return app.app
 
 
+def check_all(pattern: str):  # pragma: no cover
+    """Generate png-files."""
+    bidb = main(Path(), pattern)
+    for material in bidb.materials:
+        print(material.uid)
+        bidb.material_page(material.uid)
+
+
 if __name__ == '__main__':
-    main(Path()).app.run(host='0.0.0.0', port=8083, debug=True)
+    main(Path()).app.run(host='0.0.0.0', port=8084, debug=True)

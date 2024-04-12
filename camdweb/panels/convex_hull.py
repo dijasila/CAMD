@@ -114,7 +114,7 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         f = Formula.from_dict(count)
         hform = e / len(f)
         if uid == higlight_uid or source not in sources:
-            frmt = '{formula:html}, {uid}'
+            frmt = '{formula:html}, ({uid})'
         else:
             _, frmt = sources[source]
         tables[source].append((hform, frmt.format(uid=uid, formula=f)))

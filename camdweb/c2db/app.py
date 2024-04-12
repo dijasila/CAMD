@@ -127,7 +127,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
             sources={'OQMD': ('Bulk crystals from OQMD123',
                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
                      'C2DB': ('Monolayers from C2DB',
-                              '{formula:html}, <a href={uid}>{uid}</a>')}),
+                              '{formula:html}, (<a href={uid}>{uid}</a>)')}),
         ASRPanel('stiffness'),
         ASRPanel('phonons'),
         ASRPanel('deformationpotentials'),
