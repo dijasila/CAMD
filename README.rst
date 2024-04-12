@@ -9,7 +9,7 @@ Web-apps for:
 * QPOD
 * BiDB
 * CRYSP
-* OQMD12345
+* OQMD12345 (CrystalBank)
 
 .. contents::
 
@@ -35,16 +35,17 @@ Test URLs
 
 Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
 
-===============================================  ====
-Link                                             port
-===============================================  ====
-`C2DB-test <https://c2db-test.fysik.dtu.dk/>`__  8081
-`CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__  8082
-`QPOD <https://qpod.fysik.dtu.dk/>`__            8083
-`BiDB <https://bidb.fysik.dtu.dk/>`__            8084
-`CRYSP <https://crysp.fysik.dtu.dk/>`__          8085
-`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__  8086
-===============================================  ====
+======================================================  ====
+Link                                                    port
+======================================================  ====
+`C2DB-test <https://c2db-test.fysik.dtu.dk/>`__         8081
+`CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__         8082
+`QPOD <https://qpod.fysik.dtu.dk/>`__                   8083
+`BiDB <https://bidb.fysik.dtu.dk/>`__                   8084
+`CRYSP <https://crysp.fysik.dtu.dk/>`__                 8085
+`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__         8086
+`OPTIMADE <https://c2db-test.fysik.dtu.dk/optimade>`__
+======================================================  ====
 
 
 Installation
@@ -61,7 +62,7 @@ CAMd-web needs Python_ version 3.9 or later.
     $ git clone git@gitlab.com:asr-dev/asr
     $ pip install -e asr
     $ git clone git@gitlab.com:camd/camd-web
-    $ pip install -e camd-web[test]
+    $ pip install -e camd-web[test,optimade]
 
 
 .. _Python: https://python.org/
@@ -152,6 +153,7 @@ On the ``fysik-cmr02`` server run uWSGI like this::
 
     $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
     $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
+    $ uwsgi -w "camdweb.bidb.app:create_app()" --http :8084 --master --threads=2 --enable-threads --daemonize=bidb.log
     $ uwsgi -w "camdweb.oqmd12345.app:create_app()" --http :8086 --master --threads=2 --enable-threads --daemonize=oqmd12345.log
 
 
@@ -209,7 +211,8 @@ Objects
     number of each species present.
 
 :Panel:
-    Has a ``get_html(material)`` method that can produce a snippet of HTML
+    Has a ``get_data(material)`` method that can produce a ``PanelData``
+    object (html, title, pop-up text, javascript and possibly sub-panels)
     to be assembled in the ``/material/<uid>/`` end-point.
 
 :Index:
