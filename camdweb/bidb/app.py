@@ -59,9 +59,9 @@ def read_material(path: Path,
     return material
 
 
-def main(root: Path) -> CAMDApp:
+def main(root: Path, pattern: str = '*') -> CAMDApp:
     mlist: list[Material] = []
-    paths = list(root.glob('*/*/monolayer/'))
+    paths = list(root.glob(f'{pattern}/*/monolayer/'))
     with progress.Progress() as pb:
         pid = pb.add_task('Reading matrerials:', total=len(paths))
         for f1 in paths:
@@ -118,6 +118,14 @@ def create_app():
     """Create the WSGI app."""
     app = main(Path())
     return app.app
+
+
+def check_all(pattern: str):  # pragma: no cover
+    """Generate png-files."""
+    bidb = main(Path(), pattern)
+    for material in bidb.materials:
+        print(material.uid)
+        bidb.material_page(material.uid)
 
 
 if __name__ == '__main__':
