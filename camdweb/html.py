@@ -6,8 +6,11 @@ from typing import Iterable, Sequence
 from ase.formula import Formula
 
 
-def table(header: list[str] | None, rows: Sequence[Iterable],
-          responsive: bool = True) -> str:
+def table(header: list[str] | None,
+          rows: Sequence[Iterable],
+          *,
+          responsive: bool = True,
+          striped: bool = True) -> str:
     """Create HTML table.
 
     Example:
@@ -48,8 +51,9 @@ def table(header: list[str] | None, rows: Sequence[Iterable],
                 '</th>\n    <th>'.join(header) +
                 '</th>\n   </tr>\n  </thead>\n')
 
+    classes = 'table table-striped' if striped else 'table'
     html_table = (
-        f' <table class="table table-striped">\n{head}' +
+        f' <table class="{classes}">\n{head}' +
         '  <tbody>\n   <tr>\n    ' +
         '\n   </tr>\n   <tr>\n    '.join(
             '\n    '.join(f'<td>{x}</td>' for x in row)
