@@ -26,26 +26,21 @@ from collections import defaultdict
 from pathlib import Path
 
 import rich.progress as progress
-from ase import Atoms
-from ase.io import read
-
 from camdweb.c2db.asr_panel import read_result_file
 from camdweb.utils import read_atoms
-import re
 
 RESULT_FILES = [
     'magstate',
     'magnetic_anisotropy',
     'structureinfo',
-    #'defect_symmetry', to be added; may or may not be present
+    # 'defect_symmetry', to be added; may or may not be present
     'gs',
     'gs@calculate',
-    'database.material_fingerprint'
-    ]
+    'database.material_fingerprint']
 
 CHARGE_0_RESULT_FILES = ['defectinfo',
                          'sj_analyze']
-                         #'charge_neutrality'] handled in pris folder, same file
+# 'charge_neutrality'] handled in pris folder, same file
 RESULT_FILES.extend(CHARGE_0_RESULT_FILES)
 
 
@@ -68,29 +63,28 @@ def copy_materials(root: Path, patterns: list[str]) -> None:
             copy_material(dir, names)
             pb.advance(pid)
 
+
 def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     gpw = dir / 'gs.gpw'
     if not gpw.is_file():
         return
 
     parts = str(dir).split('/')
-    defects_index = next((i for i, part in enumerate(parts) if 'defects.' in part), None)
+    defects_index = next((i for i, part in enumerate(parts)
+                          if 'defects.' in part), None)
 
     if defects_index is None or defects_index + 1 > len(parts):
         return
 
-    #Handle pristine and defect folders
+    # Handle pristine and defect folders
     material_folder = parts[defects_index - 1].split('-')[0]
 
     if 'defects.pristine' in str(dir):
         subfolder = parts[defects_index].split('.')[-1]
         folder = Path(material_folder) / subfolder
-        RESULT_FILES.extend(['defectinfo'])     #'charge_neutrality' conditional
-        try:
-            charge_neutrality = dir / f'results-asr.charge_neutrality.json'
-            RESULT_FILES.extend(['charge_neutrality'])
-        except:
-            pass
+        RESULT_FILES.extend(['defectinfo'])  # 'charge_neutrality' conditional
+        # charge_neutrality = dir / 'results-asr.charge_neutrality.json'
+        RESULT_FILES.extend(['charge_neutrality'])
     else:
         defects_parts = parts[defects_index].split('.')
         subfolder = defects_parts[-1]
@@ -111,7 +105,8 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         return
 
     try:
-        defectinfo = rrf('defectinfo')     # Maybe take data from json directly at some later point
+        defectinfo = rrf('defectinfo')
+        # Maybe take data from json directly at some later point
         data['host_name'] = defectinfo['host_name']
         data['defect_name'] = defectinfo['defect_name']
         data['charge_state'] = defectinfo['charge_state']
@@ -121,7 +116,8 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
         data['host_uid'] = defectinfo['host_uid']
         data['host_spacegroup'] = defectinfo['host_spacegroup']
         data['host_pointgroup'] = defectinfo['host_pointgroup']
-        data['r_nn'] = defectinfo['R_nn'] or 0.0   # Defect-defect distance; 0 inplace of None
+        # Defect-defect distance; 0 inplace of None:
+        data['r_nn'] = defectinfo['R_nn'] or 0.0
     except FileNotFoundError:
         pass
 
@@ -143,7 +139,6 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
             shutil.copyfile(result, folder / result.name)
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
-
 
 
 if __name__ == '__main__':

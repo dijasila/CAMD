@@ -96,7 +96,7 @@ DIMS = ['', 'length', 'area', 'volume']
 
 class AtomsPanel(Panel):
     title = 'Atoms'
-    
+
     def __init__(self) -> None:
         super().__init__()
         self.callbacks = {'atoms': self.plot}

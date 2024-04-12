@@ -6,7 +6,8 @@ This module has code to convert ~cmr/C2DB/tree/ folders and friends
 Also contains simple web-app that can run off the tree of folders.
 
 Goal is to have the code decoupled from ASE, GPAW and ASR.
-Right now ASR webpanel() functions are still used (see camdweb.c2db.asr_panel module).
+Right now ASR webpanel() functions are still used
+(see camdweb.c2db.asr_panel module).
 """
 from __future__ import annotations
 
@@ -17,7 +18,6 @@ import rich.progress as progress
 
 from camdweb.materials import Material, Materials
 from camdweb.html import table, image
-from camdweb.c2db.asr_panel import ASRPanel, read_result_file
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.panel import Panel, PanelData
 from camdweb.panels.charge_neutrality import ChargeNeutralitySuperpanel
@@ -36,9 +36,10 @@ HTML = """
 </div>
 """
 
+
 class QPODAtomsPanel(AtomsPanel):
     title = 'Summary'
-    
+
     def __init__(self) -> None:
         super().__init__()
         self.callbacks = {'atoms': self.plot}
@@ -47,7 +48,7 @@ class QPODAtomsPanel(AtomsPanel):
                  material: Material) -> PanelData:
         col1 = self.create_column_one(material)
         col2, script = self.create_column_two(material)
-        
+
         host = material.columns['host_name']
         defect = material.columns['defect_name']
         charge = material.columns['charge_state']
@@ -72,10 +73,12 @@ class QPODAtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: Material) -> str:
         html1 = table(['Pristine crystal info', ''],
-                      self.table_rows(material,
-                                      ['host_name', 'host_crystal', 'host_spacegroup',
-                                       'host_pointgroup', 'host_hof', 'host_gap_pbe',
-                                       'host_gap_hse', 'host_uid'])) # add c2db link to host_uid
+                      self.table_rows(
+                          material,
+                          ['host_name', 'host_crystal', 'host_spacegroup',
+                           'host_pointgroup', 'host_hof', 'host_gap_pbe',
+                           'host_gap_hse', 'host_uid']))
+        # add c2db link to host_uid
         html2 = table(['Defect properties', ''],
                       self.table_rows(material,
                                       ['r_nn']))
@@ -83,6 +86,7 @@ class QPODAtomsPanel(AtomsPanel):
                       self.table_rows(material,
                                       ['magnetic']))
         return '\n'.join([html1, html2, html3])
+
 
 class QPODApp(CAMDApp):
     """QPOD app with /row/<olduid> endpoint."""
@@ -99,8 +103,10 @@ class QPODApp(CAMDApp):
                  root: Path | None = None):
         super().__init__(materials,
                          initial_columns=initial_columns,
-                         #initial_filter_string='dyn_stab=True, ehull<0.2',  # ADD charge 0 as initial _ks
+                         # initial_filter_string='dyn_stab=True, ehull<0.2',
+                         # ADD charge 0 as initial _ks
                          root=root)
+
 
 def main(root: Path) -> CAMDApp:
     """Create QPOD app."""
@@ -118,7 +124,7 @@ def main(root: Path) -> CAMDApp:
                     material.columns.update(data)
                     mlist.append(material)
             else:
-                print(f'''Warning: data.json file not found 
+                print(f'''Warning: data.json file not found
                         or not readable in {f}''')
             pb.advance(pid)
 
@@ -129,7 +135,8 @@ def main(root: Path) -> CAMDApp:
 
     materials = Materials(mlist, panels)
 
-    initial_columns = ['host_name', 'defect_name', 'charge_state', 'formula', 'uid']
+    initial_columns = ['host_name', 'defect_name', 'charge_state',
+                       'formula', 'uid']
 
     materials.column_descriptions.update(
         magstate='Magnetic state',
