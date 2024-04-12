@@ -1,3 +1,4 @@
+# flake8: noqa
 from __future__ import annotations
 import json
 import sys
@@ -43,26 +44,26 @@ HTML = """
 class DefectSymmetryPanel(Panel):
     def __init__(self) -> None:
         super().__init__()
-        
+
     def get_data(self,
                  material: Material) -> PanelData:
-        
+
         root = material.folder
         defsym_file = root / 'results-asr.defect_symmetry.json'
         if not defsym_file.is_file():
             raise SkipPanel('No defect symmetry analysis present.')
-        
+
         ks_gap_png = root / 'ks_gap.png'
         tbl0, tbl1, tbl2 = self.plot_and_tables(root, ks_gap_png)
 
         html = HTML.format(tbl0=tbl0, tbl1=tbl1, tbl2=tbl2,
                           ks_gap_png=image(ks_gap_png, 'One-electon defect states'))
-    
+
         return PanelData(html,
                     title='One-electron defect states',
                     script='')
 
-    
+
     def plot_and_tables(self, root: Path, ks_gap_png: Path):
         data = rrf(root / 'results-asr.defect_symmetry.json')
         eref = rrf(root / 'results-asr.get_wfs.json')['eref']
@@ -70,19 +71,19 @@ class DefectSymmetryPanel(Panel):
 
         vbm = data['pristine']['kwargs']['data']['vbm']
         cbm = data['pristine']['kwargs']['data']['cbm']
-        symmetries_data = [symmetries['kwargs']['data'] 
+        symmetries_data = [symmetries['kwargs']['data']
                            for symmetries in data['symmetries']]
-        
+
         if symmetries_data[0]['best'] is None:
             warnings.warn("no symmetry analysis present for this defect. "
                       "Only plot gapstates!", UserWarning)
             style = 'state'
         else:
             style = 'symmetry'
-            
+
         state_tables, transition_table = get_symmetry_tables(
             symmetries_data, vbm, cbm, e_fermi, style=style)
-        
+
         plot_gapstates(symmetries_data, cbm, vbm, e_fermi, ks_gap_png)
 
         return state_tables[0], state_tables[1], transition_table
@@ -148,7 +149,7 @@ def get_symmetry_tables(state_results, vbm, cbm, e_fermi, style):
                 rows.append((rowlabels[i],
                              # state_array[i, 0],
                              f'{state_array[i, 1]} eV'))
-        
+
         state_table = table(
             header=[f'Orbitals in spin channel {spin}',
                     *columnlabels],
