@@ -27,7 +27,8 @@ from camdweb.utils import formula_dict_to_string
 class Index:
     def __init__(self,
                  rows: list[tuple[dict[str, int], dict[str, ColVal]]],
-                 max_int_range: int = 350):
+                 max_int_range: int = 350,
+                 strict=True):
         """Indices for speeding up row filtering.
 
         The *rows* argument is a list of two element tuples:
@@ -107,9 +108,13 @@ class Index:
             values = np.array([value for value, i in fdata])
             self.floats[name] = (values, ids)
 
-        print(self.strings.keys() & self.floats.keys())
-        print(self.strings.keys() & self.integers.keys())
-        print(self.floats.keys() & self.integers.keys())
+        sf = self.strings.keys() & self.floats.keys()
+        si = self.strings.keys() & self.integers.keys()
+        fi = self.floats.keys() & self.integers.keys()
+        if sf or si or fi:
+            print(sf, si, fi)
+            if strict:
+                raise ValueError
         print(f'Rows: {len(rows)} | '
               f'Strings: {len(self.strings)} | '
               f'Integers: {len(self.integers)} | '
