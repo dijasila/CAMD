@@ -1,61 +1,94 @@
 from pathlib import Path
 from textwrap import wrap
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 from camdweb.c2db.asr_panel import read_result_file
+from camdweb.html import image, table
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData
-from camdweb.html import image
 
 HTML = """
-{img}
+<div class="row">
+  <div class="col-6">
+   {col1}
+  </div>
+  <div class="col-6">
+   {col2}
+  </div>
+</div>
 """
 
 
 class ShiftCurrentPanel(Panel):
     datafiles = ['results-asr.shift.json']
+    info = """The frequency-dependent shift current is a second order
+    optical response tensor, relating a DC current to the square of an
+    applied electric field of frequency omega.  The shift current tensor
+    is of rank 3 corresponding to the polarization direction of the
+    induced current and the two electric field vectors, respectively.  The
+    shift current spectra are obtained from second-order perturbation
+    theory in the long wave length limit (q=0) without spin-orbit
+    interactions.  The calculations include a line-shape broadening of
+    50meV, and transitions of near degenerate bands are ignored when the
+    energy difference is below 10meV.
+
+    Relevant articles:
+
+    M. O. Sauer, et al.,
+    Shift current photovoltaic efficiency in 2D materials.
+    npj Comput. Mater. 9, 35 (2023).
+    """
 
     def get_data(self,
                  material: Material) -> PanelData:
         result_file = material.folder / self.datafiles[0]
-        self.make_figures(result_file)
-        return PanelData(
-            HTML.format(
-                img=image(f'{material.folder}/dos.png',
-                          alt=f'Shift-current for {material.uid}')),
-            title='Shift current spectrum (RPA)')
-
-    def make_figures(self, result_file: Path):
         data = read_result_file(result_file)
+        gap = material.data['gap_dir_nosoc']
+        table_rows, figures = self.make_figures(data, gap), material.folder
+        tbl = table(table_rows)
+        col1 = [image(path, alt='Shift-current') for path in figures[::2]]
+        col2 = [image(path, alt='Shift-current') for path in figures[1::2]]
+        if len(figures) % 2 == 0:
+            col1.append(tbl)
+        else:
+            col2.append(tbl)
+        return PanelData(HTML.format(col1=col1, col2=col2),
+                         title='Shift current spectrum (RPA)')
 
-        # Make the table
-        sym_chi = data['symm']
-        table = []
-        for pol in sorted(sym_chi.keys()):
-            relation = sym_chi[pol]
-            if pol == 'zero':
-                if relation != '':
-                    pol = 'Others'
-                    relation = '0=' + relation
-                else:
-                    continue  # pragma: no cover
 
-            if (len(relation) == 3):
-                relation_new = ''  # pragma: no cover
+def make_figures(data: dict[str, Any],
+                 gap: float,
+                 folder: Path) -> tuple[str, list[Path]]:
+    # Make the table
+    sym_chi = data['symm']
+    table = []
+    for pol in sorted(sym_chi.keys()):
+        relation = sym_chi[pol]
+        if pol == 'zero':
+            if relation != '':
+                pol = 'Others'
+                relation = '0=' + relation
             else:
-                # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
-                relation_new = '\n'.join(wrap(relation, 50))
-            table.append((pol, relation_new))
+                continue
 
-        # Make the figure list
-        npan = len(sym_chi) - 1
-        files = [result_file.with_name(f'shift{ii + 1}.png')
-                 for ii in range(npan)]
-        plot_shift(data, 1.2, files, nd=2)
+        if (len(relation) == 3):
+            relation_new = ''
+        else:
+            # relation_new = '$'+'$\n$'.join(wrap(relation, 40))+'$'
+            relation_new = '\n'.join(wrap(relation, 50))
+        table.append((pol, relation_new))
 
-        # 'header': ['Element', 'Relations']
+    # Make the figure list
+    npan = len(sym_chi) - 1
+    files = [folder / f'shift{ii + 1}.png' for ii in range(npan)]
+
+    if not files[0].is_file():
+        plot_shift(data, gap, files, nd=2)
+
+    return table, files
 
 
 def plot_shift(data, gap, filenames, nd=2):
