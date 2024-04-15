@@ -37,17 +37,18 @@ URLs
 
 Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
 
-======================================================  ====
-Link                                                    port
-======================================================  ====
-`C2DB <https://c2db-test.fysik.dtu.dk/>`__              8081
-`CMR-projects <https://cmrdb-test.fysik.dtu.dk/>`__     8082
-`QPOD <https://qpod.fysik.dtu.dk/>`__                   8083
-`BiDB <https://bidb.fysik.dtu.dk/>`__                   8084
-`CRYSP <https://crysp.fysik.dtu.dk/>`__                 8085
-`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__         8086
-`OPTIMADE <https://c2db-test.fysik.dtu.dk/optimade>`__
-======================================================  ====
+=================================================  ====
+Link                                               port
+=================================================  ====
+`C2DB <https://c2db.fysik.dtu.dk/>`__              8081
+`CMR-projects <https://cmrdb.fysik.dtu.dk/>`__     8082
+`QPOD <https://qpod.fysik.dtu.dk/>`__              8083
+`BiDB <https://bidb.fysik.dtu.dk/>`__              8084
+`CRYSP <https://crysp.fysik.dtu.dk/>`__            8085
+`OQMD12345 <https://oqmd12345.fysik.dtu.dk/>`__    8086
+`OPTIMADE <https://cmr-optimade.fysik.dtu.dk>`__
+`OPTIMADE <https://c2db.fysik.dtu.dk/optimade>`__
+=================================================  ====
 
 
 Installation
