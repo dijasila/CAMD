@@ -46,22 +46,24 @@ class ShiftCurrentPanel(Panel):
                  material: Material) -> PanelData:
         result_file = material.folder / self.datafiles[0]
         data = read_result_file(result_file)
-        gap = material.data['gap_dir_nosoc']
-        table_rows, figures = self.make_figures(data, gap), material.folder
-        tbl = table(table_rows)
+        gap = material.gap_dir_nosoc
+        table_rows, figures = make_figures(data, gap, material.folder)
+        tbl = table(['Element', 'Relations'], table_rows)
         col1 = [image(path, alt='Shift-current') for path in figures[::2]]
         col2 = [image(path, alt='Shift-current') for path in figures[1::2]]
         if len(figures) % 2 == 0:
             col1.append(tbl)
         else:
             col2.append(tbl)
-        return PanelData(HTML.format(col1=col1, col2=col2),
+        return PanelData(HTML.format(col1='\n'.join(col1),
+                                     col2='\n'.join(col2)),
                          title='Shift current spectrum (RPA)')
 
 
 def make_figures(data: dict[str, Any],
                  gap: float,
-                 folder: Path) -> tuple[str, list[Path]]:
+                 folder: Path) -> tuple[list[tuple[str, str]],
+                                        list[Path]]:
     # Make the table
     sym_chi = data['symm']
     table = []

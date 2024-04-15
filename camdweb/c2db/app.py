@@ -17,10 +17,10 @@ import json
 from pathlib import Path
 
 import rich.progress as progress
-
 from camdweb.c2db.asr_panel import ASRPanel
 from camdweb.c2db.bs_dos_bz_panel import BSDOSBZPanel
 from camdweb.c2db.polarizability import IRPolarizability, OpticalPolarizability
+from camdweb.c2db.shift_current import ShiftCurrentPanel
 from camdweb.html import Range, RangeX, Select, image, table
 from camdweb.materials import Material, Materials
 from camdweb.optimade.app import add_optimade
@@ -29,7 +29,6 @@ from camdweb.panels.bader import BaderPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.emass import EmassPanel
 from camdweb.panels.panel import Panel
-from camdweb.panels.shift_current import ShiftCurrentPanel
 from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
 
