@@ -32,8 +32,7 @@ from camdweb.panels.panel import Panel
 from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
 
-OLD = 'https://cmrdb.fysik.dtu.dk/c2db/row/'
-OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/row'
+OQMD = 'https://cmrdb.fysik.dtu.dk/oqmd123/material/'
 
 
 class C2DBAtomsPanel(AtomsPanel):
@@ -51,12 +50,6 @@ class C2DBAtomsPanel(AtomsPanel):
                                       ['magstate', 'gap', 'gap_hse',
                                        'gap_gw']))
         return '\n'.join([html1, html2, html3])
-
-
-def olduid(uid, link=False):  # pragma: no cover
-    if link:
-        return f'<a href={OLD}/{uid}>{uid}</a>'
-    return uid
 
 
 class C2DBApp(CAMDApp):
@@ -185,8 +178,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     materials.html_formatters.update(
         cod_id=cod,
         icsd_id=icsd,
-        doi=doi,
-        olduid=olduid)
+        doi=doi)
 
     initial_columns = ['formula', 'ehull', 'hform', 'gap', 'magstate',
                        'layergroup']
