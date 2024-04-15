@@ -5,7 +5,7 @@ CAMd web-apps
 Web-apps for:
 
 * C2DB
-* old CMR-projects
+* CMR-projects
 * QPOD
 * BiDB
 * CRYSP
@@ -18,28 +18,30 @@ Important links
 ===============
 
 * `Bottle <https://bottlepy.org/docs/dev/index.html>`__
-* `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/index.html>`__
+* `uWSGI <https://uwsgi-docs.readthedocs.io/en/latest/index.html>`_
 * `Plotly <https://plotly.com/python/>`__
 * `Bootstrap
   <https://getbootstrap.com/docs/5.3/getting-started/introduction/>`__
 * `WSGI <https://peps.python.org/pep-3333/>`_
+* `HTMX <https://htmx.org/>`__
 * `ASE <https://wiki.fysik.dtu.dk/ase/index.html>`__
 * `CMR-projects <https://cmrdb.fysik.dtu.dk/>`__
 * `CMR-repo <https://gitlab.com/camd/cmr>`__
 * `ASR-repo <https://gitlab.com/asr-dev/asr>`__
 * `Scaling to many users <https://workchronicles.com/white-lies/>`__
+* `OPTIMADE <https://www.optimade.org/>`__
 
 
-Test URLs
-=========
+URLs
+====
 
 Forwarding to ``https://fysik-cmr02.fysik.dtu.dk:<port>``:
 
 ======================================================  ====
 Link                                                    port
 ======================================================  ====
-`C2DB-test <https://c2db-test.fysik.dtu.dk/>`__         8081
-`CMR-test <https://cmrdb-test.fysik.dtu.dk/>`__         8082
+`C2DB <https://c2db-test.fysik.dtu.dk/>`__              8081
+`CMR-projects <https://cmrdb-test.fysik.dtu.dk/>`__     8082
 `QPOD <https://qpod.fysik.dtu.dk/>`__                   8083
 `BiDB <https://bidb.fysik.dtu.dk/>`__                   8084
 `CRYSP <https://crysp.fysik.dtu.dk/>`__                 8085
@@ -149,7 +151,7 @@ If 100 % coverage is not possible then you can make CI pass by adding
 Deployment
 ==========
 
-On the ``fysik-cmr02`` server run uWSGI like this::
+On the ``fysik-cmr02`` server run uWSGI_ like this::
 
     $ uwsgi -w "camdweb.c2db.app:create_app()" --http :8081 --master --threads=2 --enable-threads --daemonize=c2db.log
     $ uwsgi -w "camdweb.cmr.app:create_app()" --http :8082 --master --threads=2 --enable-threads --daemonize=cmr.log
