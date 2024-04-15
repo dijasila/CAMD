@@ -2,11 +2,6 @@
 
 See https://cmr.fysik.dtu.dk/
 
-TODO:
-
-* bidb: magnetic: yes or 1. slide_stability: Stable?
-* extra???
-
 """
 from __future__ import annotations
 
@@ -236,6 +231,12 @@ class ABX2ProjectDescription(ProjectDescription):
             'Phase: ZB=zinckblende, WZ=wurtzite, KT=wz kesterite, '
             'ST=wz stannite, CP=zb chaclopyrite', 'phase',
             ',ST,KT,CP,WZ,ZB'.split(','))]
+
+    def postprocess(self, material):
+        if material.E_uncertanty_perAtom == '-':
+            del material.columns['E_uncertanty_perAtom']
+        if material.E_uncertanty_hull == '-':
+            del material.columns['E_uncertanty_hull']
 
 
 @project('agau309')
@@ -525,88 +526,6 @@ class Ads1DProjectDescription(ProjectDescription):
     uid = 'uid'
 
 
-@project('bidb')
-class BiDBProjectDescription(ProjectDescription):
-    title = 'Bilayer database'
-    column_descriptions = {
-        'binding_energy_zscan': 'Binding energy (zscan) [meV/Å<sup>2</sup>]',
-        'number_of_layers': 'nlayers',
-        'monolayer_uid': 'Monolayer ID',
-        'bilayer_uid': 'Bilayer ID',
-        'dynamically_stable': 'Dynamically stable',
-        'magnetic': 'Magnetic',
-        'interlayer_magnetic_exchange': 'Interlayer Magnetic State',
-        'slide_stability': 'Slide Stability',
-        'thermodynamic_stability': '',
-        'binding_energy_gs': 'Binding Energy (gs) [meV/Å<sup>2</sup>]',
-        'ehull': 'Energy above convex hull [eV/atom]',
-        'gap_pbe': 'Band gap (PBE)',
-        'icsd_id': 'ICSD id of parent bulk structure',
-        'cod_id': 'COD id of parent bulk structure',
-        'layer_group': 'Layer group',
-        'layer_group_number': 'Layer group number',
-        'space_group': 'Space group',
-        'space_group_number': 'Space group number'}
-    uid = 'uid'
-    initial_columns = [
-        'formula',
-        'number_of_layers',
-        'binding_energy_gs',
-        'slide_stability',
-        'uid',
-        'magnetic']
-    form_parts = [
-        Select('Number of layers', 'number_of_layers', ['', '1', '2']),
-        Range('Binding energy [meV/Å<sup>2</sup>] (bilayers)',
-              'binding_energy_gs'),
-        Select('Slide stability (bilayers)', 'slide_stability',
-               ['', 'Stable']),
-        Range('Band gap range [eV]', 'gap_pbe'),
-        Select('Magnetic', 'magnetic', ['', '0', '1'])]
-
-    def create_column_one(self, panel, material):
-        def tab(names):
-            return panel.table_rows(material, names)
-
-        if material.number_of_layers == 1:
-            tables = [
-                (['Monolayer structure info', 'Value'],
-                 tab(['layer_group',
-                      'layer_group_number',
-                      'space_group',
-                      'space_group_number',
-                      'icsd_id',
-                      'cod_id'])),
-                (['Stability', ''],
-                 tab(['dynamically_stable', 'ehull'])),
-                (['Basic properties', ''],
-                 tab(['magnetic', 'gap_PBE']))]
-        else:
-            tables = [
-                (['Bilayer structure info', 'Value'],
-                 tab(['layer_group',
-                      'layer_group_number',
-                      'space_group',
-                      'space_group_number',
-                      'icsd_id',
-                      'cod_id',
-                      'monolayer_uid'])),
-                (['Stability', ''],
-                 tab(['binding_energy_zscan', 'slide_stability'])),
-                (['Basic properties', ''],
-                 tab(['magnetic', 'interlayer_magnetic_exchange', 'gap_PBE']))]
-            # Add link to monolayer:
-            _, mid = tables[0][1][-1]
-            tables[0][1][-1] = (
-                'Monolayer in BiDB',
-                f'<a href={mid}>{mid}</a>')
-            tables[0][1].append(
-                ('Monolayer in C2DB',
-                 f'<a href=https://cmrdb.fysik.dtu.dk/c2db/row/{mid}>'
-                 f'{mid}</a>'))
-        return '\n'.join(table(header, rows) for header, rows in tables)
-
-
 @project('lowdim')
 class LowDimProjectDescription(ProjectDescription):
     title = ('Definition of a scoring parameter to'
@@ -766,6 +685,10 @@ class C1DBProjectDescription(ProjectDescription):
                 rows.append(
                     [text, f'<a href={uid}>{uid}</a>'])
         return table(['XXX', ''], rows)
+
+    def postprocess(self, material):
+        if isinstance(getattr(material, 'derived_from', None), int):
+            material.columns['derived_from'] = str(material.derived_from)
 
 
 if __name__ == '__main__':
