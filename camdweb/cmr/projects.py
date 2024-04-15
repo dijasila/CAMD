@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from ase.db import connect
 
 from camdweb.cmr.lowdim import LowDimPanel, keysfortable0
-from camdweb.html import (FormPart, Input, Range, RangeS, RangeX, Select,
+from camdweb.html import (FormPart, Input, RangeS, RangeX, Select,
                           image, table)
 from camdweb.material import Material
 from camdweb.panels.panel import Panel, PanelData, SkipPanel
