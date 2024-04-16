@@ -68,8 +68,10 @@ def fft(atomic_numbers: list[int] | np.ndarray) -> tuple[dict[str, int],
             formula_dict_to_string(stoichiometry))
 
 
-def read_atoms(path: Path | str) -> Atoms:
-    atoms = read(path)
+def read_atoms(path: Path | str,
+               *,
+               format: str | None = None) -> Atoms:
+    atoms = read(path, format=format)
     assert isinstance(atoms, Atoms)
     return atoms
 
