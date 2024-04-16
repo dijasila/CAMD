@@ -40,6 +40,8 @@ def create_db_file(projects_name: str,
         elif name == 'abx2':
             kwargs['KS_gap'] = 0  # int should be converted to float
             kwargs['E_hull'] = np.inf  # should not be shown
+            kwargs['E_uncertanty_perAtom'] = '-'
+            kwargs['E_uncertanty_hull'] = 0.1
         elif name == 'abs3':  # band-structure data:
             data = {'x': [0, 1, 2],
                     'y': [1.0, 1.5, 1.4],

@@ -68,6 +68,9 @@ class CMRProjectApp(CAMDApp):
         self.dbpath = dbpath
         self.title = title
         self.form_parts += form_parts
+        self.links = [
+            ('About ...', f'{CMR}/{self.name}/{self.name}.html'),
+            ('CMR', CMR)]
 
     def index_page(self) -> str:
         html = super().index_page()
