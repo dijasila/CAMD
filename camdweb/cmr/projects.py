@@ -163,7 +163,7 @@ def abs3_bs(d: dict, path: Path) -> bool:
     n1 = len(d['X'])
     n2 = len(d['names'])
     if n1 != n2:
-        print('bad data:', d, path)
+        print('bad data:', path)
         return False
     fig, ax = plt.subplots()
     ax.plot(d['x'], d['y'])
