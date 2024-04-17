@@ -16,7 +16,7 @@ dependencies = [
     "plotly",
     "ase",
     "asr"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
