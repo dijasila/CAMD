@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import abc
 from typing import TYPE_CHECKING, Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from camdweb import ColVal
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ class PanelData:
     title: str
     info: str = ''
     script: str = ''
-    subpanels: list[PanelData] | None = None
+    subpanels: list[PanelData] = field(default_factory=list)
 
 
 class Panel(abc.ABC):
