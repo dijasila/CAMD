@@ -147,7 +147,7 @@
               % p = i
               % i += 1
               % # panel_title, info, html, sub_panels = super_panel.get_properties()
-              % if len(panel.subpanels or []) == 0:
+              % if len(panel.subpanels) == 0:
                 <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
                   href="#sec{{ p }}" style="color: #00ABE4">
                   <span class="d-none d-sm-inline">{{ !panel.title }}</span>
@@ -159,7 +159,7 @@
                   class="nav-link px-0 align-middle">
                     <span class="d-none d-sm-inline dropdown-toggle">{{ !panel.title }}</span>
                 </a>
-                % for subpanel in panel.subpanels or []:
+                % for subpanel in panel.subpanels:
                   % p2 = i
                   % i += 1
                   % # subpanel_title, info, html, sub_panels = sub_panel
@@ -231,7 +231,7 @@
           </div>
         </div>
         </section>
-        % for subpanel in panel.subpanels or []:
+        % for subpanel in panel.subpanels:
           % p = i
           % i += 1
           % # panel_title, info, html, sub_panels = sub_panel
