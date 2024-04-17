@@ -16,7 +16,7 @@ Build tree like this::
     $ cd /tmp
     $ mkdir tree
     $ cd tree
-    $ python -m cxdb.qpod.copy_files <root-dir> <pattern> <pattern> ...
+    $ python -m camdweb.qpod.copy_files <root-dir> <pattern> <pattern> ...
 
     """
 import json
@@ -33,30 +33,27 @@ RESULT_FILES = [
     'magstate',
     'magnetic_anisotropy',
     'structureinfo',
-    # 'defect_symmetry', to be added; may or may not be present
     'gs',
-    'gs@calculate',
-    'database.material_fingerprint']
+    'gs@calculate']
 
 CHARGE_0_RESULT_FILES = ['defectinfo',
                          'sj_analyze']
-# 'charge_neutrality'] handled in pris folder, same file
 RESULT_FILES.extend(CHARGE_0_RESULT_FILES)
 
 
-ROOT = Path('/home/niflheim2/cmr/defects/WIP/defects/rerun-qpod/tree-fabian2')
+ROOT = Path('/home/niflheim2/cmr/WIP/defects/rerun-qpod')
 
-# Updated PATTERNS to match the new structure
 PATTERNS = [
-    'A*/*/*/defects.*/charge_*',
-    'A*/*/*/defects.pristine*'
+    'tree-*/A*/*/*/defects.*/charge_*',
+    'tree-*/A*/*/*/defects.pristine*'
 ]
-
 
 def copy_materials(root: Path, patterns: list[str]) -> None:
     dirs = [dir for pattern in patterns for dir in root.glob(pattern)]
     names: defaultdict[str, int] = defaultdict(int)
-
+    
+    assert root.exists()
+    
     with progress.Progress() as pb:
         pid = pb.add_task('Copying materials:', total=len(dirs))
         for dir in dirs:
@@ -82,27 +79,33 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     if 'defects.pristine' in str(dir):
         subfolder = parts[defects_index].split('.')[-1]
         folder = Path(material_folder) / subfolder
-        RESULT_FILES.extend(['defectinfo'])  # 'charge_neutrality' conditional
-        # charge_neutrality = dir / 'results-asr.charge_neutrality.json'
+        RESULT_FILES.extend(['defectinfo'])
         RESULT_FILES.extend(['charge_neutrality'])
     else:
         defects_parts = parts[defects_index].split('.')
         subfolder = defects_parts[-1]
         charge_folder = parts[defects_index + 1]
         folder = Path(material_folder) / subfolder / charge_folder
+        RESULT_FILES.extend(['database.material_fingerprint'])
+        
         if charge_folder == 'charge_0':
             RESULT_FILES.extend(CHARGE_0_RESULT_FILES)
+        
+        if (folder / 'results-asr.defect_symmetry.json').is_file():
+            RESULT_FILES.extend(['defect_symmetry'])
 
+    # def rrf(name: str) -> dict:
+    #     return read_result_file(dir / f'results-asr.{name}.json')
     def rrf(name: str) -> dict:
-        return read_result_file(dir / f'results-asr.{name}.json')
+        filepath = dir / f'results-asr.{name}.json'
+        if not is_json_file_well_formatted(filepath):
+            print(f"File {filepath} is not well formatted")
+            if name == 'database.material_fingerprint':
+                fix_json_file(filepath)
+        
+        return read_result_file(filepath)
 
     data = {}
-    try:
-        fingerprint = rrf('database.material_fingerprint')
-        data['uid'] = fingerprint['uid']
-    except FileNotFoundError:
-        print("Database.fingerprint file not found", dir)
-        return
 
     try:
         defectinfo = rrf('defectinfo')
@@ -121,8 +124,22 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
     except FileNotFoundError:
         pass
 
-    atoms = read_atoms(gpw)
-    data['energy'] = atoms.get_potential_energy()
+    try:
+        atoms = read_atoms(dir / 'structure.json')
+    except FileNotFoundError:
+        print('ERROR:', dir)
+
+    if not 'defects.pristine' in str(dir):
+        try:
+            fingerprint = rrf('database.material_fingerprint')
+            data['uid'] = fingerprint['uid']
+        except FileNotFoundError:
+            print("Database.fingerprint file not found", dir)
+            return
+        try:
+            data['energy'] = atoms.get_potential_energy()
+        except Exception:
+            print(dir)
 
     folder.mkdir(exist_ok=False, parents=True)
 
@@ -140,6 +157,42 @@ def copy_material(dir: Path, names: defaultdict[str, int]) -> None:
 
     (folder / 'data.json').write_text(json.dumps(data, indent=0))
 
+##### MAJOR HACKY FIX FOR *known* CURSED JSON FILES #####
+##### This can be removed once the json files are fixed ##### 
+def fix_json_file(filepath: str):
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+
+    # Check if the last line ends with '}}'
+    if lines[-1].rstrip().endswith('}}'):
+        # Remove the extra '}' from the last line
+        lines[-1] = lines[-1].rstrip('}\n') + '\n'
+        with open(filepath, 'w') as file:
+            file.writelines(lines)
+    
+    try:
+        with open(filepath, 'r') as file:
+            json.load(file)
+    except json.JSONDecodeError as e:
+        error_message = str(e)
+        if "Expecting ',' delimiter" in error_message:
+            with open(filepath, 'a') as file:
+                file.write('}')
+        if "Extra data" in error_message:
+            with open(filepath, 'r') as file:
+                lines = file.readlines()
+            with open(filepath, 'w') as file:
+                file.writelines(lines[:-1])
+
+def is_json_file_well_formatted(filepath: str) -> bool:
+    try:
+        with open(filepath, 'r') as file:
+            json.load(file)
+        return True
+    except json.JSONDecodeError:
+        return False
+
+##### END OF MAJOR HACKY FIX ##### 
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
