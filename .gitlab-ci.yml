@@ -35,6 +35,7 @@ tests:
       junit: junit.xml
     expire_in: 1 week
 
+
 oldtests:
   image: python:3.9
   script:
@@ -46,4 +47,11 @@ oldtests:
     - pip install pytest boddle
     - pip install .
     - pytest -v --color=yes
+  when: manual
+
+
+monitoring:
+  image: python:3.12
+  script:
+    - python camdweb/monitor.py
   when: manual
