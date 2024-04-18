@@ -1,0 +1,27 @@
+
+<section id="sec{{ p }}">
+<div class="accordion accordion-flush" id="accordionFlush">
+  <!--  Create each Accordion Body  -->
+  <div class="accordion-item mb-1">
+    <!--  accordion button  -->
+    <h2 class="accordion-header" id="flush-heading{{ p }}">
+        <button class="accordion-button collapsed"
+           type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
+           aria-expanded="false" aria-controls="flush-collapse{{ p }}">
+          <span class="d-none d-sm-inline">{{ !panel.title }}</span>
+        </button>
+    </h2>
+
+    <!--  Accordion Content (Panel info)  -->
+    <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
+         id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
+         aria-labelledby="flush-heading{{ p }}" title="{{ !panel.title }}">
+      <div class="panel accordion-body">
+        {{ !panel.html }}
+        {{ !panel.info }}
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+

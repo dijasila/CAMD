@@ -145,6 +145,7 @@ class CAMDApp:
         """Page showing one selected material."""
         sidebar = self.persistent_sidebar()
         material = self.materials[uid]
+        panel_data = self.panel_data()
         webpanels = []
         for panel in self.materials.panels:
             if not all((material.folder / datafile).is_file()
@@ -159,7 +160,14 @@ class CAMDApp:
         return template('material.html',
                         title=uid,
                         panels=webpanels,
-                        sidebar=sidebar)
+                        sidebar=sidebar,
+                        panel_data=panel_data)
+
+    def panel_data(self):
+        ...
+
+    def materials_sidebar(self):
+        return template()
 
     def persistent_sidebar(self):
         """Provide persistent sidebar for all pages."""

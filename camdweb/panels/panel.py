@@ -16,11 +16,36 @@ class SkipPanel(Exception):
 
 @dataclass
 class PanelData:
+    pid: int
     html: str
     title: str
     info: str = ''
     script: str = ''
     subpanels: list[PanelData] = field(default_factory=list)
+
+    def build_sidebar(self, super_pid: int=None):
+        from bottle import template
+        if self.subpanels is None and super_pid is None:
+            panel_case = 'Panel'
+        elif self.subpanels is not None and super_pid is None:
+            panel_case = 'SuperPanel'
+        elif super_pid is not None and self.subpanels is None:
+            panel_case = 'SubPanel'
+        else:
+            raise ValueError('Sub-panels do not support sub-panels.')
+
+        sidebar_html = template(
+            '../sidebar_element.html',
+            case=panel_case,
+            title=self.title,
+            pid=self.pid,
+            ppid=super_pid)
+        for subpanel in self.subpanels:
+            subpanel_html = subpanel.build_sidebar(super_pid=self.pid)
+            sidebar_html = '\n'.join([sidebar_html, subpanel_html])
+
+        return sidebar_html
+
 
 
 class Panel(abc.ABC):
