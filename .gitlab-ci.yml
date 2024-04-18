@@ -54,4 +54,7 @@ monitoring:
   image: python:3.12
   script:
     - python camdweb/monitor.py
-  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == "schedule"
