@@ -283,8 +283,11 @@ def copy_material(fro: Path,
     else:  # pragma: no cover
         dyn_stab_stiffness = ph['dynamic_stability_stiffness']
 
-    data['dyn_stab'] = (dyn_stab_phonons == 'high' and
-                        dyn_stab_stiffness == 'high')
+    if dyn_stab_phonons == 'unknown' or dyn_stab_stiffness == 'unknown':
+        data['dyn_stab'] = 'Unknown'
+    else:
+        data['dyn_stab'] = 'Yes' if (dyn_stab_phonons == 'high' and
+                                     dyn_stab_stiffness == 'high') else 'No'
 
     for x in ['hse', 'gw']:
         try:
