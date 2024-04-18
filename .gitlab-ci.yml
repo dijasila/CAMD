@@ -34,6 +34,10 @@ tests:
         path: coverage.xml
       junit: junit.xml
     expire_in: 1 week
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $SCHEDULED_MONITOR_JOB == "monitor"
+      when: never
 
 
 oldtests:
@@ -54,4 +58,7 @@ monitoring:
   image: python:3.12
   script:
     - python camdweb/monitor.py
-  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: manual
+    - if: $SCHEDULED_MONITOR_JOB == "monitor"
