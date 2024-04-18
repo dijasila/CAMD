@@ -30,7 +30,7 @@ class MiscPanel(Panel):
                                       keys[0:kl1]))
         html2 = table(['Miscellaneous details', ''],
                       self.table_rows(material,
-                                      keys[kl1::]))
+                                      keys[kl1:]))
 
         return PanelData(HTML.format(col1=html1, col2=html2),
                          title='Miscellaneous')
