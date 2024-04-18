@@ -13,10 +13,10 @@ HTML = """
 </div>
 """
 
-#Miscellaneous
+
 class MiscPanel(Panel):
     def get_data(self,
-                 material: Material) -> str:
+                 material: Material) -> PanelData:
 
         keys = []
         dkeys = material.columns.keys()
@@ -27,10 +27,10 @@ class MiscPanel(Panel):
 
         html1 = table(['Miscellaneous details', ''],
                       self.table_rows(material,
-                            keys[0:kl1]))
+                                      keys[0:kl1]))
         html2 = table(['Miscellaneous details', ''],
                       self.table_rows(material,
-                            keys[kl1::]))
+                                      keys[kl1::]))
 
         return PanelData(HTML.format(col1=html1, col2=html2),
                          title='Miscellaneous')

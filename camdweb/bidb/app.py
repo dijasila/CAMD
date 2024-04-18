@@ -7,6 +7,7 @@ import rich.progress as progress
 
 from camdweb.html import table, image, Select, Range
 from camdweb.materials import Material, Materials
+from camdweb.panels.misc import MiscPanel
 from camdweb.panels.atoms import AtomsPanel
 from camdweb.web import CAMDApp
 from camdweb.bidb.stackings import StackingsPanel
@@ -87,7 +88,8 @@ def main(root: Path, pattern: str = '*') -> CAMDApp:
               StackingsPanel(),
               BSDOSBZPanel(),
               ASRPanel('fermisurface'),
-              ASRPanel('raman')]
+              ASRPanel('raman'),
+              MiscPanel()]
 
     materials = Materials(mlist, panels)
 
