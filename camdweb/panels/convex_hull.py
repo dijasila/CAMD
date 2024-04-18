@@ -154,7 +154,7 @@ def plot_2d(pd: PhaseDiagram,
     if set(sources) == {'C2DB', 'OQMD'}:
         plot_order = ['OQMD', 'C2DB']
     else:
-        plot_order = list[set(sources)]
+        plot_order = list(set(sources))
 
     x, y = pd.points[:, 1:].T
 
@@ -234,7 +234,7 @@ def plot_3d(pd: PhaseDiagram,
     if set(sources) == {'C2DB', 'OQMD'}:
         plot_order = ['OQMD', 'C2DB']
     else:
-        plot_order = list[set(sources)]
+        plot_order = list(set(sources))
 
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
