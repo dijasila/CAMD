@@ -61,4 +61,5 @@ monitoring:
   rules:
     - if: $CI_PIPELINE_SOURCE == "push"
       when: manual
+      allow_failure: true
     - if: $SCHEDULED_MONITOR_JOB == "monitor"
