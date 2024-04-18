@@ -3,12 +3,39 @@ import json
 
 CMR = 'https://cmrdb.fysik.dtu.dk'
 C2DB = 'https://c2db.fysik.dtu.dk'
+BiDB = 'https://bidb.fysik.dtu.dk'
+CRYSP = 'https://crysp.fysik.dtu.dk/'
+OQMD12345 = 'https://oqmd12345.fysik.dtu.dk/'
 
 
 def check_cmr():
-    with urlopen(f'{CMR}/agau309/material/2/download/xyz') as fd:
-        xyz = fd.read().decode()
-    assert xyz.startswith('309\n')
+    with urlopen(f'{CMR}/agau309/material/1') as fd:
+        html = fd.read().decode()
+    assert 'Unique ID' in html
+
+
+def check_c2db():
+    with urlopen(f'{C2DB}/material/1MoS2-1') as fd:
+        html = fd.read().decode()
+    assert 'Structure origin' in html
+
+
+def check_bidb():
+    with urlopen(f'{BiDB}/material/1MoS2-1') as fd:
+        html = fd.read().decode()
+    assert 'Space group number' in html
+
+
+# def check_crysp():
+#     with urlopen(f'{CRYSP}/material/{UID}') as fd:
+#         html = fd.read().decode()
+#     assert 'Atoms: {ATOMS}}' in html
+
+
+def check_OQMD12345():
+    with urlopen(f'{OQMD12345}/material/12B-620379') as fd:
+        html = fd.read().decode()
+    assert 'OQMD Ref. ID' in html
 
 
 def check_optimade():
