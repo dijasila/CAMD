@@ -16,7 +16,6 @@ class SkipPanel(Exception):
 
 @dataclass
 class PanelData:
-    pid: int
     html: str
     title: str
     info: str = ''
@@ -25,27 +24,55 @@ class PanelData:
 
     def build_sidebar(self, super_pid: int=None):
         from bottle import template
-        if self.subpanels is None and super_pid is None:
+
+        if len(self.subpanels) == 0 and super_pid is None:
             panel_case = 'Panel'
-        elif self.subpanels is not None and super_pid is None:
+        elif super_pid is None:
             panel_case = 'SuperPanel'
-        elif super_pid is not None and self.subpanels is None:
+        elif super_pid is not None and len(self.subpanels) == 0:
             panel_case = 'SubPanel'
         else:
             raise ValueError('Sub-panels do not support sub-panels.')
 
         sidebar_html = template(
-            '../sidebar_element.html',
+            'sidebar_element.html',
             case=panel_case,
             title=self.title,
-            pid=self.pid,
+            pid=id(self),
             ppid=super_pid)
+
         for subpanel in self.subpanels:
-            subpanel_html = subpanel.build_sidebar(super_pid=self.pid)
+            subpanel_html = subpanel.build_sidebar(super_pid=id(self))
             sidebar_html = '\n'.join([sidebar_html, subpanel_html])
 
         return sidebar_html
 
+    def build_body(self, super_pid: int=None):
+        from bottle import template
+
+        if len(self.subpanels) == 0 and super_pid is None:
+            panel_case = 'Panel'
+        elif super_pid is None:
+            panel_case = 'SuperPanel'
+        elif super_pid is not None and len(self.subpanels) == 0:
+            panel_case = 'SubPanel'
+        else:
+            raise ValueError('Sub-panels do not support sub-panels.')
+
+        body_html = template(
+            'panel_element.html',
+            case=panel_case,
+            title=self.title,
+            html=self.html,
+            info=self.info,
+            pid=id(self),
+            ppid=super_pid)
+
+        for subpanel in self.subpanels:
+            subpanel_html = subpanel.build_body(super_pid=id(self))
+            body_html = '\n'.join([body_html, subpanel_html])
+
+        return body_html
 
 
 class Panel(abc.ABC):

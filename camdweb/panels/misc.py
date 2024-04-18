@@ -15,6 +15,9 @@ HTML = """
 
 
 class MiscPanel(Panel):
+    def __init__(self):
+      self.subpanels = None
+
     def get_data(self,
                  material: Material) -> PanelData:
 
@@ -32,5 +35,11 @@ class MiscPanel(Panel):
                       self.table_rows(material,
                                       keys[kl1:]))
 
-        return PanelData(HTML.format(col1=html1, col2=html2),
+        pd = PanelData(HTML.format(col1=html1, col2=html2),
                          title='Miscellaneous')
+
+        if self.subpanels is not None:
+            for subpanel in self.subpanels:
+                pd.subpanels.append(subpanel.get_data(material))
+
+        return pd
