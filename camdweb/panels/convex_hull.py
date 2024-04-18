@@ -121,13 +121,24 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         source_names.append(source)
         uids.append(uid)
 
+    # Plotting should be done in the order of the sources dict:
+    source_name_set = set(source_names)
+    plot_order = []
+    for name in sources:
+        if name in source_name_set:
+            plot_order.append(name)
+            source_name_set.remove(name)
+    plot_order += list(source_name_set)
+
     pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
                       verbose=verbose)
     if 2 <= len(pd.symbols) <= 3:
         if len(pd.symbols) == 2:
-            fig = plot_2d(pd, uids, source_names, uid=higlight_uid)
+            fig = plot_2d(pd, uids, source_names, uid=higlight_uid,
+                          plot_order=plot_order)
         else:
-            fig = plot_3d(pd, uids, source_names, uid=higlight_uid)
+            fig = plot_3d(pd, uids, source_names, uid=higlight_uid,
+                          plot_order=plot_order)
         chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     else:
         chull = ''
@@ -142,13 +153,17 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
 def plot_2d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None) -> go.Figure:
+            uid: str | None = None,
+            plot_order: list[str] | None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
 
     if sources is None:
         sources = ['Materials'] * len(uids)
+
+    if plot_order is None:
+        plot_order = list(set(sources))
 
     x, y = pd.points[:, 1:].T
 
@@ -165,10 +180,12 @@ def plot_2d(pd: PhaseDiagram,
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
 
-    for i, source in enumerate(set(sources)):
+    for i, source in enumerate(plot_order):
         mask = [True if source in label else False
                 for label in sources]
-        hovertemplate = '%{customdata} <br> ΔH: %{y:.2f} eV/atom'
+
+        hovertemplate = '%{customdata} <br> Δ<i>H</i>: %{y:.2f} eV/atom'
+        symbol = 'circle' if i == 0 else 'circle-open-dot'
 
         data.append(go.Scatter(
             x=x[mask],
@@ -178,7 +195,8 @@ def plot_2d(pd: PhaseDiagram,
             name=source,
             hovertemplate=hovertemplate,
             mode='markers',
-            marker=dict(color=colors[i], size=8)))
+            marker=dict(color=colors[i], size=8, symbol=symbol,
+                        line=dict(width=2, color=colors[i]))))
 
     delta = y.ptp() / 30
     ymin = y.min() - 2.5 * delta
@@ -204,7 +222,7 @@ def plot_2d(pd: PhaseDiagram,
     A, B = pd.symbols
     fig.update_layout(
         xaxis_title=f'{A}<sub>1-x</sub>{B}<sub>x</sub>',
-        yaxis_title='ΔH [eV/atom]',
+        yaxis_title='Δ<i>H</i> [eV/atom]',
         template='simple_white')
 
     return fig
@@ -213,13 +231,17 @@ def plot_2d(pd: PhaseDiagram,
 def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None) -> go.Figure:
+            uid: str | None = None,
+            plot_order: list[str] | None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
 
     if sources is None:
         sources = ['Materials'] * len(uids)
+
+    if plot_order is None:
+        plot_order = list(set(sources))
 
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
@@ -230,10 +252,12 @@ def plot_3d(pd: PhaseDiagram,
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
 
-    for i, source in enumerate(set(sources)):
+    for i, source in enumerate(plot_order):
         mask = [True if source in label else False
                 for label in sources]
-        hovertemplate = '%{customdata} <br> ΔH: %{z:.2f} eV/atom'
+
+        hovertemplate = '%{customdata} <br> Δ<i>H</i>: %{z:.2f} eV/atom'
+        symbol = 'circle' if i == 0 else 'circle-open'
 
         data.append(
             go.Scatter3d(
@@ -243,7 +267,8 @@ def plot_3d(pd: PhaseDiagram,
                 name=source,
                 hovertemplate=hovertemplate,
                 mode='markers',
-                marker=dict(color=colors[i], size=5),))
+                marker=dict(color=colors[i], size=5, symbol=symbol,
+                            line=dict(width=2, color=colors[i]))))
 
     fig = go.Figure(data=data)
 
@@ -272,7 +297,7 @@ def plot_3d(pd: PhaseDiagram,
 
     fig.update_layout(scene=dict(xaxis_title=B,
                                  yaxis_title=C,
-                                 zaxis_title='ΔH [eV/atom]',
+                                 zaxis_title='Δ<i>H</i> [eV/atom]',
                                  annotations=annotations,))
     return fig
 
