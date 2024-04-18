@@ -19,7 +19,7 @@ tests:
     - pip install git+https://gitlab.com/asr-dev/asr.git
     - pip install .[test,optimade]
     - coverage run --branch -m pytest -v --color=yes --junit-xml=junit.xml
-    - coverage report -i --precision=2 --skip-covered
+    - coverage report -i --precision=2 --skip-covered --sort=miss
     - coverage html --skip-covered
     - coverage xml --data-file .coverage
     - mypy
