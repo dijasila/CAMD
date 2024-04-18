@@ -150,6 +150,12 @@ def plot_2d(pd: PhaseDiagram,
     if sources is None:
         sources = ['Materials'] * len(uids)
 
+    # Plot OQMD bulk on top
+    if set(sources) == {'C2DB', 'OQMD'}:
+        plot_order = ['OQMD', 'C2DB']
+    else:
+        plot_order = list[set(sources)]
+
     x, y = pd.points[:, 1:].T
 
     X = []
@@ -165,10 +171,12 @@ def plot_2d(pd: PhaseDiagram,
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
 
-    for i, source in enumerate(set(sources)):
+    for i, source in enumerate(plot_order):
         mask = [True if source in label else False
                 for label in sources]
-        hovertemplate = '%{customdata} <br> ΔH: %{y:.2f} eV/atom'
+
+        hovertemplate = '%{customdata} <br> Δ<i>H</i>: %{y:.2f} eV/atom'
+        symbol = 'circle' if i == 0 else 'circle-open-dot'
 
         data.append(go.Scatter(
             x=x[mask],
@@ -178,7 +186,8 @@ def plot_2d(pd: PhaseDiagram,
             name=source,
             hovertemplate=hovertemplate,
             mode='markers',
-            marker=dict(color=colors[i], size=8)))
+            marker=dict(color=colors[i], size=8, symbol=symbol,
+                        line=dict(width=2, color=colors[i]))))
 
     delta = y.ptp() / 30
     ymin = y.min() - 2.5 * delta
@@ -204,7 +213,7 @@ def plot_2d(pd: PhaseDiagram,
     A, B = pd.symbols
     fig.update_layout(
         xaxis_title=f'{A}<sub>1-x</sub>{B}<sub>x</sub>',
-        yaxis_title='ΔH [eV/atom]',
+        yaxis_title='Δ<i>H</i> [eV/atom]',
         template='simple_white')
 
     return fig
@@ -221,6 +230,12 @@ def plot_3d(pd: PhaseDiagram,
     if sources is None:
         sources = ['Materials'] * len(uids)
 
+    # Plot OQMD bulk on top
+    if set(sources) == {'C2DB', 'OQMD'}:
+        plot_order = ['OQMD', 'C2DB']
+    else:
+        plot_order = list[set(sources)]
+
     x, y, z = pd.points[:, 1:].T
     i, j, k = pd.simplices.T
 
@@ -230,10 +245,12 @@ def plot_3d(pd: PhaseDiagram,
     names = [format(Formula(ref[2]).reduce()[0], 'html')
              for ref in pd.references]
 
-    for i, source in enumerate(set(sources)):
+    for i, source in enumerate(plot_order):
         mask = [True if source in label else False
                 for label in sources]
-        hovertemplate = '%{customdata} <br> ΔH: %{z:.2f} eV/atom'
+
+        hovertemplate = '%{customdata} <br> Δ<i>H</i>: %{z:.2f} eV/atom'
+        symbol = 'circle' if i == 0 else 'circle-open'
 
         data.append(
             go.Scatter3d(
@@ -243,7 +260,8 @@ def plot_3d(pd: PhaseDiagram,
                 name=source,
                 hovertemplate=hovertemplate,
                 mode='markers',
-                marker=dict(color=colors[i], size=5),))
+                marker=dict(color=colors[i], size=5, symbol=symbol,
+                            line=dict(width=2, color=colors[i]))))
 
     fig = go.Figure(data=data)
 
@@ -272,7 +290,7 @@ def plot_3d(pd: PhaseDiagram,
 
     fig.update_layout(scene=dict(xaxis_title=B,
                                  yaxis_title=C,
-                                 zaxis_title='ΔH [eV/atom]',
+                                 zaxis_title='Δ<i>H</i> [eV/atom]',
                                  annotations=annotations,))
     return fig
 
