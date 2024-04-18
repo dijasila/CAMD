@@ -4,6 +4,7 @@ from pathlib import Path
 
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.misc import MiscPanel
 from camdweb.web import CAMDApp
 from camdweb.html import table
 from camdweb.utils import read_atoms
@@ -57,7 +58,7 @@ def main(argv: list[str] | None = None,
         atoms = read_atoms(path)
         rows.append(Material(str(i), atoms))
 
-    panels = [MyAtomsPanel()]
+    panels = [MyAtomsPanel(), MiscPanel()]
     materials = Materials(rows, panels)
 
     initial_columns = ['uid', 'formula', 'energy', 'fmax', 'smax', 'magmom']
