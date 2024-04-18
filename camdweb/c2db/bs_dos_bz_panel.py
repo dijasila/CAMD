@@ -20,7 +20,9 @@ HTML = """
     {bz}
   </div>
 </div>
+"""
 
+SCRIPT = """
 <script type='text/javascript'>
 var graphs = {bs_data};
 Plotly.newPlot('bandstructure', graphs, {{}});
@@ -70,7 +72,7 @@ class BSDOSBZPanel(Panel):
         bs_json = json.dumps(
             fig, cls=plotly.utils.PlotlyJSONEncoder)
         return PanelData(
-            HTML.format(bs_data=bs_json,
-                        dos=image(dos_file, 'DOS'),
-                        bz=image(bz_file, 'BZ')),
+            html=HTML.format(dos=image(dos_file, 'DOS'),
+                             bz=image(bz_file, 'BZ')),
+            script=SCRIPT.format(bs_data=bs_json),
             title='Electronic band structure and density of states')
