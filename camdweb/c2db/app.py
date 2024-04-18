@@ -28,6 +28,7 @@ from camdweb.panels.atoms import AtomsPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.emass import EmassPanel
+from camdweb.panels.misc import MiscPanel
 from camdweb.panels.panel import Panel
 from camdweb.utils import cod, doi, icsd
 from camdweb.web import CAMDApp
@@ -139,7 +140,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
         ShiftCurrentPanel(),
         ASRPanel('collect_spiral'),
         ASRPanel('dmi'),
-        ASRPanel('spinorbit')]
+        ASRPanel('spinorbit'),
+        MiscPanel()]
 
     materials = Materials(mlist, panels)
 
