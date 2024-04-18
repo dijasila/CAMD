@@ -27,6 +27,11 @@ SCRIPT = """
 var graphs = {bs_data};
 Plotly.newPlot('bandstructure', graphs, {{}});
 </script>
+
+<script type="text/javascript">
+window.addEventListener("resize", function(){{
+Plotly.Plots.resize(document.getElementById("{id}"));}});
+</script>
 """
 
 
@@ -74,5 +79,5 @@ class BSDOSBZPanel(Panel):
         return PanelData(
             html=HTML.format(dos=image(dos_file, 'DOS'),
                              bz=image(bz_file, 'BZ')),
-            script=SCRIPT.format(bs_data=bs_json),
+            script=SCRIPT.format(bs_data=bs_json, id='????'),
             title='Electronic band structure and density of states')
