@@ -121,13 +121,24 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
         source_names.append(source)
         uids.append(uid)
 
+    # Plotting should be done in the order of the sources dict:
+    source_name_set = set(source_names)
+    plot_order = []
+    for name in sources:
+        if name in source_name_set:
+            plot_order.append(name)
+            source_name_set.remove(name)
+    plot_order += list(source_name_set)
+
     pd = PhaseDiagram([(count, e) for count, e, source in refs.values()],
                       verbose=verbose)
     if 2 <= len(pd.symbols) <= 3:
         if len(pd.symbols) == 2:
-            fig = plot_2d(pd, uids, source_names, uid=higlight_uid)
+            fig = plot_2d(pd, uids, source_names, uid=higlight_uid,
+                          plot_order=plot_order)
         else:
-            fig = plot_3d(pd, uids, source_names, uid=higlight_uid)
+            fig = plot_3d(pd, uids, source_names, uid=higlight_uid,
+                          plot_order=plot_order)
         chull = json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
     else:
         chull = ''
@@ -142,7 +153,8 @@ def make_figure_and_tables(refs: dict[str, tuple[dict[str, int],
 def plot_2d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None) -> go.Figure:
+            uid: str | None = None,
+            plot_order: list[str] or None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
@@ -150,10 +162,7 @@ def plot_2d(pd: PhaseDiagram,
     if sources is None:
         sources = ['Materials'] * len(uids)
 
-    # Plot OQMD bulk on top
-    if set(sources) == {'C2DB', 'OQMD'}:
-        plot_order = ['OQMD', 'C2DB']
-    else:
+    if plot_order is None:
         plot_order = list(set(sources))
 
     x, y = pd.points[:, 1:].T
@@ -222,7 +231,8 @@ def plot_2d(pd: PhaseDiagram,
 def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
-            uid: str | None = None) -> go.Figure:
+            uid: str | None = None,
+            plot_order: list[str] or None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
@@ -230,10 +240,7 @@ def plot_3d(pd: PhaseDiagram,
     if sources is None:
         sources = ['Materials'] * len(uids)
 
-    # Plot OQMD bulk on top
-    if set(sources) == {'C2DB', 'OQMD'}:
-        plot_order = ['OQMD', 'C2DB']
-    else:
+    if plot_order is None:
         plot_order = list(set(sources))
 
     x, y, z = pd.points[:, 1:].T
