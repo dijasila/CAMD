@@ -154,7 +154,7 @@ def plot_2d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
             uid: str | None = None,
-            plot_order: list[str] or None = None) -> go.Figure:
+            plot_order: list[str] | None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
@@ -232,7 +232,7 @@ def plot_3d(pd: PhaseDiagram,
             uids: list[str] | None = None,
             sources: list[str] | None = None,
             uid: str | None = None,
-            plot_order: list[str] or None = None) -> go.Figure:
+            plot_order: list[str] | None = None) -> go.Figure:
 
     if uids is None:
         uids = [r[2] for r in pd.references]
