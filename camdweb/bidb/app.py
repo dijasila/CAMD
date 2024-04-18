@@ -45,9 +45,15 @@ class BiDBAtomsPanel(AtomsPanel):
     def create_column_one(self,
                           material: Material) -> str:
         skip = {'interlayer_magnetic_exchange',
-                'binding_energy_zscan'}
+                'binding_energy_zscan',
+                'monolayer_uid'}
         keys = COLUMN_DESCRIPTIONS.keys() - skip
         rows = self.table_rows(material, keys)
+        if material.number_of_layers == 2:
+            uid = material.data['monolayer'].uid
+            rows.append(
+                ('Monolayer ID',
+                 f'<a href="/material/{uid}">{material.monolayer_uid}</a>'))
         return table(None, rows)
 
 
