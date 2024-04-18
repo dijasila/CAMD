@@ -116,6 +116,10 @@
     border: 1px solid #212529;
 }
 
+.iconcolor {
+    color: #FF8F92;
+}
+
 .plot-container {
     /* Ensure plotly container doesn't exceed its parent's width */
     max-width: 100%; /* restrict based on parent's width */
@@ -213,19 +217,23 @@
                 <button class="accordion-button collapsed"
                    type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
                    aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
+                  % if panel.info != '':
+                    <span class="d-none d-sm-inline">
+                      <a href="#" class="d-inline-block" tabindex="0"
+                         data-bs-toggle="popover"
+                         data-bs-trigger="hover focus"
+                         data-bs-content="{{ !panel.info }} "
+                         data-bs-placement="top">
+                         <i class="fa-solid fa-circle-info iconcolor" style="margin-right: 0.3em"></i>
+                      </a>
+                  % else:
+                      <span style="margin-right: 1.5em"></span>
+                  % end
+                      {{ !panel.title }}
+                    </span>
                 </button>
-                <button type="button" class="btn btn-lg btn-danger"
-                        data-bs-toggle="popover" title="Popover title"
-                        data-bs-content="And here's some amazing content. It's very engaging. Right?">Click to toggle popover
-                </button>
-                <i class="fa-solid fa-question" tabindex="0"
-                       data-toggle="popover"
-                       data-trigger="focus" data-popover-content="#a2"
-                       title="Your Popover Title" data-placement="top"
-                       data-bs-content="With <b>html</b> content"></i>
-
             </h2>
+
 
             <!--  Accordion Content (Panel info)  -->
             <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
@@ -282,7 +290,21 @@ var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
   return new bootstrap.Popover(popoverTriggerEl)
 })
 </script>
-
+<script>
+$(function(){
+    $("[data-toggle=popover]").popover({
+        html : true,
+        content: function() {
+          var content = $(this).attr("data-popover-content");
+          return $(content).children(".popover-body").html();
+        },
+        title: function() {
+          var title = $(this).attr("data-popover-content");
+          return $(title).children(".popover-heading").html();
+        }
+    });
+});
+</script>
 </body>
 
 <!-- webpage javascript for interactive plotly -->
