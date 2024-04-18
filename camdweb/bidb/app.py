@@ -52,8 +52,8 @@ class BiDBAtomsPanel(AtomsPanel):
         if material.number_of_layers == 2:
             uid = material.data['monolayer'].uid
             rows.append(
-                ('Monolayer ID',
-                 f'<a href="/material/{uid}">{material.monolayer_uid}</a>'))
+                ['Monolayer ID',
+                 f'<a href="/material/{uid}">{material.monolayer_uid}</a>'])
         return table(None, rows)
 
 
