@@ -69,7 +69,7 @@ class C2DBApp(CAMDApp):
                  olduid2uid: dict[str, str] | None = None):
         super().__init__(materials,
                          initial_columns=initial_columns,
-                         initial_filter_string='dyn_stab=True, ehull<0.2',
+                         initial_filter_string='dyn_stab=Yes, ehull<0.2',
                          root=root)
         self.olduid2uid = olduid2uid or {}
 
@@ -193,7 +193,8 @@ def main(argv: list[str] | None = None) -> CAMDApp:
     app.form_parts += [
         Select('Magnetic:', 'magstate', ['', 'NM', 'FM'], ['-', 'No', 'Yes']),
         Select('Dynamically stable:', 'dyn_stab',
-               ['', 'True', 'False'], ['-', 'Yes', 'No'], default='True'),
+               ['', 'Yes', 'No', 'Unknown'],
+               ['-', 'Yes', 'No', 'Unknown'], default='Yes'),
         Range('Energy above convex hull [eV/atom]:', 'ehull',
               nonnegative=True, default=('0.0', '0.2')),
         RangeX('Band gap range [eV]:', 'bg',
