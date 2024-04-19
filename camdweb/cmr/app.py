@@ -10,7 +10,7 @@ from typing import Callable
 import rich.progress as progress
 from ase.db import connect
 from ase.db.row import AtomsRow
-from bottle import Bottle, static_file, template
+from bottle import Bottle, static_file, template, redirect
 
 from camdweb.cli import COLUMN_DESCRIPTIONS
 from camdweb.cmr.projects import ProjectDescription, create_project_description
@@ -29,6 +29,8 @@ class CMRProjectsApp:
         self.app = Bottle()
         self.app.route('/')(self.overview)
         self.app.route('/favicon.ico')(self.favicon)
+        self.app.route('/c2db/')(self.c2db)
+        self.app.route('/c2db')(self.c2db)
 
         # Pick random project app to use for png endpoint:
         project_app = next(iter(project_apps.values()))
@@ -54,6 +56,9 @@ class CMRProjectsApp:
     def favicon(self) -> bytes:
         path = Path(__file__).with_name('favicon.ico')
         return static_file(path.name, path.parent)
+
+    def c2db(self):
+        redirect('https://c2db.fysik.dtu.dk/')
 
 
 class CMRProjectApp(CAMDApp):
