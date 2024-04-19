@@ -128,7 +128,7 @@ class Index:
         if name in chemical_symbols:
             n = value  # number of atoms
             assert isinstance(n, int)
-            if name not in self.integers and name not in self.floats:
+            if name not in self.integers:
                 if op == '=' and n != 0:
                     return set()
                 if op == '<' and n == 0:

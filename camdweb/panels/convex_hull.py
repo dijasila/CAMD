@@ -19,6 +19,7 @@ import sys
 from collections import defaultdict
 from typing import Iterable
 
+import numpy as np
 import plotly
 import plotly.graph_objs as go
 from ase.formula import Formula
@@ -198,7 +199,7 @@ def plot_2d(pd: PhaseDiagram,
             marker=dict(color=colors[i], size=8, symbol=symbol,
                         line=dict(width=2, color=colors[i]))))
 
-    delta = y.ptp() / 30
+    delta = np.ptp(y) / 30
     ymin = y.min() - 2.5 * delta
     fig = go.Figure(data=data, layout_yaxis_range=[ymin, 0.1])
 
