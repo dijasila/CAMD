@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import abc
+from bottle import template
 from typing import TYPE_CHECKING, Callable, Iterable
 from dataclasses import dataclass, field
 from camdweb import ColVal
@@ -21,6 +22,50 @@ class PanelData:
     info: str = ''
     script: str = ''
     subpanels: list[PanelData] = field(default_factory=list)
+
+    def determine_panel_type(self, super_pid: int | None = None) -> str:
+        if len(self.subpanels) == 0 and super_pid is None:
+            return 'Panel'
+        elif super_pid is None:
+            return 'SuperPanel'
+        elif super_pid is not None and len(self.subpanels) == 0:
+            return 'SubPanel'
+        else:
+            raise ValueError('Sub-panels do not support sub-panels.')
+
+    def build_sidebar(self, super_pid: int | None = None):
+        panel_case = self.determine_panel_type(super_pid=super_pid)
+
+        sidebar_html = template(
+            'sidebar_element.html',
+            case=panel_case,
+            title=self.title,
+            pid=id(self),
+            ppid=super_pid)
+
+        for subpanel in self.subpanels:
+            subpanel_html = subpanel.build_sidebar(super_pid=id(self))
+            sidebar_html = '\n'.join([sidebar_html, subpanel_html])
+
+        return sidebar_html
+
+    def build_body(self, super_pid: int | None = None):
+        panel_case = self.determine_panel_type(super_pid=super_pid)
+
+        body_html = template(
+            'panel_element.html',
+            case=panel_case,
+            title=self.title,
+            html=self.html,
+            info=self.info,
+            pid=id(self),
+            ppid=super_pid)
+
+        for subpanel in self.subpanels:
+            subpanel_html = subpanel.build_body(super_pid=id(self))
+            body_html = '\n'.join([body_html, subpanel_html])
+
+        return body_html
 
 
 class Panel(abc.ABC):

@@ -24,7 +24,7 @@
     });
   }
 </script>
-<!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
+<!-- sidebar: single click scroll to loc in viewport  -->
 <script>
   function handleAnchorEvent(event, panelIndex) {
     // Prevent the default scroll behavior of the anchor element
@@ -33,22 +33,16 @@
     // Get the accordion section
     var accordionSection = document.getElementById('sec' + panelIndex);
 
-    // Check if the anchor element is double-clicked
-    if (event.detail === 2) {
-      // Toggle between collapsing and expanding the accordion without scrolling
-      toggleAccordionWithoutScrolling(accordionSection);
-    } else {
-      // Check if the accordion button is collapsed
-      var isCollapsed = accordionSection.querySelector('.accordion-button').classList.contains('collapsed');
+    // Check if the accordion button is collapsed
+    var isCollapsed = accordionSection.querySelector('.accordion-button').classList.contains('collapsed');
 
-      // If the accordion button is collapsed, always expand it
-      if (isCollapsed) {
-        expandAccordion(accordionSection, panelIndex);
-        scrollToTop(panelIndex);
-      } else {
-        // If the accordion button is expanded, scroll to the top of the accordion section
-        scrollToTop(panelIndex);
-      }
+    // If the accordion button is collapsed, always expand it
+    if (isCollapsed) {
+      expandAccordion(accordionSection, panelIndex);
+      scrollToTop(panelIndex);
+    } else {
+      // If the accordion button is expanded, scroll to the top of the accordion section
+      scrollToTop(panelIndex);
     }
   }
 
@@ -144,44 +138,10 @@
         <!--  Sidebar Collapse Buttons  -->
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
-             % i = 0
-             % for panel in panels:
-              % p = i
-              % i += 1
-              % # panel_title, info, html, sub_panels = super_panel.get_properties()
-              % if len(panel.subpanels) == 0:
-                <a class="nav-link px-1 text-start" onclick="handleAnchorEvent(event, {{ p }})"
-                  href="#sec{{ p }}" style="color: #00ABE4">
-                  <span class="d-none d-sm-inline">{{ !panel.title }}</span>
-                </a>
-              % else:
-                <li>
-                %#<!--  Subpanel Sidebar Dropdown Name  -->
-                <a href="#submenu{{ p }}" data-bs-toggle="collapse"
-                  class="nav-link px-0 align-middle">
-                    <span class="d-none d-sm-inline dropdown-toggle">{{ !panel.title }}</span>
-                </a>
-                % for subpanel in panel.subpanels:
-                  % p2 = i
-                  % i += 1
-                  % # subpanel_title, info, html, sub_panels = sub_panel
-                  % #<!--  Subpanel Dropdown Content  -->
-                  <ul class="collapse nav flex-column flex-nowrap text-center ms-1 align-items-center"
-                      id="submenu{{ p }}" data-bs-parent="#menu">
-                      <li class="w-100">
-                          <button class="nav-link nav-pills nav-flush mb-auto mx-auto text-small"
-                              type="button"
-                              data-bs-toggle="collapse"
-                              data-bs-target="#sec{{ p2 }}"
-                              aria-expanded="false"
-                              aria-controls="collapseExample">
-                            <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
-                          </button>
-                      </li>
-                  </ul>
-                % end
-              </li>
-              % end
+            % for panel in panels:
+              <!--  ask PanelData to build the sidebar using the
+                    sidebar_element.html template  -->
+              {{ !panel.build_sidebar() }}
             % end
           </li>
         </ul>
@@ -203,113 +163,30 @@
       </div>
 
       <div class="col">
-      <!--  Link Each Panel with Button Anchor  -->
-      % for i, panel in enumerate(panels):
-        % p = i
-        % i += 1
-        % # panel_title, info, html, sub_panels = super_panel.get_properties()
-        <section id="sec{{ p }}">
-        <div class="accordion accordion-flush" id="accordionFlush">
-          <!--  Create each Accordion Body  -->
-          <div class="accordion-item mb-1">
-            <!--  accordion button  -->
-            <h2 class="accordion-header" id="flush-heading{{ p }}">
-                <button class="accordion-button collapsed"
-                   type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
-                   aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                  <span class="d-none d-sm-inline">
-                  % if panel.info != '':
-                      <a href="#" class="d-inline-block" tabindex="0"
-                         data-bs-toggle="popover"
-                         data-bs-trigger="hover focus"
-                         data-bs-content="{{ !panel.info }} "
-                         data-bs-placement="top">
-                         <i class="fa-solid fa-circle-info iconcolor" style="margin-right: 0.3em"></i>
-                      </a>
-                  % else:
-                      <span style="margin-right: 1.5em"></span>
-                  % end
-                      {{ !panel.title }}
-                    </span>
-                </button>
-            </h2>
-
-
-            <!--  Accordion Content (Panel info)  -->
-            <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
-                 id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
-                 aria-labelledby="flush-heading{{ p }}" title="{{ !panel.title }}">
-              <div class="panel accordion-body">
-                {{ !panel.html }}
-                {{ !panel.info }}
-              </div>
-            </div>
-          </div>
-        </div>
-        </section>
-        % for subpanel in panel.subpanels:
-          % p = i
-          % i += 1
-          % # panel_title, info, html, sub_panels = sub_panel
-          <section id="sec{{ p }}">
-          <div class="accordion accordion-flush" id="accordionFlush">
-            <!--  Create each Accordion Body  -->
-            <div class="accordion-item mb-1">
-              <!--  accordion button  -->
-              <h2 class="accordion-header" id="flush-heading{{ p }}">
-                  <button class="accordion-button collapsed"
-                      type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ p }}"
-                      aria-expanded="false" aria-controls="flush-collapse{{ p }}">
-                    <span class="d-none d-sm-inline">{{ !subpanel.title }}</span>
-                  </button>
-              </h2>
-
-              <!--  Accordion Content (Panel info)  -->
-              <div class="accordion-collapse {{'collapse show' if p == 0 else 'collapse'}}"
-                    id="flush-collapse{{ p }}" data-bs-parent="#accordionFlush"
-                    aria-labelledby="flush-heading{{ p }}" title="{{ !subpanel.title }}">
-                <div class="panel accordion-body">
-                  {{ !subpanel.html }}
-                  {{ !subpanel.info }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        % for panel in panels:
+          <!--  ask PanelData to compile all panels and subpanels
+                populating the panel_element.html template  -->
+          {{ !panel.build_body() }}
         % end
-      % end
     </div>
     </div>
   </div>
 </div>
 
-<!-- custom implementation for popover -->
+<!-- custom implementation for popover. The position of this is EXTREMELY
+ important. It must come after the popover element, or it will not work -->
 <script>
 var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
 var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
   return new bootstrap.Popover(popoverTriggerEl)
 })
 </script>
-<script>
-$(function(){
-    $("[data-toggle=popover]").popover({
-        html : true,
-        content: function() {
-          var content = $(this).attr("data-popover-content");
-          return $(content).children(".popover-body").html();
-        },
-        title: function() {
-          var title = $(this).attr("data-popover-content");
-          return $(title).children(".popover-heading").html();
-        }
-    });
-});
-</script>
+
 </body>
 
 <!-- webpage javascript for interactive plotly -->
 % for panel in panels:
-%     if panel.script:
-          {{ !panel.script }}
-%     end
+%   if panel.script:
+      {{ !panel.script }}
+%   end
 % end
