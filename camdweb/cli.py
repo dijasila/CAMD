@@ -59,7 +59,6 @@ def main(argv: list[str] | None = None,
         rows.append(Material(str(i), atoms))
 
     panels = [MyAtomsPanel(), MiscPanel()]
-    panels[1].subpanels = [MiscPanel(), ]
     materials = Materials(rows, panels)
 
     initial_columns = ['uid', 'formula', 'energy', 'fmax', 'smax', 'magmom']
