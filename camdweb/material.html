@@ -24,7 +24,6 @@
     });
   }
 </script>
-
 <!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
 <script>
   function handleAnchorEvent(event, panelIndex) {
@@ -117,6 +116,10 @@
     border: 1px solid #212529;
 }
 
+.iconcolor {
+    color: #FF8F92;
+}
+
 .plot-container {
     /* Ensure plotly container doesn't exceed its parent's width */
     max-width: 100%; /* restrict based on parent's width */
@@ -124,7 +127,6 @@
     overflow: hidden; /* Hide any content that overflows the container */
 }
 </style>
-
 
 <body>
 
@@ -173,6 +175,28 @@
   </div>
 </div>
 
+<!-- custom implementation for popover -->
+<script>
+var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+  return new bootstrap.Popover(popoverTriggerEl)
+})
+</script>
+<script>
+$(function(){
+    $("[data-toggle=popover]").popover({
+        html : true,
+        content: function() {
+          var content = $(this).attr("data-popover-content");
+          return $(content).children(".popover-body").html();
+        },
+        title: function() {
+          var title = $(this).attr("data-popover-content");
+          return $(title).children(".popover-heading").html();
+        }
+    });
+});
+</script>
 </body>
 
 <!-- webpage javascript for interactive plotly -->

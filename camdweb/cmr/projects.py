@@ -637,7 +637,9 @@ class C1DBProjectDescription(ProjectDescription):
         'Source': 'Source',
         'derived_from': 'derived from',
         'xc': 'XC-functional',
-        'ndim': 'Dimensionality'}
+        'ndim': 'Dimensionality',
+        'thermodynamic_stability_level': 'Thermodynamic stability',
+        'dynamic_stability_phonons': 'Dynamical stability (phonons)'}
     initial_columns = [
         'formula', 'hform', 'gap', 'is_magnetic', 'xc', 'ndim']
     uid = 'uid'
@@ -651,7 +653,7 @@ class C1DBProjectDescription(ProjectDescription):
                 'ICSD',
                 'Derived by element substitution',
                 'Machine learning generated']),
-        Select('Dynamically stable (phonons)', 'dyn_phonons',
+        Select('Dynamically stable (phonons)', 'dynamic_stability_phonons',
                ['', 'low', 'high'], ['', 'No', 'Yes']),
         RangeS('Thermodynamic stability', 'thermodynamic_stability_level',
                ['1', '2', '3'], ['Low', 'Medium', 'High']),
@@ -663,7 +665,7 @@ class C1DBProjectDescription(ProjectDescription):
     def create_column_one(self, panel, material):
         rows = panel.table_rows(material, self.column_descriptions)
         source = material.Source
-        df = material.derived_from
+        df = getattr(material, 'derived_from', '')
         if source == 'COD':
             rows.append(['Source', cod(df)])
         elif source == 'ICSD':
