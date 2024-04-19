@@ -1,20 +1,22 @@
 % if case == 'Panel' or case == 'SuperPanel':
 <!--  Panel  -->
 <section id="sec{{ pid }}">
+% is_atoms_panel = 'Atoms:' in title
 <div class="accordion accordion-flush" id="accordionFlush">
     <!--  Create each Accordion Body  -->
     <div class="accordion-item mb-1">
     <!--  accordion button  -->
     <h2 class="accordion-header" id="flush-heading{{ pid }}">
-        <button class="accordion-button collapsed"
-            type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ pid }}"
-            aria-expanded="false" aria-controls="flush-collapse{{ pid }}">
+        <button class="accordion-button {{'' if is_atoms_panel else 'collapsed'}}"
+            type="button" data-bs-toggle="collapse"
+            data-bs-target="#flush-collapse{{ pid }}"
+            aria-expanded="{{'true' if is_atoms_panel else 'false'}}"
+            aria-controls="flush-collapse{{ pid }}">
             <span class="d-none d-sm-inline">{{ !title }}</span>
         </button>
     </h2>
 
     <!--  Accordion Content (Panel info)  -->
-    % is_atoms_panel = 'Atoms:' in title
     <div class="accordion-collapse {{'collapse show' if is_atoms_panel else 'collapse'}}"
             id="flush-collapse{{ pid }}" data-bs-parent="#accordionFlush"
             aria-labelledby="flush-heading{{ pid }}" title="{{ !title }}">
