@@ -115,8 +115,6 @@ class Index:
             print(sf, si, fi)
             if strict:
                 raise ValueError
-        print(list(self.integers))
-        print(list(self.strings))
         print(f'Rows: {len(rows)} | '
               f'Strings: {len(self.strings)} | '
               f'Integers: {len(self.integers)} | '
