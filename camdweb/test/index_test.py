@@ -37,8 +37,9 @@ def index():
      ('b1=0', {0}),
      ('Source=COD', set()),
      ('+a', SyntaxError),
-     ('b1235=0', set())] +
-    [(f, set()) for f in ['N', 'N=1', 'N!=0', 'N>0', 'N>=1', 'N<0']] +
+     ('b1235=0', set()),
+     ('N<0', SyntaxError)] +
+    [(f, set()) for f in ['N', 'N=1', 'N!=0', 'N>0', 'N>=1']] +
     [(f, {0, 1, 2}) for f in ['N=0', 'N!=1', 'N<1', 'N<=0', 'N<=1']])
 def test_index(index: Index, filter: str, result: set[int]):
     if isinstance(result, set):
@@ -47,6 +48,7 @@ def test_index(index: Index, filter: str, result: set[int]):
     else:
         with pytest.raises(result):
             func = parse(filter)
+            func(index)
 
 
 @pytest.fixture(scope='module')
@@ -81,7 +83,7 @@ def test_index2():
     with pytest.raises(TypeError):
         Index([({'H': 2}, {'gap': 1j})])
     i = Index([({'H': 2}, {'gap': 'high'})])
-    with pytest.raises(ValueError):
+    with pytest.raises(SyntaxError):
         i.key('gap', '<', 'high')
     assert i.key('xx', '=', 117) == set()
 

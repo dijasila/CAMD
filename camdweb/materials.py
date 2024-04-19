@@ -116,11 +116,11 @@ class Materials:
         filter = session.filter
         try:
             func = parse(filter)
+            col_numbers = list(func(self.index))
         except SyntaxError as ex:
             error = ex.args[0]
             col_numbers = []
         else:
-            col_numbers = list(func(self.index))
             error = ''
 
         rows = [self[self.i2uid[i]] for i in col_numbers]

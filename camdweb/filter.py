@@ -126,20 +126,25 @@ class Index:
             op: str,
             value: bool | int | float | str) -> set[int]:
         if name in chemical_symbols:
+            print(name, op, value)
             n = value  # number of atoms
             assert isinstance(n, int)
-            if name not in self.integers:
-                if op == '=' and n != 0:
-                    return set()
-                if op == '<' and n == 0:
-                    return set()
-                if op == '!=' and n == 0:
-                    return set()
-                if op == '>' and n == 0:
-                    return set()
-                if op == '>=' and n > 0:
-                    return set()
+            if n < 0:
+                raise SyntaxError(f'{name} {op} {n} does not make sense!')
+            if op == '>=' and n == 0:
                 return self.ids
+            if op == '=' and n == 0:
+                return self.ids - self.key(name, '>', 0)
+            if op == '<=':
+                return self.ids - self.key(name, '>', n)
+            if op == '<':
+                if n == 0:
+                    raise SyntaxError(f'{name} < 0 does not make sense!')
+                return self.ids - self.key(name, '>=', n)
+            if op == '!=':
+                if n == 0:
+                    return self.key(name, '>', 0)
+                return self.ids - self.key(name, '=', n)
 
         if name in self.integers:
             assert isinstance(value, (int, bool)), (name, value)
@@ -161,7 +166,7 @@ class Index:
                     if val != value:
                         result.update(ids)
                 return result
-            raise ValueError
+            raise SyntaxError(f'{name} {op} {value} does not make sense!')
 
         return set()
 

@@ -102,6 +102,7 @@ def parse1(q: str) -> str:
     if n1 != n:
         raise SyntaxError(f'Bad filter string: {q0!r}')
 
+    print(q)
     return q
 
 
