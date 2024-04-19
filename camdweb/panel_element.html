@@ -7,13 +7,26 @@
     <div class="accordion-item mb-1">
     <!--  accordion button  -->
     <h2 class="accordion-header" id="flush-heading{{ pid }}">
-        <button class="accordion-button {{'' if is_atoms_panel else 'collapsed'}}"
-            type="button" data-bs-toggle="collapse"
-            data-bs-target="#flush-collapse{{ pid }}"
-            aria-expanded="{{'true' if is_atoms_panel else 'false'}}"
-            aria-controls="flush-collapse{{ pid }}">
-            <span class="d-none d-sm-inline">{{ !title }}</span>
-        </button>
+      <button class="accordion-button {{'' if is_atoms_panel else 'collapsed'}}"
+          type="button" data-bs-toggle="collapse"
+          data-bs-target="#flush-collapse{{ pid }}"
+          aria-expanded="{{'true' if is_atoms_panel else 'false'}}"
+          aria-controls="flush-collapse{{ pid }}">
+        <span class="d-none d-sm-inline">
+        % if info != '':
+            <a href="#" class="d-inline-block" tabindex="0"
+               data-bs-toggle="popover"
+               data-bs-trigger="hover focus"
+               data-bs-content="{{ !info }} "
+               data-bs-placement="top">
+               <i class="fa-solid fa-circle-info iconcolor" style="margin-right: 0.3em"></i>
+            </a>
+        % else:
+            <span style="margin-right: 1.5em"></span>
+        % end
+        {{ !title }}
+        </span>
+      </button>
     </h2>
 
     <!--  Accordion Content (Panel info)  -->
@@ -39,7 +52,20 @@
             <button class="accordion-button collapsed"
                 type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapse{{ pid }}"
                 aria-expanded="false" aria-controls="flush-collapse{{ pid }}">
-            <span class="d-none d-sm-inline">{{ !title }}</span>
+                  <span class="d-none d-sm-inline">
+                  % if info != '':
+                      <a href="#" class="d-inline-block" tabindex="0"
+                         data-bs-toggle="popover"
+                         data-bs-trigger="hover focus"
+                         data-bs-content="{{ !info }} "
+                         data-bs-placement="top">
+                         <i class="fa-solid fa-circle-info iconcolor" style="margin-right: 0.3em"></i>
+                      </a>
+                  % else:
+                      <span style="margin-right: 1.5em"></span>
+                  % end
+                  {{ !title }}
+                  </span>
             </button>
         </h2>
 
