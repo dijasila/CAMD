@@ -161,9 +161,6 @@ class CAMDApp:
                         panels=webpanels,
                         sidebar=sidebar)
 
-    def materials_sidebar(self):
-        return template()
-
     def persistent_sidebar(self):
         """Provide persistent sidebar for all pages."""
         return template('sidebar.html',
