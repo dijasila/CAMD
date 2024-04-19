@@ -106,7 +106,7 @@ class Select(FormPart):
         """
         parts = [
             '<div class="form-group row pb-1">',
-            f'<label for="form_{self.name}" class="col-4 col-form-label-sm">'
+            f'<label for="{self.name}" class="col-4 col-form-label-sm">'
             f'  {self.text}</label>'
             '<div class="col d-flex align-items-center">',
             f'<select class="form-select" name="{self.name}" id="{self.name}">'
@@ -192,7 +192,7 @@ class Range(FormPart):
         v1, v2 = self.default
         parts = [
             '<div class="form-group row pb-1">',
-            f'<label for="form_{self.name}"',
+            f'<label for="from_{self.name}"',
             '  class="col-4 col-form-label-sm">',
             f'  {self.text}',
             '</label>',
@@ -200,7 +200,7 @@ class Range(FormPart):
             '<input class="form-control"',
             '  type="text"',
             f'  name="from_{self.name}"',
-            f'  id="form_{self.name}"',
+            f'  id="from_{self.name}"',
             f'  value="{v1}" />\n</div>',
             f'<label for="to_{self.name}" class="col-1 align-items-center ',
             'd-flex justify-content-center">-</label>',
@@ -234,7 +234,7 @@ class RangeX(Range):
     def render(self) -> str:
         parts = [
             '<div class="form-group row pb-1">',
-            f'<label for="form_{self.name}"',
+            f'<label for="from_{self.name}"',
             '  class="col-4 col-form-label-sm">',
             f'  {self.text}',
             '</label>',
@@ -286,6 +286,11 @@ class RangeS(Range):
 
         parts = [
             '<div class="form-group row pb-1">',
+            f'<label for="from_{self.name}"',
+            '  class="col-4 col-form-label-sm">',
+            f'  {self.text}',
+            '</label>',
+            '<div class="col d-flex align-items-center">',
             f'<select name="from_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
@@ -293,12 +298,14 @@ class RangeS(Range):
         parts.append('</select></div>')
 
         parts += [
-            '<div class="col">',
+            '<label class="col-1 align-items-center ',
+            'd-flex justify-content-center">-</label>',
+            '<div class="col d-flex align-items-center">',
             f'<select name="to_{self.name}" class="form-select">']
         for val, txt in zip(self.options, names):
             selected = ' selected' if val == '' else ''
             parts.append(f'  <option value="{val}"{selected}>{txt}</option>')
-        parts.append('</select></div>')
+        parts.append('</select></div></div>')
 
         return '\n'.join(parts)
 
