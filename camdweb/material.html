@@ -24,7 +24,7 @@
     });
   }
 </script>
-<!-- sidebar: double click closes accordion, single click scroll to loc in viewport  -->
+<!-- sidebar: single click scroll to loc in viewport  -->
 <script>
   function handleAnchorEvent(event, panelIndex) {
     // Prevent the default scroll behavior of the anchor element
@@ -33,22 +33,16 @@
     // Get the accordion section
     var accordionSection = document.getElementById('sec' + panelIndex);
 
-    // Check if the anchor element is double-clicked
-    if (event.detail === 2) {
-      // Toggle between collapsing and expanding the accordion without scrolling
-      toggleAccordionWithoutScrolling(accordionSection);
-    } else {
-      // Check if the accordion button is collapsed
-      var isCollapsed = accordionSection.querySelector('.accordion-button').classList.contains('collapsed');
+    // Check if the accordion button is collapsed
+    var isCollapsed = accordionSection.querySelector('.accordion-button').classList.contains('collapsed');
 
-      // If the accordion button is collapsed, always expand it
-      if (isCollapsed) {
-        expandAccordion(accordionSection, panelIndex);
-        scrollToTop(panelIndex);
-      } else {
-        // If the accordion button is expanded, scroll to the top of the accordion section
-        scrollToTop(panelIndex);
-      }
+    // If the accordion button is collapsed, always expand it
+    if (isCollapsed) {
+      expandAccordion(accordionSection, panelIndex);
+      scrollToTop(panelIndex);
+    } else {
+      // If the accordion button is expanded, scroll to the top of the accordion section
+      scrollToTop(panelIndex);
     }
   }
 
@@ -145,6 +139,8 @@
         <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-center align-items-sm-start">
           <li class="nav-item nav-list affix">
             % for panel in panels:
+              <!--  ask PanelData to build the sidebar using the
+                    sidebar_element.html template  -->
               {{ !panel.build_sidebar() }}
             % end
           </li>
@@ -168,6 +164,8 @@
 
       <div class="col">
         % for panel in panels:
+          <!--  ask PanelData to compile all panels and subpanels
+                populating the panel_element.html template  -->
           {{ !panel.build_body() }}
         % end
     </div>
@@ -175,33 +173,20 @@
   </div>
 </div>
 
-<!-- custom implementation for popover -->
+<!-- custom implementation for popover. The position of this is EXTREMELY
+ important. It must come after the popover element, or it will not work -->
 <script>
 var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
 var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
   return new bootstrap.Popover(popoverTriggerEl)
 })
 </script>
-<script>
-$(function(){
-    $("[data-toggle=popover]").popover({
-        html : true,
-        content: function() {
-          var content = $(this).attr("data-popover-content");
-          return $(content).children(".popover-body").html();
-        },
-        title: function() {
-          var title = $(this).attr("data-popover-content");
-          return $(title).children(".popover-heading").html();
-        }
-    });
-});
-</script>
+
 </body>
 
 <!-- webpage javascript for interactive plotly -->
 % for panel in panels:
-%     if panel.script:
-          {{ !panel.script }}
-%     end
+%   if panel.script:
+      {{ !panel.script }}
+%   end
 % end
