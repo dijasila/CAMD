@@ -65,6 +65,7 @@ def copy_material(record: Repository) -> None:  # pragma: no cover
     # only pull postprocess directories which will contain the relevant
     # history one would like to use to create webpages.
     input, output, node = record.inputs, record.output, record.node
+    print(input)
     write_structure = False
     shutil_files = []
 

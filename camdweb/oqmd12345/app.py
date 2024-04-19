@@ -17,6 +17,7 @@ import rich.progress as progress
 from camdweb.html import table
 from camdweb.materials import Material, Materials
 from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.crystalsymmetry import CrystalSymmetryPanel
 from camdweb.panels.panel import Panel
 from camdweb.web import CAMDApp
 
@@ -62,7 +63,10 @@ def main(root: Path) -> CAMDApp:
             mlist.append(material)
             pb.advance(pid)
 
-    panels: list[Panel] = [OQMD12345AtomsPanel()]
+    panels: list[Panel] = [
+        OQMD12345AtomsPanel(),
+        CrystalSymmetryPanel(),
+    ]
 
     materials = Materials(mlist, panels)
 

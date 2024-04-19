@@ -4,7 +4,7 @@ Content::
 
   +-----------+-------------------------------+
   | column 1  | repeat-unit-cell button       |
-  | ...       | download button (TODO)        |
+  | ...       | download button               |
   |           +-------------------------------+
   |           | ball and stick plotly plot    |
   |           | ...                           |
@@ -109,7 +109,7 @@ class AtomsPanel(Panel):
         return PanelData(
             HTML.format(column1=col1,
                         column2=col2),
-            title=f'Atoms: {html_format_formula(material.formula)}',
+            title=f'{self.title}: {html_format_formula(material.formula)}',
             script=script)
 
     def create_column_one(self,

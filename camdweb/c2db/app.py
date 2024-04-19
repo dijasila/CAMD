@@ -25,6 +25,7 @@ from camdweb.html import Range, RangeX, Select, image, table
 from camdweb.materials import Material, Materials
 from camdweb.optimade.app import add_optimade
 from camdweb.panels.atoms import AtomsPanel
+from camdweb.panels.crystalsymmetry import CrystalSymmetryPanel
 from camdweb.panels.bader import BaderPanel
 from camdweb.panels.convex_hull import ConvexHullPanel
 from camdweb.panels.emass import EmassPanel
@@ -116,6 +117,7 @@ def main(argv: list[str] | None = None) -> CAMDApp:
 
     panels: list[Panel] = [
         C2DBAtomsPanel(),
+        CrystalSymmetryPanel(),
         ConvexHullPanel(
             sources={'OQMD': ('Bulk crystals from OQMD123',
                               f'<a href={OQMD}/{{uid}}>{{formula:html}}</a>'),
