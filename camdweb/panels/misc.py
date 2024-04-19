@@ -16,11 +16,9 @@ HTML = """
 
 class MiscPanel(Panel):
     def __init__(self):
-      self.subpanels = None
+        self.subpanels = None
 
-    def get_data(self,
-                 material: Material) -> PanelData:
-
+    def get_data(self, material: Material) -> PanelData:
         keys = []
         dkeys = material.columns.keys()
         for key in dkeys:
@@ -36,7 +34,7 @@ class MiscPanel(Panel):
                                       keys[kl1:]))
 
         pd = PanelData(HTML.format(col1=html1, col2=html2),
-                         title='Miscellaneous')
+                       title='Miscellaneous')
 
         if self.subpanels is not None:
             for subpanel in self.subpanels:
