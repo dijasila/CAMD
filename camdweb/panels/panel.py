@@ -23,18 +23,18 @@ class PanelData:
     script: str = ''
     subpanels: list[PanelData] = field(default_factory=list)
 
-    def determine_panel_type(self, super_panel_pid: int) -> str:
-        if len(self.subpanels) == 0 and super_panel_pid is None:
+    def determine_panel_type(self, super_pid: int | None = None) -> str:
+        if len(self.subpanels) == 0 and super_pid is None:
             return 'Panel'
-        elif super_panel_pid is None:
+        elif super_pid is None:
             return 'SuperPanel'
-        elif super_panel_pid is not None and len(self.subpanels) == 0:
+        elif super_pid is not None and len(self.subpanels) == 0:
             return 'SubPanel'
         else:
             raise ValueError('Sub-panels do not support sub-panels.')
 
-    def build_sidebar(self, super_pid: int = None):
-        panel_case = self.determine_panel_type(super_panel_pid=super_pid)
+    def build_sidebar(self, super_pid: int | None = None):
+        panel_case = self.determine_panel_type(super_pid=super_pid)
 
         sidebar_html = template(
             'sidebar_element.html',
@@ -49,8 +49,8 @@ class PanelData:
 
         return sidebar_html
 
-    def build_body(self, super_pid: int = None):
-        panel_case = self.determine_panel_type(super_panel_pid=super_pid)
+    def build_body(self, super_pid: int | None = None):
+        panel_case = self.determine_panel_type(super_pid=super_pid)
 
         body_html = template(
             'panel_element.html',
